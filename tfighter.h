@@ -6,8 +6,12 @@
 #define REFLECT (1 << 3)
 #define PROJECTILE (1 << 4)
 
+typedef struct{
+	float x, y, w, h;
+} trect;
+
 struct hitbox{
-	SDL_Rect rect;
+	trect rect;
 	float vx, vy, ax, ay; /* Location change variables */
 	float vw, vh, aw, ah; /* Size change variables */
 	float attack, knockback;
@@ -30,7 +34,7 @@ typedef struct{
 } tfighterconf;
 
 typedef struct{
-	SDL_Rect rect;
+	trect rect;
 	float vx, vy;
 	float speed;
 	float accel;
@@ -38,12 +42,11 @@ typedef struct{
 	float defense;
 	float jump;
 	float gravity;
-	hitbox *box;
+	movebase *moves[];
 } tfighter;
 
-tfighter tfighter_new(tfighterconf conf);
+tfighter *tfighter_new(float x, float y);
 
-void tfighter_draw(SDL_Surface *surf, tfighter *t);
 void tfighter_update(tfighter *t);
 
-int intersect(SDL_Rect r, SDL_Rect o);
+int intersect(trect *r, trect *o);
