@@ -11,6 +11,9 @@ float gscale = 10;
 SDL_Window *gwin = NULL;
 SDL_Renderer *gren = NULL;
 
+hitbox gboxes[20];
+int gcbox = 0;
+int gid = 1;
 SDL_Rect temprect;
 
 void close_game(){
@@ -64,9 +67,6 @@ void fillrect(trect *t){
 int main(int argc, char *argv[]){
 	/*trect rect = {20, 40, 80, 80};	*/
 	trect levelblocks[1] = {{2, 16, 17, 1}};
-	hitbox boxes[20];
-	hitbox box1 = {{10, 10, 20, 20}, 1, 1, 0, 0, 0, 0, 0, 0, 10, 20, 0, NULL};
-	movebase move1 = {&box1, 0, 100, 1000, ATTACK};
 	tfighter *p1 = tfighter_new(4, 4);
 	int quit = 0;
 	SDL_Event e;
@@ -86,6 +86,10 @@ int main(int argc, char *argv[]){
 			else if(e.type == SDL_KEYDOWN){
 				if(e.key.keysym.sym == SDLK_w){
 					p1->vy = -1.0f;
+				}
+				else if(e.key.keysym.sym == SDLK_f){
+					hitbox *box = &gboxes[gcbox];
+					hitbox_clone(&p1->rect, p1->moves, box);
 				}
 			}
 			else if(e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_RESIZED){
@@ -111,15 +115,19 @@ int main(int argc, char *argv[]){
 
 		SDL_SetRenderDrawColor(gren, 0x00, 0xFF, 0xFF, 0x77);
 
-		/*SDL_RenderFillRect(gren, project(&temprect, &p1->rect));*/
 		fillrect(&p1->rect);
 		tfighter_update(p1, levelblocks);
+		hitbox_update(&gboxes[0]);
 	
 		SDL_SetRenderDrawColor(gren, 0x00, 0x99, 0x00, 0xFF);
 		int i;
 		for(i=sizeof(levelblocks); i>=0; --i){
 			/*SDL_RenderFillRect(gren, project(&temprect, &levelblocks[i]));*/
 			fillrect(&levelblocks[i]);
+		}
+
+		if(gboxes[0].owner != 0){
+			fillrect(&gboxes[0]);
 		}
 
 		SDL_RenderPresent(gren);

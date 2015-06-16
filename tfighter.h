@@ -16,16 +16,13 @@ struct hitbox{
 	float vw, vh, aw, ah; /* Size change variables */
 	float attack, knockback;
 	char owner; /* ID of the owner */
+	int delay, mintime, maxtime; /* In Frames */
+	int type; 
+	int tick;
 	struct hitbox *next;
 };
 
 typedef struct hitbox hitbox;
-
-typedef struct{
-	hitbox *hitboxes;
-	int delay, mintime, maxtime; /* In Milliseconds */
-	int type; 
-} movebase;
 
 typedef struct{
 	char bruiserness;
@@ -41,12 +38,19 @@ typedef struct{
 	float attack;
 	float defense;
 	float jump;
+	char id;
 	float gravity;
-	movebase *moves[];
+	hitbox *moves;
 } tfighter;
 
 tfighter *tfighter_new(double x, double y);
 
+void tfighter_free(tfighter *t);
+
 void tfighter_update(tfighter *t, trect blocks[]);
+
+void hitbox_update(hitbox *h);
+
+void hitbox_clone(trect *offset, hitbox *src, hitbox *dest);
 
 int intersects(trect *r, trect *o);
