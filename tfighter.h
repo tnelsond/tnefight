@@ -7,7 +7,7 @@
 #define PROJECTILE (1 << 4)
 
 typedef struct{
-	float x, y, w, h;
+	double x, y, w, h;
 } trect;
 
 struct hitbox{
@@ -45,8 +45,8 @@ typedef struct{
 	movebase *moves[];
 } tfighter;
 
-tfighter *tfighter_new(float x, float y);
+tfighter *tfighter_new(double x, double y);
 
-void tfighter_update(tfighter *t);
+void tfighter_update(tfighter *t, trect blocks[]);
 
-int intersect(trect *r, trect *o);
+int intersects(trect *r, trect *o);

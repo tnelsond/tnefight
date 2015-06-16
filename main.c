@@ -2,23 +2,29 @@
 
 #include "tfighter.h"
 
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 600
-
 #define projectnum(x) (int)(x * gscale + .5f)
 
-SDL_Window *gwindow = NULL;
+int gheight = 600;
+int gwidth = 800;
+float gscale = 10;
+
+SDL_Window *gwin = NULL;
 SDL_Renderer *gren = NULL;
-float gscale = 40;
+
+SDL_Rect temprect;
 
 void close_game(){
 	if(gren)
 		SDL_DestroyRenderer(gren);
-	if(gwindow)
-		SDL_DestroyWindow(gwindow);
-	gwindow = NULL;
+	if(gwin)
+		SDL_DestroyWindow(gwin);
+	gwin = NULL;
 	gren = NULL;
 	SDL_Quit();
+}
+
+int max(int a, int b){
+	return a > b ? a : b;
 }
 
 void check(int exp){
@@ -33,12 +39,31 @@ SDL_Rect *project(SDL_Rect *r, trect *t){
 	r->y = projectnum(t->y);
 	r->w = projectnum(t->w);
 	r->h = projectnum(t->h);
+/*
+	if(r->x < 0){
+		r->w += r->x;
+	}
+	if(r->y < 0){
+		r->h += r->y;
+	}
+	if(r->x + r->w > gwidth){
+		r->w = gwidth - r->x;
+	}
+	if(r->y + r->h > gheight){
+		r->h = gheight - r->y;
+	}
+*/
 	return r;
+}
+
+void fillrect(trect *t){
+	project(&temprect, t);
+	SDL_RenderFillRect(gren, &temprect);
 }
 
 int main(int argc, char *argv[]){
 	/*trect rect = {20, 40, 80, 80};	*/
-	SDL_Rect temprect;
+	trect levelblocks[1] = {{2, 16, 17, 1}};
 	hitbox boxes[20];
 	hitbox box1 = {{10, 10, 20, 20}, 1, 1, 0, 0, 0, 0, 0, 0, 10, 20, 0, NULL};
 	movebase move1 = {&box1, 0, 100, 1000, ATTACK};
@@ -47,9 +72,9 @@ int main(int argc, char *argv[]){
 	SDL_Event e;
 	
 	check(SDL_Init(SDL_INIT_VIDEO) >= 0);
-	gwindow = SDL_CreateWindow("SDL TEST", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
-	check(gwindow != NULL);
-	gren = SDL_CreateRenderer(gwindow, -1, SDL_RENDERER_ACCELERATED);
+	gwin = SDL_CreateWindow("SDL TEST", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, gwidth, gheight, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+	check(gwin != NULL);
+	gren = SDL_CreateRenderer(gwin, -1, SDL_RENDERER_ACCELERATED);
 	check(gren != NULL);
 
 	while(!quit){
@@ -58,8 +83,15 @@ int main(int argc, char *argv[]){
 				quit = 1;
 				close_game();
 			}
+			else if(e.type == SDL_KEYDOWN){
+				if(e.key.keysym.sym == SDLK_w){
+					p1->vy = -1.0f;
+				}
+			}
 			else if(e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_RESIZED){
 				gscale = e.window.data1 / 20;
+				gwidth = e.window.data1;
+				gheight = e.window.data2;
 			}
 			/*if(e.type == SDL_KEYDOWN){
 				if(e.key.keysym.sym == SDLK_A){
@@ -67,13 +99,28 @@ int main(int argc, char *argv[]){
 				}
 			}*/
 		}
+		const Uint8* keystates = SDL_GetKeyboardState(NULL);
+		if(keystates[SDL_SCANCODE_A]){
+			p1->vx -= p1->accel;
+		}
+		if(keystates[SDL_SCANCODE_D]){
+			p1->vx += p1->accel;
+		}
 		SDL_SetRenderDrawColor(gren, 0x00, 0x33, 0x00, 0xFF);
 		SDL_RenderClear(gren);
 
 		SDL_SetRenderDrawColor(gren, 0x00, 0xFF, 0xFF, 0x77);
 
-		SDL_RenderFillRect(gren, project(&temprect, &p1->rect));
-		/*tfighter_update(p1);*/
+		/*SDL_RenderFillRect(gren, project(&temprect, &p1->rect));*/
+		fillrect(&p1->rect);
+		tfighter_update(p1, levelblocks);
+	
+		SDL_SetRenderDrawColor(gren, 0x00, 0x99, 0x00, 0xFF);
+		int i;
+		for(i=sizeof(levelblocks); i>=0; --i){
+			/*SDL_RenderFillRect(gren, project(&temprect, &levelblocks[i]));*/
+			fillrect(&levelblocks[i]);
+		}
 
 		SDL_RenderPresent(gren);
 
