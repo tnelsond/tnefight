@@ -7,7 +7,19 @@ int intersects(trect *r, trect *o){
 			&& r->y + r->h > o->y && r->y < o->y + o->h;
 }
 
-tfighter *tfighter_new(double x, double y){
+tlevel *tlevel_new(int len){
+	tlevel *tl = malloc(sizeof(tlevel));
+	tl->blocks = malloc(sizeof(trect)*len);
+	tl->len = len;
+}
+
+void tlevel_free(tlevel *tl){
+	free(tl->blocks);
+	free(tl);
+	tl = NULL;
+}
+
+tfighter *tfighter_new(float x, float y){
 	tfighter *ret = malloc(sizeof(tfighter));
 	ret->rect.x = x;
 	ret->rect.y = y;
@@ -15,31 +27,37 @@ tfighter *tfighter_new(double x, double y){
 	ret->rect.h = 2;
 	ret->vx = 0;
 	ret->vy = 0;
-	ret->accel = 0.1f;
+	ret->accel = 0.01f;
 	ret->speed = 1.0f;
 	ret->gravity = 0.05f;
 	ret->id = 1;
 	ret->moves = malloc(sizeof(hitbox));
-	ret->moves->rect.x = 0.4f;
+	ret->moves->rect.x = 2;
 	ret->moves->rect.y = 0.1f;
-	ret->moves->rect.w = 1.0;
-	ret->moves->rect.h = 2.0;
-	ret->moves->vx = 0.5f;
-	ret->moves->vy = 0.1f;
-	ret->moves->ax = -0.01f;
-	ret->moves->ay = 0.003f;
+	ret->moves->rect.w = 1.0f;
+	ret->moves->rect.h = 0.4f;
+	ret->moves->vx = 0.0f;
+	ret->moves->vy = 0.0f;
+	ret->moves->ax = 0.00f;
+	ret->moves->ay = 0.00f;
+	ret->moves->aw = 0.00f;
+	ret->moves->ah = 0.00f;
+	ret->moves->vw = 0.2f;
 	ret->moves->maxtime = 20;
 	ret->moves->mintime = 10;
 	ret->moves->type = ATTACK;
 	ret->moves->owner = ret->id;
 	ret->moves->tick = 0;
-	ret->moves->delay = 0;
+	ret->moves->delay = 10;
+	ret->moves->left = 1;
+	ret->left = 1;
 	return ret;
 }
 
 void tfighter_free(tfighter *t){
 	free(t->moves);
 	free(t);
+	t = NULL;
 }
 
 void hitbox_update(hitbox *h){
@@ -50,23 +68,29 @@ void hitbox_update(hitbox *h){
 		h->owner = 0;
 		return;
 	}
-	
-	h->rect.x += h->vx += h->ax;
-	h->rect.y += h->vy += h->ay;
-	h->rect.w += h->vw += h->aw;
-	h->rect.h += h->vh += h->ah;
+
+	h->rect.w += (h->vw += h->aw);
+	h->rect.h += (h->vh += h->ah);
+	/*h->vx += h->ax + (h->left ? -h->vw/2 : h->vw/2);*/
+	h->vx += (h->left ? -h->vw/4 : 0);
+	h->vy += h->ay;
+	h->rect.x += h->vx;
+	h->rect.y += h->vy + h->vh / 2;
 }
 
-void hitbox_clone(trect *offset, hitbox *src, hitbox *dest){
-	dest->rect.x = src->rect.x + offset->x;
+void hitbox_spawn(tfighter *t, hitbox *src, hitbox *dest){
+	trect *offset = &t->rect;
+	dest->rect.x = src->rect.x * (t->left ? -1 : 1) + offset->x + offset->w/2;
 	dest->rect.y = src->rect.y + offset->y;
 
 	dest->rect.w = src->rect.w;
 	dest->rect.h = src->rect.h;
 
-	dest->vx = src->vx;
+	dest->left = t->left;
+
+	dest->vx = src->vx * (t->left ? -1 : 1);
 	dest->vy = src->vy;
-	dest->ax = src->ax;
+	dest->ax = src->ax * (t->left ? -1 : 1);
 	dest->ay = src->ay;
 
 	dest->vw = src->vw;
@@ -84,18 +108,41 @@ void hitbox_clone(trect *offset, hitbox *src, hitbox *dest){
 
 	dest->type = src->type;
 	dest->tick = 0;
-	dest->next = NULL; /* FIX THIS LATER */
 }
 
-void tfighter_update(tfighter *t, trect blocks[]){
+void tfighter_update(tfighter *t, tlevel *tl){
 	int i;
-	t->rect.y += t->vy += t->gravity;
-	t->rect.x += t->vx;
-	t->vx *= 0.94;
-	for(i=sizeof(blocks); i>=0; --i){
-		if(intersects(&t->rect, &blocks[i])){
-			t->vy = 0;	
-			t->rect.y = blocks[i].y - t->rect.h;
+	t->vy += t->gravity;
+	t->rect.y += t->vy;
+	for(i=0; i < tl->len; ++i){
+		if(intersects(&t->rect, &tl->blocks[i])){
+			if(t->vy > 0){
+				t->vy = 0;	
+				t->rect.y = tl->blocks[i].y - t->rect.h;
+			}
+			else{
+				t->vy = 0;	
+				t->rect.y = tl->blocks[i].y + tl->blocks[i].h;
+			}
 		}
 	}
+	t->vx *= 0.94;
+	t->rect.x += t->vx;
+	for(i=0; i < tl->len; ++i){
+		if(intersects(&t->rect, &tl->blocks[i])){
+			if(t->vx > 0){
+				t->vx = 0;	
+				t->rect.x = tl->blocks[i].x - t->rect.w;
+			}
+			else{
+				t->vx = 0;
+				t->rect.x = tl->blocks[i].x + tl->blocks[i].w;
+			}
+		}
+	}
+}
+
+void tlevel_add_hitbox(tlevel *tl, tfighter *t, hitbox *h){
+	hitbox_spawn(t, h, &tl->boxes[tl->cbox]);
+	tl->cbox = (tl->cbox + 1) % tl->MAX_BOXES;
 }
