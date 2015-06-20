@@ -19,12 +19,15 @@ void tlevel_free(tlevel *tl){
 	tl = NULL;
 }
 
-tfighter *tfighter_new(float x, float y){
+tfighter *tfighter_new(float x, float y, SDL_Keycode *keys){
 	tfighter *ret = malloc(sizeof(tfighter));
+	ret->state = 0;
+	ret->keys = keys;
 	ret->rect.x = x;
 	ret->rect.y = y;
 	ret->rect.w = 2;
 	ret->rect.h = 2;
+	ret->jump = 0.7f;
 	ret->vx = 0;
 	ret->vy = 0;
 	ret->accel = 0.01f;
@@ -110,8 +113,37 @@ void hitbox_spawn(tfighter *t, hitbox *src, hitbox *dest){
 	dest->tick = 0;
 }
 
+void tfighter_input(tfighter *t, int keydown, SDL_Keycode key){
+	int i;
+	int prevstate = t->state;
+	for(i=0; i<6; ++i){
+		if(key == t->keys[i]){
+			if(keydown){
+				t->state = t->state | (1 << i);
+			}
+			else{
+				t->state = t->state & ~(1 << i);
+			}
+		}
+	}
+	if((~prevstate & JUMP) && (t->state & JUMP)){
+		t->vy = -t->jump;
+	}
+}
+
 void tfighter_update(tfighter *t, tlevel *tl){
 	int i;
+	if(t->state & LEFT){
+		t->vx -= t->accel;
+		t->left = 1;
+	}
+	else if(t->state & RIGHT){
+		t->vx += t->accel;
+		t->left = 0;
+	}
+	if(t->state & DOWN){
+		t->vy += t->accel;
+	}
 	t->vy += t->gravity;
 	t->rect.y += t->vy;
 	for(i=0; i < tl->len; ++i){

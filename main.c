@@ -3,6 +3,7 @@
 #include "tfighter.h"
 
 #define projectnum(x) (int)(x * gscale + .5f)
+#define PLAYERS 2
 
 int gheight = 600;
 int gwidth = 800;
@@ -52,8 +53,13 @@ int main(int argc, char *argv[]){
 	hitbox boxes[100];
 	tlevel level;
 	int quit = 0;
+	int i;
 	SDL_Event e;
-	tfighter *p1 = tfighter_new(4, 4);
+	SDL_Keycode c1[] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_j, SDLK_k};
+	SDL_Keycode c2[] = {SDLK_LEFT, SDLK_RIGHT, SDLK_UP, SDLK_DOWN, SDLK_KP_0, SDLK_KP_PERIOD};
+	tfighter *fighters[PLAYERS] = {NULL, NULL};
+	fighters[0] = tfighter_new(4, 4, c1);
+	fighters[1] = tfighter_new(6, 4, c2);
 	level.blocks = levelblocks;
 	level.len = 2;
 	level.boxes = boxes;
@@ -67,19 +73,19 @@ int main(int argc, char *argv[]){
 	check(gren != NULL);
 
 	while(!quit){
-		const Uint8* keystates = SDL_GetKeyboardState(NULL);
-		int i;
 		while(SDL_PollEvent(&e) != 0){
 			if(e.type == SDL_QUIT){
 				quit = 1;
 				close_game();
 			}
 			else if(e.type == SDL_KEYDOWN){
-				if(e.key.keysym.sym == SDLK_w){
-					p1->vy = -1.0f;
+				for(i=0; i<PLAYERS; ++i){
+					tfighter_input(fighters[i], 1, e.key.keysym.sym);
 				}
-				else if(e.key.keysym.sym == SDLK_f){
-					tlevel_add_hitbox(&level, p1, p1->moves);
+			}
+			else if(e.type == SDL_KEYUP){
+				for(i=0; i<PLAYERS; ++i){
+					tfighter_input(fighters[i], 0, e.key.keysym.sym);
 				}
 			}
 			else if(e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_RESIZED){
@@ -93,29 +99,23 @@ int main(int argc, char *argv[]){
 				}
 			}*/
 		}
-		if(keystates[SDL_SCANCODE_A]){
-			p1->vx -= p1->accel;
-			p1->left = 1;
-		}
-		if(keystates[SDL_SCANCODE_D]){
-			p1->vx += p1->accel;
-			p1->left = 0;
-		}
 
 		SDL_SetRenderDrawColor(gren, 0x00, 0x33, 0x00, 0xFF);
 		SDL_RenderClear(gren);
 
-		SDL_SetRenderDrawColor(gren, 0x00, 0xFF, 0xFF, 0xFF);
-		fillrect(&p1->rect);
-		SDL_SetRenderDrawColor(gren, 0x00, 0x60, 0x60, 0xFF);
-		temprect.w /= 2;
-		temprect.h /= 2;
-		if(!p1->left){
-			temprect.x += temprect.w;
-		}
-		SDL_RenderFillRect(gren, &temprect);
+		for(i=0; i<PLAYERS; ++i){
+			SDL_SetRenderDrawColor(gren, 0x00, 0xFF, 0xFF, 0xFF);
+			fillrect(&fighters[i]->rect);
+			SDL_SetRenderDrawColor(gren, 0x00, 0x60, 0x60, 0xFF);
+			temprect.w /= 2;
+			temprect.h /= 2;
 
-		tfighter_update(p1, &level);
+			if(!fighters[i]->left){
+				temprect.x += temprect.w;
+			}
+			SDL_RenderFillRect(gren, &temprect);
+			tfighter_update(fighters[i], &level);
+		}
 	
 		SDL_SetRenderDrawColor(gren, 0x00, 0x99, 0x00, 0xFF);
 		for(i=0; i<level.len; ++i){
@@ -141,7 +141,8 @@ int main(int argc, char *argv[]){
 		SDL_Delay(20);
 	}
 
-	free(p1);
+	for(i=0; i<PLAYERS; ++i)
+		free(fighters[i]);
 	close_game();
 	return 0;
 }

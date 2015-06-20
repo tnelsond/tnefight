@@ -7,6 +7,17 @@
 #define REFLECT (1 << 3)
 #define PROJECTILE (1 << 4)
 
+/* tfighter state */
+#define LEFT (1 << 0)
+#define RIGHT (1 << 1)
+#define UP (1 << 2)
+#define DOWN (1 << 3)
+#define JUMP (1 << 4)
+#define ATTACKING (1 << 5)
+#define STUNNED (1 << 6)
+
+#define NUMKEYS 5;
+
 typedef struct{
 	float x, y, w, h;
 } trect;
@@ -53,13 +64,17 @@ typedef struct{
 	float gravity;
 	char left;
 	hitbox *moves;
+	SDL_Keycode *keys;
+	int state;
 } tfighter;
 
-tfighter *tfighter_new(float x, float y);
+tfighter *tfighter_new(float x, float y, SDL_Keycode *keys);
 
 void tfighter_free(tfighter *t);
 
 void tfighter_update(tfighter *t, tlevel *tl);
+
+void tfighter_input(tfighter *t, int down, SDL_Keycode key);
 
 void hitbox_update(hitbox *h);
 
