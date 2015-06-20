@@ -58,8 +58,8 @@ int main(int argc, char *argv[]){
 	SDL_Keycode c1[] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_j, SDLK_k};
 	SDL_Keycode c2[] = {SDLK_LEFT, SDLK_RIGHT, SDLK_UP, SDLK_DOWN, SDLK_KP_0, SDLK_KP_PERIOD};
 	tfighter *fighters[PLAYERS] = {NULL, NULL};
-	fighters[0] = tfighter_new(4, 4, c1);
-	fighters[1] = tfighter_new(6, 4, c2);
+	fighters[0] = tfighter_new(4, 4, 0x77, 0x55, 0x00, c1);
+	fighters[1] = tfighter_new(6, 4, 0x00, 0x66, 0xbb, c2);
 	level.blocks = levelblocks;
 	level.len = 2;
 	level.boxes = boxes;
@@ -104,11 +104,20 @@ int main(int argc, char *argv[]){
 		SDL_RenderClear(gren);
 
 		for(i=0; i<PLAYERS; ++i){
-			SDL_SetRenderDrawColor(gren, 0x00, 0xFF, 0xFF, 0xFF);
+			SDL_SetRenderDrawColor(gren, fighters[i]->red, fighters[i]->green, fighters[i]->blue, 0xFF);
 			fillrect(&fighters[i]->rect);
-			SDL_SetRenderDrawColor(gren, 0x00, 0x60, 0x60, 0xFF);
+			SDL_SetRenderDrawColor(gren, fighters[i]->red/2, fighters[i]->green/2, fighters[i]->blue/2, 0xFF);
 			temprect.w /= 2;
 			temprect.h /= 2;
+			if(fighters[i]->state & DOWN){
+				temprect.y += temprect.h;
+			}
+			else if(fighters[i]->state & UP){
+				
+			}
+			else{
+				temprect.y += temprect.h/2;
+			}
 
 			if(!fighters[i]->left){
 				temprect.x += temprect.w;

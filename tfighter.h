@@ -63,12 +63,15 @@ typedef struct{
 	char id;
 	float gravity;
 	char left;
+	int red;
+	int green;
+	int blue;
 	hitbox *moves;
 	SDL_Keycode *keys;
 	int state;
 } tfighter;
 
-tfighter *tfighter_new(float x, float y, SDL_Keycode *keys);
+tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys);
 
 void tfighter_free(tfighter *t);
 

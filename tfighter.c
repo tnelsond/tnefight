@@ -21,8 +21,11 @@ void tlevel_free(tlevel *tl){
 	tl = NULL;
 }
 
-tfighter *tfighter_new(float x, float y, SDL_Keycode *keys){
+tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys){
 	tfighter *ret = malloc(sizeof(tfighter));
+	ret->red = red;
+	ret->green = green;
+	ret->blue = blue;
 	ret->state = 0;
 	ret->keys = keys;
 	ret->rect.x = x;
