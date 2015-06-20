@@ -7,7 +7,7 @@
 
 int gheight = 600;
 int gwidth = 800;
-float gscale = 10;
+float gscale = 5;
 
 SDL_Window *gwin = NULL;
 SDL_Renderer *gren = NULL;
@@ -49,7 +49,7 @@ void fillrect(trect *t){
 }
 
 int main(int argc, char *argv[]){
-	trect levelblocks[] = {{2, 16, 17, 1}, {3, 10, 2, 2}};
+	trect levelblocks[] = {{2, 16, 30, 1}, {3, 10, 2, 2}};
 	hitbox boxes[100];
 	tlevel level;
 	int quit = 0;
@@ -80,16 +80,16 @@ int main(int argc, char *argv[]){
 			}
 			else if(e.type == SDL_KEYDOWN){
 				for(i=0; i<PLAYERS; ++i){
-					tfighter_input(fighters[i], 1, e.key.keysym.sym);
+					tfighter_input(fighters[i], &level, 1, e.key.keysym.sym);
 				}
 			}
 			else if(e.type == SDL_KEYUP){
 				for(i=0; i<PLAYERS; ++i){
-					tfighter_input(fighters[i], 0, e.key.keysym.sym);
+					tfighter_input(fighters[i], &level, 0, e.key.keysym.sym);
 				}
 			}
 			else if(e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_RESIZED){
-				gscale = e.window.data1 / 20;
+				gscale = e.window.data1 / 40;
 				gwidth = e.window.data1;
 				gheight = e.window.data2;
 			}

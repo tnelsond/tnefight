@@ -2,6 +2,8 @@
 #include <SDL2/SDL.h>
 #include "tfighter.h"
 
+int gid = 1;
+
 int intersects(trect *r, trect *o){
 	return r->x + r->w > o->x && r->x < o->x + o->w 
 			&& r->y + r->h > o->y && r->y < o->y + o->h;
@@ -33,7 +35,7 @@ tfighter *tfighter_new(float x, float y, SDL_Keycode *keys){
 	ret->accel = 0.01f;
 	ret->speed = 1.0f;
 	ret->gravity = 0.05f;
-	ret->id = 1;
+	ret->id = gid++;
 	ret->moves = malloc(sizeof(hitbox));
 	ret->moves->rect.x = 2;
 	ret->moves->rect.y = 0.1f;
@@ -113,7 +115,7 @@ void hitbox_spawn(tfighter *t, hitbox *src, hitbox *dest){
 	dest->tick = 0;
 }
 
-void tfighter_input(tfighter *t, int keydown, SDL_Keycode key){
+void tfighter_input(tfighter *t, tlevel *tl, int keydown, SDL_Keycode key){
 	int i;
 	int prevstate = t->state;
 	for(i=0; i<6; ++i){
@@ -128,6 +130,9 @@ void tfighter_input(tfighter *t, int keydown, SDL_Keycode key){
 	}
 	if((~prevstate & JUMP) && (t->state & JUMP)){
 		t->vy = -t->jump;
+	}
+	if((~prevstate & ATTACKING) && (t->state & ATTACKING)){
+		tlevel_add_hitbox(tl, t, t->moves);
 	}
 }
 
@@ -144,6 +149,15 @@ void tfighter_update(tfighter *t, tlevel *tl){
 	if(t->state & DOWN){
 		t->vy += t->accel;
 	}
+
+	for(i=0; i<tl->MAX_BOXES; ++i){
+		int owner = tl->boxes[i].owner;
+		if(owner && owner != t->id && intersects(&t->rect, &tl->boxes[i].rect)){
+			t->vy -= .2f;
+			t->vx += tl->boxes[i].vx;
+		}
+	}
+
 	t->vy += t->gravity;
 	t->rect.y += t->vy;
 	for(i=0; i < tl->len; ++i){

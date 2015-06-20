@@ -74,7 +74,7 @@ void tfighter_free(tfighter *t);
 
 void tfighter_update(tfighter *t, tlevel *tl);
 
-void tfighter_input(tfighter *t, int down, SDL_Keycode key);
+void tfighter_input(tfighter *t, tlevel *tl, int down, SDL_Keycode key);
 
 void hitbox_update(hitbox *h);
 
