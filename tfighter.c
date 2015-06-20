@@ -40,17 +40,17 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->gravity = 0.05f;
 	ret->id = gid++;
 	ret->moves = malloc(sizeof(hitbox));
-	ret->moves->rect.x = 2;
+	ret->moves->rect.x = 0;
 	ret->moves->rect.y = 0.1f;
 	ret->moves->rect.w = 1.0f;
 	ret->moves->rect.h = 0.4f;
-	ret->moves->vx = 0.0f;
+	ret->moves->vx = 0.3f;
 	ret->moves->vy = 0.0f;
 	ret->moves->ax = 0.00f;
 	ret->moves->ay = 0.00f;
 	ret->moves->aw = 0.00f;
 	ret->moves->ah = 0.00f;
-	ret->moves->vw = 0.2f;
+	ret->moves->vw = 0.6f;
 	ret->moves->maxtime = 20;
 	ret->moves->mintime = 10;
 	ret->moves->type = ATTACK;
@@ -79,8 +79,11 @@ void hitbox_update(hitbox *h){
 
 	h->rect.w += (h->vw += h->aw);
 	h->rect.h += (h->vh += h->ah);
+	if(h->left){
+		h->rect.x -= h->vw;
+	}
 	/*h->vx += h->ax + (h->left ? -h->vw/2 : h->vw/2);*/
-	h->vx += (h->left ? -h->vw/4 : 0);
+	h->vx += h->ax;
 	h->vy += h->ay;
 	h->rect.x += h->vx;
 	h->rect.y += h->vy + h->vh / 2;
@@ -88,7 +91,14 @@ void hitbox_update(hitbox *h){
 
 void hitbox_spawn(tfighter *t, hitbox *src, hitbox *dest){
 	trect *offset = &t->rect;
-	dest->rect.x = src->rect.x * (t->left ? -1 : 1) + offset->x + offset->w/2;
+
+	if(t->left){
+		dest->rect.x = -src->rect.x - src->rect.w/2 + offset->x + offset->w/2;
+	}
+	else{
+		dest->rect.x = src->rect.x + offset->x - src->rect.w/2 + offset->w/2;
+	}
+
 	dest->rect.y = src->rect.y + offset->y;
 
 	dest->rect.w = src->rect.w;
