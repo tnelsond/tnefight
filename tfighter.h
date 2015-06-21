@@ -26,10 +26,11 @@ struct hitbox{
 	trect rect;
 	float vx, vy, ax, ay; /* Location change variables */
 	float vw, vh, aw, ah; /* Size change variables */
-	float attack, knockback;
+	float attack, xknockback, yknockback;
 	char owner; /* ID of the owner */
+	char hit;
 	char left;
-	int delay, mintime, maxtime; /* In Frames */
+	int lag, delay, mintime, maxtime; /* In Frames */
 	int type; 
 	int tick;
 };
@@ -68,6 +69,7 @@ typedef struct{
 	int blue;
 	hitbox *moves;
 	SDL_Keycode *keys;
+	int tick;
 	int state;
 } tfighter;
 
