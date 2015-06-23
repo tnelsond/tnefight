@@ -49,7 +49,7 @@ void fillrect(trect *t){
 }
 
 int main(int argc, char *argv[]){
-	trect levelblocks[] = {{2, 16, 30, 1}, {3, 10, 2, 2}};
+	trect levelblocks[] = {{20, 32, 60, 1}, {45, 20, 10, 0.5}};
 	hitbox boxes[100];
 	tlevel level;
 	int quit = 0;
@@ -62,6 +62,8 @@ int main(int argc, char *argv[]){
 	fighters[1] = tfighter_new(6, 4, 0x00, 0x66, 0xbb, c2);
 	level.blocks = levelblocks;
 	level.len = 2;
+	level.w = 100;
+	level.h = 44;
 	level.boxes = boxes;
 	level.cbox = 0;
 	level.MAX_BOXES = 100;
@@ -89,7 +91,7 @@ int main(int argc, char *argv[]){
 				}
 			}
 			else if(e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_RESIZED){
-				gscale = e.window.data1 / 40;
+				gscale = e.window.data1 / level.w;
 				gwidth = e.window.data1;
 				gheight = e.window.data2;
 			}
