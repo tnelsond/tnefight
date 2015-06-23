@@ -49,7 +49,7 @@ void fillrect(trect *t){
 }
 
 int main(int argc, char *argv[]){
-	trect levelblocks[] = {{20, 32, 60, 1}, {45, 20, 10, 0.5}};
+	trect levelblocks[] = {{20, 35, 4, 20}, {23, 34, 3, 20}, {25, 32, 40, 20}, {47, 16, 5, 0.5f}, {50, 27, 5, 0.5f}, {57, 22, 5, 0.5f}, {60, 36, 20, 20}, {70, 22, 5, 8}};
 	hitbox boxes[100];
 	tlevel level;
 	int quit = 0;
@@ -58,12 +58,14 @@ int main(int argc, char *argv[]){
 	SDL_Keycode c1[] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_j, SDLK_k};
 	SDL_Keycode c2[] = {SDLK_LEFT, SDLK_RIGHT, SDLK_UP, SDLK_DOWN, SDLK_KP_0, SDLK_KP_PERIOD};
 	tfighter *fighters[PLAYERS] = {NULL, NULL};
-	fighters[0] = tfighter_new(4, 4, 0x77, 0x55, 0x00, c1);
-	fighters[1] = tfighter_new(6, 4, 0x00, 0x66, 0xbb, c2);
+	fighters[0] = tfighter_new(34, 15, 0x77, 0x55, 0x00, c1);
+	fighters[1] = tfighter_new(36, 15, 0x00, 0x66, 0xbb, c2);
 	level.blocks = levelblocks;
-	level.len = 2;
-	level.w = 100;
-	level.h = 44;
+	level.len = 8;
+	level.rect.x = 0;
+	level.rect.y = 0;
+	level.rect.w = 100;
+	level.rect.h = 44;
 	level.boxes = boxes;
 	level.cbox = 0;
 	level.MAX_BOXES = 100;
@@ -91,7 +93,7 @@ int main(int argc, char *argv[]){
 				}
 			}
 			else if(e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_RESIZED){
-				gscale = e.window.data1 / level.w;
+				gscale = e.window.data1 / level.rect.w;
 				gwidth = e.window.data1;
 				gheight = e.window.data2;
 			}
@@ -102,8 +104,11 @@ int main(int argc, char *argv[]){
 			}*/
 		}
 
-		SDL_SetRenderDrawColor(gren, 0x00, 0x33, 0x00, 0xFF);
+		SDL_SetRenderDrawColor(gren, 0x00, 0x00, 0x00, 0xFF);
 		SDL_RenderClear(gren);
+
+		SDL_SetRenderDrawColor(gren, 0xaa, 0xaa, 0xaa, 0xFF);
+		fillrect(&level.rect);
 
 		for(i=0; i<PLAYERS; ++i){
 			SDL_SetRenderDrawColor(gren, fighters[i]->red, fighters[i]->green, fighters[i]->blue, 0xFF);
@@ -128,14 +133,14 @@ int main(int argc, char *argv[]){
 			tfighter_update(fighters[i], &level);
 		}
 	
-		SDL_SetRenderDrawColor(gren, 0x00, 0x99, 0x00, 0xFF);
+		SDL_SetRenderDrawColor(gren, 0x44, 0x44, 0x44, 0xFF);
 		for(i=0; i<level.len; ++i){
 			fillrect(&level.blocks[i]);
 		}
 
 		SDL_SetRenderDrawColor(gren, 0xFF, 0x00, 0x00, 0x11);
 		for(i=0; i<level.MAX_BOXES; ++i){
-			if(level.boxes[i].owner != 0){
+			if(level.boxes[i].owner){
 				if(level.boxes[i].tick < level.boxes[i].delay){
 					SDL_SetRenderDrawColor(gren, 0x00, 0xFF, 0x00, 0xFF);
 				}

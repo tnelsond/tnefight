@@ -22,12 +22,14 @@ typedef struct{
 	float x, y, w, h;
 } trect;
 
+typedef struct tfighter tfighter;
+
 struct hitbox{
 	trect rect;
 	float vx, vy, ax, ay; /* Location change variables */
 	float vw, vh, aw, ah; /* Size change variables */
 	float attack, xknockback, yknockback;
-	char owner; /* ID of the owner */
+	tfighter *owner;
 	char hit;
 	char left;
 	int lag, delay, mintime, maxtime; /* In Frames */
@@ -41,8 +43,7 @@ typedef struct tlevel{
 	trect *blocks;
 	hitbox *boxes;
 	int cbox;
-	float w;
-	float h;
+	trect rect;
 	int len;
 	int MAX_BOXES;
 } tlevel;
@@ -53,7 +54,7 @@ typedef struct{
 	char size;
 } tfighterconf;
 
-typedef struct{
+struct tfighter{
 	trect rect;
 	float vx, vy;
 	float speed;
@@ -61,8 +62,8 @@ typedef struct{
 	float attack;
 	float defense;
 	float jump;
-	char id;
 	float gravity;
+	char id;
 	char left;
 	int red;
 	int green;
@@ -71,7 +72,7 @@ typedef struct{
 	SDL_Keycode *keys;
 	int tick;
 	int state;
-} tfighter;
+};
 
 tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys);
 
