@@ -66,7 +66,9 @@ struct tfighter{
 	float accel;
 	float attack;
 	float defense;
-	float jump;
+	float jumpvel;
+	int MAXJUMPS;
+	int jump;
 	float gravity;
 	char id;
 	char left;

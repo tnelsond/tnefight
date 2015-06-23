@@ -59,7 +59,9 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->rect.y = y;
 	ret->rect.w = 2;
 	ret->rect.h = 2;
-	ret->jump = 0.7f;
+	ret->jumpvel = 0.7f;
+	ret->MAXJUMPS = 2;
+	ret->jump = 2;
 	ret->vx = 0;
 	ret->vy = 0;
 	ret->accel = 0.03f;
@@ -226,7 +228,10 @@ void tfighter_input(tfighter *t, tlevel *tl, int keydown, SDL_Keycode key){
 		}
 	}
 	if((~prevstate & JUMP) && (t->state & JUMP)){
-		t->vy = -t->jump;
+		if(t->jump < t->MAXJUMPS){
+			t->vy = -t->jumpvel;
+			++t->jump;
+		}
 	}
 	if((~prevstate & ATTACKING) && (t->state & ATTACKING)){
 		if(t->state & DOWN){
@@ -266,7 +271,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 
 	for(i=0; i<tl->MAX_BOXES; ++i){
 		tfighter *owner = tl->boxes[i].owner;
-		if(owner && owner != t && !(tl->boxes[i].hit & t->id) && intersects(&t->rect, &tl->boxes[i].rect)){
+		if(owner && owner != t && tl->boxes[i].tick > tl->boxes[i].delay && !(tl->boxes[i].hit & t->id) && intersects(&t->rect, &tl->boxes[i].rect)){
 			t->vy -= 0.1f * tl->boxes[i].yknockback;
 			t->vx += tl->boxes[i].xknockback * (tl->boxes[i].left ? -1 : 1);
 			tl->boxes[i].hit |= t->id;
@@ -279,6 +284,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 		if(intersects(&t->rect, &tl->blocks[i])){
 			if(t->vy > 0){
 				t->vy = 0;	
+				t->jump = 0;
 				t->rect.y = tl->blocks[i].y - t->rect.h;
 			}
 			else if(tl->blocks[i].h >= 0.9f){
