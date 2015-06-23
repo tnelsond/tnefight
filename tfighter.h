@@ -79,6 +79,7 @@ struct tfighter{
 	SDL_Keycode *keys;
 	int tick;
 	int state;
+	float damage;
 };
 
 tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys);

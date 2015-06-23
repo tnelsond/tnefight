@@ -50,6 +50,7 @@ void tlevel_free(tlevel *tl){
 tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys){
 	tfighter *ret = malloc(sizeof(tfighter));
 	ret->tick = 0;
+	ret->damage = 0;
 	ret->red = red;
 	ret->green = green;
 	ret->blue = blue;
@@ -85,6 +86,7 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->moves[0].vw = 0.6f;
 	ret->moves[0].xknockback = 0.2f;
 	ret->moves[0].yknockback = 4.5f;
+	ret->moves[0].attack = 3;
 	ret->moves[0].maxtime = 20;
 	ret->moves[0].mintime = 10;
 	ret->moves[0].type = ATTACK;
@@ -108,6 +110,7 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->moves[1].vw = 0.0f;
 	ret->moves[1].xknockback = 0.2f;
 	ret->moves[1].yknockback = 4.5f;
+	ret->moves[1].attack = 6;
 	ret->moves[1].maxtime = 20;
 	ret->moves[1].mintime = 10;
 	ret->moves[1].type = ATTACK;
@@ -131,6 +134,7 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->moves[2].vw = 0.0f;
 	ret->moves[2].xknockback = 0.0f;
 	ret->moves[2].yknockback = 6.5f;
+	ret->moves[2].attack = 9;
 	ret->moves[2].maxtime = 20;
 	ret->moves[2].mintime = 10;
 	ret->moves[2].type = ATTACK | MOVEMENT;
@@ -272,9 +276,10 @@ void tfighter_update(tfighter *t, tlevel *tl){
 	for(i=0; i<tl->MAX_BOXES; ++i){
 		tfighter *owner = tl->boxes[i].owner;
 		if(owner && owner != t && tl->boxes[i].tick > tl->boxes[i].delay && !(tl->boxes[i].hit & t->id) && intersects(&t->rect, &tl->boxes[i].rect)){
-			t->vy -= 0.1f * tl->boxes[i].yknockback;
-			t->vx += tl->boxes[i].xknockback * (tl->boxes[i].left ? -1 : 1);
+			t->vy -= 0.1f * tl->boxes[i].yknockback * ((t->damage + 50)/100);
+			t->vx += tl->boxes[i].xknockback * (tl->boxes[i].left ? -1 : 1) * ((t->damage + 50)/100);
 			tl->boxes[i].hit |= t->id;
+			t->damage += tl->boxes[i].attack;
 		}
 	}
 
