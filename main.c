@@ -54,7 +54,7 @@ int main(int argc, char *argv[]){
 	level.rect.x = 0;
 	level.rect.y = 0;
 	level.rect.w = 100;
-	level.rect.h = 44;
+	level.rect.h = 52;
 	level.boxes = boxes;
 	level.cbox = 0;
 	level.MAX_BOXES = 100;
