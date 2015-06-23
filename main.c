@@ -5,10 +5,6 @@
 #define projectnum(x) (int)(x * gscale + .5f)
 #define PLAYERS 2
 
-int gheight = 600;
-int gwidth = 800;
-float gscale = 5;
-
 SDL_Window *gwin = NULL;
 SDL_Renderer *gren = NULL;
 
@@ -35,20 +31,13 @@ void check(int exp){
 	close_game();
 }
 
-SDL_Rect *project(SDL_Rect *r, trect *t){
-	r->x = projectnum(t->x);
-	r->y = projectnum(t->y);
-	r->w = projectnum(t->w);
-	r->h = projectnum(t->h);
-	return r;
-}
-
-void fillrect(trect *t){
-	project(&temprect, t);
+void fillrect(tcamera *tc, trect *t){
+	project(tc, t, &temprect);
 	SDL_RenderFillRect(gren, &temprect);
 }
 
 int main(int argc, char *argv[]){
+	tcamera camera = {0, 0, 1, 800, 600};
 	trect levelblocks[] = {{20, 35, 4, 20}, {23, 34, 3, 20}, {25, 32, 40, 20}, {47, 16, 5, 0.5f}, {50, 27, 5, 0.5f}, {57, 22, 5, 0.5f}, {60, 36, 20, 20}, {70, 22, 5, 8}};
 	hitbox boxes[100];
 	tlevel level;
@@ -71,7 +60,7 @@ int main(int argc, char *argv[]){
 	level.MAX_BOXES = 100;
 	
 	check(SDL_Init(SDL_INIT_VIDEO) >= 0);
-	gwin = SDL_CreateWindow("SDL TEST", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, gwidth, gheight, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+	gwin = SDL_CreateWindow("SDL TEST", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, camera.swidth, camera.sheight, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 	check(gwin != NULL);
 	gren = SDL_CreateRenderer(gwin, -1, SDL_RENDERER_ACCELERATED);
 	check(gren != NULL);
@@ -93,9 +82,8 @@ int main(int argc, char *argv[]){
 				}
 			}
 			else if(e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_RESIZED){
-				gscale = e.window.data1 / level.rect.w;
-				gwidth = e.window.data1;
-				gheight = e.window.data2;
+				camera.swidth = e.window.data1;
+				camera.sheight = e.window.data2;
 			}
 			/*if(e.type == SDL_KEYDOWN){
 				if(e.key.keysym.sym == SDLK_A){
@@ -108,11 +96,13 @@ int main(int argc, char *argv[]){
 		SDL_RenderClear(gren);
 
 		SDL_SetRenderDrawColor(gren, 0xaa, 0xaa, 0xaa, 0xFF);
-		fillrect(&level.rect);
+		fillrect(&camera, &level.rect);
+
+		tcamera_track(&camera, &fighters[0]->rect, &fighters[1]->rect);
 
 		for(i=0; i<PLAYERS; ++i){
 			SDL_SetRenderDrawColor(gren, fighters[i]->red, fighters[i]->green, fighters[i]->blue, 0xFF);
-			fillrect(&fighters[i]->rect);
+			fillrect(&camera, &fighters[i]->rect);
 			SDL_SetRenderDrawColor(gren, fighters[i]->red/2, fighters[i]->green/2, fighters[i]->blue/2, 0xFF);
 			temprect.w /= 2;
 			temprect.h /= 2;
@@ -135,7 +125,7 @@ int main(int argc, char *argv[]){
 	
 		SDL_SetRenderDrawColor(gren, 0x44, 0x44, 0x44, 0xFF);
 		for(i=0; i<level.len; ++i){
-			fillrect(&level.blocks[i]);
+			fillrect(&camera, &level.blocks[i]);
 		}
 
 		SDL_SetRenderDrawColor(gren, 0xFF, 0x00, 0x00, 0x11);
@@ -148,7 +138,7 @@ int main(int argc, char *argv[]){
 					SDL_SetRenderDrawColor(gren, 0xFF, 0x00, 0x00, 0xFF);
 				}
 				hitbox_update(&level.boxes[i]);
-				fillrect(&level.boxes[i].rect);
+				fillrect(&camera, &level.boxes[i].rect);
 			}
 		}
 

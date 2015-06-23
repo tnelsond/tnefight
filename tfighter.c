@@ -9,6 +9,32 @@ int intersects(trect *r, trect *o){
 			&& r->y + r->h > o->y && r->y < o->y + o->h;
 }
 
+int project(tcamera *tc, trect *t, SDL_Rect *r){
+	r->x = (t->x - tc->x) * tc->scale;
+	r->y = (t->y - tc->y) * tc->scale;
+	r->w = t->w * tc->scale;
+	r->h = t->h * tc->scale;
+}
+
+void tcamera_track(tcamera *tc, trect *a, trect *b){
+	float width = (a->x + a->w/2) - (b->x + b->w/2);
+	if(width < 0){
+		width = -width;
+	}
+	float height = (a->y + a->h/2) - (b->y + b->h/2);
+	if(height < 0){
+		height = -height;
+	}
+
+	float x = ((a->x + a->w/2) + (b->x + b->w/2)) / 2;
+	float y = ((a->y + a->h/2) + (b->y + b->h/2)) / 2;
+	tc->scale = tc->swidth / (width > height ? width + 20 : height + 20);
+	tc->cx = x;
+	tc->cy = y;
+	tc->x = tc->cx - tc->swidth/tc->scale/2;
+	tc->y = tc->cy - tc->sheight/tc->scale/2;
+}
+
 tlevel *tlevel_new(int len){
 	tlevel *tl = malloc(sizeof(tlevel));
 	tl->blocks = malloc(sizeof(trect)*len);

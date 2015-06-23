@@ -22,6 +22,11 @@ typedef struct{
 	float x, y, w, h;
 } trect;
 
+typedef struct{
+	float x, y, cx, cy, scale;
+	int swidth, sheight;
+} tcamera;
+
 typedef struct tfighter tfighter;
 
 struct hitbox{
@@ -93,3 +98,7 @@ tlevel *tlevel_new(int len);
 void tlevel_add_hitbox(tlevel *tl, tfighter *t, hitbox *h);
 
 void tlevel_free(tlevel *tl);
+
+int project(tcamera *tc, trect *t, SDL_Rect *r);
+
+void tcamera_track(tcamera *tc, trect *a, trect *b);
