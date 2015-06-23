@@ -36,34 +36,59 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->jump = 0.7f;
 	ret->vx = 0;
 	ret->vy = 0;
-	ret->accel = 0.01f;
+	ret->accel = 0.03f;
 	ret->speed = 1.0f;
 	ret->gravity = 0.03f;
 	ret->id = gid;
 	gid = gid << 1;
-	ret->moves = malloc(sizeof(hitbox));
-	ret->moves->rect.x = 0;
-	ret->moves->rect.y = 0.1f;
-	ret->moves->rect.w = 1.0f;
-	ret->moves->rect.h = 0.4f;
-	ret->moves->vx = 0.3f;
-	ret->moves->lag = 40;
-	ret->moves->vy = 0.0f;
-	ret->moves->ax = 0.00f;
-	ret->moves->ay = 0.00f;
-	ret->moves->aw = 0.00f;
-	ret->moves->ah = 0.00f;
-	ret->moves->vw = 0.6f;
-	ret->moves->xknockback = 0.2f;
-	ret->moves->yknockback = 4.5f;
-	ret->moves->maxtime = 20;
-	ret->moves->mintime = 10;
-	ret->moves->type = ATTACK;
-	ret->moves->owner = ret->id;
-	ret->moves->tick = 0;
-	ret->moves->delay = 10;
-	ret->moves->left = 1;
-	ret->moves->hit = 0;
+
+	ret->moves = malloc(sizeof(hitbox)*2);
+	ret->moves[0].rect.x = 0;
+	ret->moves[0].rect.y = 0.1f;
+	ret->moves[0].rect.w = 1.0f;
+	ret->moves[0].rect.h = 0.4f;
+	ret->moves[0].vx = 0.3f;
+	ret->moves[0].lag = 30;
+	ret->moves[0].vy = 0.0f;
+	ret->moves[0].ax = 0.00f;
+	ret->moves[0].ay = 0.00f;
+	ret->moves[0].aw = 0.00f;
+	ret->moves[0].ah = 0.00f;
+	ret->moves[0].vw = 0.6f;
+	ret->moves[0].xknockback = 0.2f;
+	ret->moves[0].yknockback = 4.5f;
+	ret->moves[0].maxtime = 20;
+	ret->moves[0].mintime = 10;
+	ret->moves[0].type = ATTACK;
+	ret->moves[0].owner = ret->id;
+	ret->moves[0].tick = 0;
+	ret->moves[0].delay = 10;
+	ret->moves[0].left = 1;
+	ret->moves[0].hit = 0;
+
+	ret->moves[1].rect.x = 1.0f;
+	ret->moves[1].rect.y = -1.0f;
+	ret->moves[1].rect.w = 1.0f;
+	ret->moves[1].rect.h = 1.0f;
+	ret->moves[1].vx = 0.5f;
+	ret->moves[1].lag = 18;
+	ret->moves[1].vy = 0.5f;
+	ret->moves[1].ax = 0.00f;
+	ret->moves[1].ay = 0.01f;
+	ret->moves[1].aw = 0.00f;
+	ret->moves[1].ah = 0.00f;
+	ret->moves[1].vw = 0.0f;
+	ret->moves[1].xknockback = 0.2f;
+	ret->moves[1].yknockback = 4.5f;
+	ret->moves[1].maxtime = 20;
+	ret->moves[1].mintime = 10;
+	ret->moves[1].type = ATTACK;
+	ret->moves[1].owner = ret->id;
+	ret->moves[1].tick = 0;
+	ret->moves[1].delay = 10;
+	ret->moves[1].left = 1;
+	ret->moves[1].hit = 0;
+
 	ret->left = 1;
 	return ret;
 }
@@ -155,8 +180,14 @@ void tfighter_input(tfighter *t, tlevel *tl, int keydown, SDL_Keycode key){
 		t->vy = -t->jump;
 	}
 	if((~prevstate & ATTACKING) && (t->state & ATTACKING)){
-		tlevel_add_hitbox(tl, t, t->moves);
-		t->tick = t->moves->lag;
+		if(t->state & UP){
+			tlevel_add_hitbox(tl, t, &t->moves[1]);
+			t->tick = t->moves[0].lag;
+		}
+		else{
+			tlevel_add_hitbox(tl, t, &t->moves[0]);
+			t->tick = t->moves[1].lag;
+		}
 	}
 }
 
