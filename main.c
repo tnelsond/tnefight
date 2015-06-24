@@ -39,7 +39,7 @@ void fillrect(tcamera *tc, trect *t){
 int main(int argc, char *argv[]){
 	tcamera camera = {0, 0, 1, 800, 600};
 	trect levelblocks[] = {{20, 35, 4, 20}, {23, 34, 3, 20}, {25, 32, 40, 20}, {47, 16, 5, 0.5f}, {50, 27, 5, 0.5f}, {57, 22, 5, 0.5f}, {60, 36, 20, 20}, {70, 22, 5, 8}};
-	hitbox boxes[100];
+	hitbox boxes[30];
 	tlevel level;
 	int quit = 0;
 	int i;
@@ -57,7 +57,7 @@ int main(int argc, char *argv[]){
 	level.rect.h = 52;
 	level.boxes = boxes;
 	level.cbox = 0;
-	level.MAX_BOXES = 100;
+	level.MAX_BOXES = 30;
 	
 	check(SDL_Init(SDL_INIT_VIDEO) >= 0);
 	gwin = SDL_CreateWindow("SDL TEST", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, camera.swidth, camera.sheight, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
@@ -85,11 +85,6 @@ int main(int argc, char *argv[]){
 				camera.swidth = e.window.data1;
 				camera.sheight = e.window.data2;
 			}
-			/*if(e.type == SDL_KEYDOWN){
-				if(e.key.keysym.sym == SDLK_A){
-					boxes[0] = p1->move
-				}
-			}*/
 		}
 
 		SDL_SetRenderDrawColor(gren, 0x00, 0x00, 0x00, 0xFF);
@@ -109,13 +104,9 @@ int main(int argc, char *argv[]){
 			if(fighters[i]->state & DOWN){
 				temprect.y += temprect.h;
 			}
-			else if(fighters[i]->state & UP){
-				
-			}
-			else{
+			else if(~fighters[i]->state & UP){
 				temprect.y += temprect.h/2;
 			}
-
 			if(!fighters[i]->left){
 				temprect.x += temprect.w;
 			}

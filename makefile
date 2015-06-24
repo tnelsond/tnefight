@@ -1,4 +1,4 @@
-CC = gcc -ansi -pedantic -O2 -lSDL2
+CC = gcc -ansi -pedantic -Wall -O3 -lSDL2
 
 main.o : main.c tfighter.o
 	$(CC) main.c tfighter.o -o run.out

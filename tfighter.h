@@ -105,6 +105,6 @@ void tlevel_add_hitbox(tlevel *tl, tfighter *t, hitbox *h);
 
 void tlevel_free(tlevel *tl);
 
-int project(tcamera *tc, trect *t, SDL_Rect *r);
+void project(tcamera *tc, trect *t, SDL_Rect *r);
 
 void tcamera_track(tcamera *tc, trect *a, trect *b);

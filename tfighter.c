@@ -9,7 +9,7 @@ int intersects(trect *r, trect *o){
 			&& r->y + r->h > o->y && r->y < o->y + o->h;
 }
 
-int project(tcamera *tc, trect *t, SDL_Rect *r){
+void project(tcamera *tc, trect *t, SDL_Rect *r){
 	r->x = (t->x - tc->x) * tc->scale;
 	r->y = (t->y - tc->y) * tc->scale;
 	r->w = t->w * tc->scale;
@@ -17,17 +17,18 @@ int project(tcamera *tc, trect *t, SDL_Rect *r){
 }
 
 void tcamera_track(tcamera *tc, trect *a, trect *b){
-	float width = (a->x + a->w/2) - (b->x + b->w/2);
+	float height, width, x, y;
+	width = (a->x + a->w/2) - (b->x + b->w/2);
 	if(width < 0){
 		width = -width;
 	}
-	float height = (a->y + a->h/2) - (b->y + b->h/2);
+	height = (a->y + a->h/2) - (b->y + b->h/2);
 	if(height < 0){
 		height = -height;
 	}
 
-	float x = ((a->x + a->w/2) + (b->x + b->w/2)) / 2;
-	float y = ((a->y + a->h/2) + (b->y + b->h/2)) / 2;
+	x = ((a->x + a->w/2) + (b->x + b->w/2)) / 2;
+	y = ((a->y + a->h/2) + (b->y + b->h/2)) / 2;
 	tc->scale = tc->swidth / (width > height ? width + 20 : height + 20);
 	tc->cx = x;
 	tc->cy = y;
@@ -39,6 +40,7 @@ tlevel *tlevel_new(int len){
 	tlevel *tl = malloc(sizeof(tlevel));
 	tl->blocks = malloc(sizeof(trect)*len);
 	tl->len = len;
+	return tl;
 }
 
 void tlevel_free(tlevel *tl){
@@ -158,9 +160,13 @@ void tfighter_free(tfighter *t){
 }
 
 void hitbox_update(hitbox *h){
-	if(!h->owner)
+	if(h == NULL || h->owner == NULL)
 		return;
 	++h->tick;
+	if(~h->type & PROJECTILE){
+		h->rect.x += h->owner->vx;
+		h->rect.y += h->owner->vy;
+	}
 	if(h->tick < h->delay)
 		return;
 	if(h->tick > h->maxtime){
@@ -223,6 +229,7 @@ void hitbox_spawn(tfighter *t, hitbox *src, hitbox *dest){
 
 	dest->type = src->type;
 	dest->tick = 0;
+	dest->usable = src->usable;
 }
 
 void tfighter_input(tfighter *t, tlevel *tl, int keydown, SDL_Keycode key){
@@ -284,7 +291,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 
 	for(i=0; i<tl->MAX_BOXES; ++i){
 		tfighter *owner = tl->boxes[i].owner;
-		if(owner && owner != t && tl->boxes[i].tick > tl->boxes[i].delay && !(tl->boxes[i].hit & t->id) && intersects(&t->rect, &tl->boxes[i].rect)){
+		if((owner != NULL) && owner != t && tl->boxes[i].tick > tl->boxes[i].delay && !(tl->boxes[i].hit & t->id) && intersects(&t->rect, &tl->boxes[i].rect)){
 			t->vy -= 0.1f * tl->boxes[i].yknockback * ((t->damage + 50)/100);
 			t->vx += 0.1f * tl->boxes[i].xknockback * (tl->boxes[i].left ? -1 : 1) * ((t->damage + 50)/100);
 			tl->boxes[i].hit |= t->id;
