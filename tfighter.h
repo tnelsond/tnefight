@@ -6,7 +6,7 @@
 #define MOVEMENT (1 << 2)
 #define REFLECT (1 << 3)
 #define PROJECTILE (1 << 4)
-#define AIRONCE (1 << 4)
+#define AIRONCE (1 << 5)
 
 /* tfighter state */
 #define LEFT (1 << 0)
@@ -38,10 +38,10 @@ struct hitbox{
 	tfighter *owner;
 	char hit;
 	char left;
-	char usable;
 	int lag, delay, mintime, maxtime; /* In Frames */
 	int type; 
 	int tick;
+	char usable;
 };
 
 typedef struct hitbox hitbox;

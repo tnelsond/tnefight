@@ -58,6 +58,10 @@ int main(int argc, char *argv[]){
 	level.boxes = boxes;
 	level.cbox = 0;
 	level.MAX_BOXES = 30;
+
+	for(i=0; i<level.MAX_BOXES; ++i){
+		boxes[i].owner = NULL;
+	}
 	
 	check(SDL_Init(SDL_INIT_VIDEO) >= 0);
 	gwin = SDL_CreateWindow("SDL TEST", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, camera.swidth, camera.sheight, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);

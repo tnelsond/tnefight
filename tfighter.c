@@ -91,7 +91,7 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->moves[0].attack = 3;
 	ret->moves[0].maxtime = 20;
 	ret->moves[0].mintime = 10;
-	ret->moves[0].type = ATTACK;
+	ret->moves[0].type = ATTACK | PROJECTILE;
 	ret->moves[0].owner = ret;
 	ret->moves[0].tick = 0;
 	ret->moves[0].delay = 10;
@@ -116,7 +116,7 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->moves[1].attack = 6;
 	ret->moves[1].maxtime = 20;
 	ret->moves[1].mintime = 10;
-	ret->moves[1].type = ATTACK;
+	ret->moves[1].type = ATTACK | PROJECTILE;
 	ret->moves[1].owner = ret;
 	ret->moves[1].tick = 0;
 	ret->moves[1].delay = 10;
@@ -160,8 +160,9 @@ void tfighter_free(tfighter *t){
 }
 
 void hitbox_update(hitbox *h){
-	if(h == NULL || h->owner == NULL)
+	if(!h->owner){
 		return;
+	}
 	++h->tick;
 	if(~h->type & PROJECTILE){
 		h->rect.x += h->owner->vx;
@@ -179,14 +180,15 @@ void hitbox_update(hitbox *h){
 	if(h->left){
 		h->rect.x -= h->vw;
 	}
-	/*h->vx += h->ax + (h->left ? -h->vw/2 : h->vw/2);*/
-	h->vx += h->ax;
-	h->vy += h->ay;
-	h->rect.x += h->vx;
-	h->rect.y += h->vy + h->vh / 2;
 	if(h->type & MOVEMENT){
 		h->owner->vx = h->vx;
 		h->owner->vy = h->vy;
+	}
+	else{
+		h->vx += h->ax;
+		h->vy += h->ay;
+		h->rect.x += h->vx;
+		h->rect.y += h->vy + h->vh / 2;
 	}
 }
 
