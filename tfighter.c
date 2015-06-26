@@ -2,6 +2,8 @@
 #include <SDL2/SDL.h>
 #include "tfighter.h"
 
+#define terp(p, c, alpha) (p + (c - p) * alpha)
+
 int gid = 1;
 
 int intersects(trect *r, trect *o){
@@ -9,15 +11,24 @@ int intersects(trect *r, trect *o){
 			&& r->y + r->h > o->y && r->y < o->y + o->h;
 }
 
-void project(tcamera *tc, trect *t, SDL_Rect *r){
-	r->x = (t->x - tc->x) * tc->scale;
-	r->y = (t->y - tc->y) * tc->scale;
-	r->w = t->w * tc->scale;
-	r->h = t->h * tc->scale;
+void project(tcamera *tc, trect *t, trect *p, SDL_Rect *r, float alpha){
+	r->x = (int)((terp(p->x, t->x, alpha) - terp(tc->px, tc->x, alpha)) * tc->scale + 0.5f);
+	r->y = (int)((terp(p->y, t->y, alpha) - terp(tc->py, tc->y, alpha)) * tc->scale + 0.5f);
+	r->w = (int)((terp(p->w, t->w, alpha) * tc->scale + 0.5f));
+	r->h = (int)((terp(p->h, t->h, alpha) * tc->scale + 0.5f));
+}
+
+void project2(tcamera *tc, trect *t, SDL_Rect *r, float alpha){
+	r->x = (int)((t->x - terp(tc->px, tc->x, alpha)) * tc->scale + 0.5f);
+	r->y = (int)((t->y - terp(tc->py, tc->y, alpha)) * tc->scale + 0.5f);
+	r->w = (int)(t->w * tc->scale + 0.5f);
+	r->h = (int)(t->h * tc->scale + 0.5f);
 }
 
 void tcamera_track(tcamera *tc, trect *a, trect *b){
 	float height, width, x, y;
+	tc->px = tc->x;
+	tc->py = tc->y;
 	width = (a->x + a->w/2) - (b->x + b->w/2);
 	if(width < 0){
 		width = -width;
@@ -58,6 +69,10 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->blue = blue;
 	ret->state = 0;
 	ret->keys = keys;
+	ret->prect.x = x;
+	ret->prect.y = y;
+	ret->prect.w = 2;
+	ret->prect.h = 2;
 	ret->rect.x = x;
 	ret->rect.y = y;
 	ret->rect.w = 2;
@@ -164,6 +179,10 @@ void hitbox_update(hitbox *h){
 		return;
 	}
 	++h->tick;
+	h->prect.x = h->rect.x;
+	h->prect.y = h->rect.y;
+	h->prect.w = h->rect.w;
+	h->prect.h = h->rect.h;
 	if(~h->type & PROJECTILE){
 		h->rect.x += h->owner->vx;
 		h->rect.y += h->owner->vy;
@@ -273,6 +292,10 @@ void tfighter_input(tfighter *t, tlevel *tl, int keydown, SDL_Keycode key){
 
 void tfighter_update(tfighter *t, tlevel *tl){
 	int i;
+	t->prect.x = t->rect.x;
+	t->prect.y = t->rect.y;
+	t->prect.w = t->rect.w;
+	t->prect.h = t->rect.h;
 	if(t->state & ATTACKING){
 		--t->tick;
 		if(t->tick <= 0){

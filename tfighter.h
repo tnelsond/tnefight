@@ -24,14 +24,14 @@ typedef struct{
 } trect;
 
 typedef struct{
-	float x, y, cx, cy, scale;
+	float px, py, x, y, cx, cy, scale;
 	int swidth, sheight;
 } tcamera;
 
 typedef struct tfighter tfighter;
 
 struct hitbox{
-	trect rect;
+	trect rect, prect;
 	float vx, vy, ax, ay; /* Location change variables */
 	float vw, vh, aw, ah; /* Size change variables */
 	float attack, xknockback, yknockback;
@@ -62,7 +62,7 @@ typedef struct{
 } tfighterconf;
 
 struct tfighter{
-	trect rect;
+	trect rect, prect;
 	float vx, vy;
 	float speed;
 	float accel;
@@ -105,6 +105,7 @@ void tlevel_add_hitbox(tlevel *tl, tfighter *t, hitbox *h);
 
 void tlevel_free(tlevel *tl);
 
-void project(tcamera *tc, trect *t, SDL_Rect *r);
+void project(tcamera *tc, trect *t, trect *p, SDL_Rect *r, float alpha);
+void project2(tcamera *tc, trect *t, SDL_Rect *r, float alpha);
 
 void tcamera_track(tcamera *tc, trect *a, trect *b);
