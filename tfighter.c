@@ -12,23 +12,24 @@ int intersects(trect *r, trect *o){
 }
 
 void project(tcamera *tc, trect *t, trect *p, SDL_Rect *r, float alpha){
-	r->x = (int)((terp(p->x, t->x, alpha) - terp(tc->px, tc->x, alpha)) * tc->scale + 0.5f);
-	r->y = (int)((terp(p->y, t->y, alpha) - terp(tc->py, tc->y, alpha)) * tc->scale + 0.5f);
-	r->w = (int)((terp(p->w, t->w, alpha) * tc->scale + 0.5f));
-	r->h = (int)((terp(p->h, t->h, alpha) * tc->scale + 0.5f));
+	r->x = (int)((terp(p->x, t->x, alpha) - terp(tc->px, tc->x, alpha)) * terp(tc->pscale, tc->scale, alpha) + 0.5f);
+	r->y = (int)((terp(p->y, t->y, alpha) - terp(tc->py, tc->y, alpha)) * terp(tc->pscale, tc->scale, alpha) + 0.5f);
+	r->w = (int)((terp(p->w, t->w, alpha) * terp(tc->pscale, tc->scale, alpha) + 0.5f));
+	r->h = (int)((terp(p->h, t->h, alpha) * terp(tc->pscale, tc->scale, alpha) + 0.5f));
 }
 
 void project2(tcamera *tc, trect *t, SDL_Rect *r, float alpha){
-	r->x = (int)((t->x - terp(tc->px, tc->x, alpha)) * tc->scale + 0.5f);
-	r->y = (int)((t->y - terp(tc->py, tc->y, alpha)) * tc->scale + 0.5f);
-	r->w = (int)(t->w * tc->scale + 0.5f);
-	r->h = (int)(t->h * tc->scale + 0.5f);
+	r->x = (int)((t->x - terp(tc->px, tc->x, alpha)) * terp(tc->pscale, tc->scale, alpha) + 0.5f);
+	r->y = (int)((t->y - terp(tc->py, tc->y, alpha)) * terp(tc->pscale, tc->scale, alpha) + 0.5f);
+	r->w = (int)(t->w * terp(tc->pscale, tc->scale, alpha) + 0.5f);
+	r->h = (int)(t->h * terp(tc->pscale, tc->scale, alpha) + 0.5f);
 }
 
 void tcamera_track(tcamera *tc, trect *a, trect *b){
 	float height, width, x, y;
 	tc->px = tc->x;
 	tc->py = tc->y;
+	tc->pscale = tc->scale;
 	width = (a->x + a->w/2) - (b->x + b->w/2);
 	if(width < 0){
 		width = -width;

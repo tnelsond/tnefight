@@ -98,6 +98,7 @@ int main(int argc, char *argv[]){
 	int i;
 	Uint32 accumulator = 0;
 	Uint32 physicsstep = 1000 / 60; /* 60 fps physics */
+	Uint32 vfps = 1000 / 60; /* 60 fps */
 	SDL_Event e;
 	SDL_Keycode c1[] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_j, SDLK_k};
 	SDL_Keycode c2[] = {SDLK_LEFT, SDLK_RIGHT, SDLK_UP, SDLK_DOWN, SDLK_KP_0, SDLK_KP_PERIOD};
@@ -174,7 +175,7 @@ int main(int argc, char *argv[]){
 		SDL_RenderPresent(gren);
 		/* SDL_Delay(200); For testing */
 		
-		timesleep = oldtime - time + physicsstep;
+		timesleep = vfps - delta;
 		if(timesleep > 0)
 			SDL_Delay(timesleep);
 	}

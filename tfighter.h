@@ -24,7 +24,7 @@ typedef struct{
 } trect;
 
 typedef struct{
-	float px, py, x, y, cx, cy, scale;
+	float px, py, x, y, cx, cy, pscale, scale;
 	int swidth, sheight;
 } tcamera;
 
