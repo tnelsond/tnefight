@@ -97,7 +97,7 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->id = gid;
 	gid = gid << 1;
 
-	ret->moves = malloc(sizeof(hitbox)*3);
+	ret->moves = malloc(sizeof(hitbox)*4);
 	ret->moves[0].rect.x = 0;
 	ret->moves[0].rect.y = 0.7f;
 	ret->moves[0].rect.w = 1.0f;
@@ -175,6 +175,32 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->moves[2].left = 1;
 	ret->moves[2].hit = 0;
 	ret->moves[2].usable = 1;
+
+	ret->moves[3].rect.x = 0.5f;
+	ret->moves[3].rect.y = 0.0f;
+	ret->moves[3].rect.w = 1.0f;
+	ret->moves[3].rect.h = 1.0f;
+	ret->moves[3].vx = 0.2f;
+	ret->moves[3].lag = 25;
+	ret->moves[3].vy = 0.0f;
+	ret->moves[3].ax = -0.01f;
+	ret->moves[3].ay = 0.00f;
+	ret->moves[3].aw = 0.00f;
+	ret->moves[3].ah = 0.00f;
+	ret->moves[3].vw = 0.0f;
+	ret->moves[3].kb = 5.0f;
+	ret->moves[3].kbgrowth = 1.5f;
+	ret->moves[3].kbangle = -45.0;
+	ret->moves[3].attack = 15;
+	ret->moves[3].maxtime = 20;
+	ret->moves[3].mintime = 15;
+	ret->moves[3].type = ATTACK;
+	ret->moves[3].owner = ret;
+	ret->moves[3].tick = 0;
+	ret->moves[3].delay = 0;
+	ret->moves[3].left = 1;
+	ret->moves[3].hit = 0;
+	ret->moves[3].usable = 1;
 
 	ret->left = 1;
 	return ret;
@@ -290,15 +316,19 @@ void tfighter_input(tfighter *t, tlevel *tl, int keydown, SDL_Keycode key){
 	if((~prevstate & ATTACKING) && (t->state & ATTACKING)){
 		if(t->state & DOWN){
 			tlevel_add_hitbox(tl, t, &t->moves[1]);
-			t->tick = t->moves[0].lag;
+			t->tick = t->moves[1].lag;
 		}
 		else if(t->state & UP){
 			tlevel_add_hitbox(tl, t, &t->moves[2]);
 			t->tick = t->moves[2].lag;
 		}
-		else{
+		else if(t->state & LEFT || t->state & RIGHT){
 			tlevel_add_hitbox(tl, t, &t->moves[0]);
-			t->tick = t->moves[1].lag;
+			t->tick = t->moves[0].lag;
+		}
+		else{
+			tlevel_add_hitbox(tl, t, &t->moves[3]);
+			t->tick = t->moves[3].lag;
 		}
 	}
 }
