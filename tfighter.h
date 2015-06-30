@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <math.h>
 
 /* hitbox type */
 #define ATTACK (1 << 0)
@@ -18,6 +19,7 @@
 #define STUNNED (1 << 6)
 
 #define NUMKEYS 5;
+#define PI 3.14159265358979323846 
 
 typedef struct{
 	float x, y, w, h;
@@ -35,7 +37,9 @@ struct hitbox{
 	float vx, vy, ax, ay; /* Location change variables */
 	float vw, vh, aw, ah; /* Size change variables */
 	int attack;
-	float xknockback, yknockback;
+	float kb;
+	float kbgrowth;
+	double kbangle;
 	tfighter *owner;
 	char hit;
 	char left;

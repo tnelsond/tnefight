@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <math.h>
 #include <SDL2/SDL.h>
 #include "tfighter.h"
 
@@ -109,8 +110,9 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->moves[0].aw = 0.00f;
 	ret->moves[0].ah = 0.00f;
 	ret->moves[0].vw = 0.6f;
-	ret->moves[0].xknockback = 4.0f;
-	ret->moves[0].yknockback = 2.5f;
+	ret->moves[0].kb = 6.0f;
+	ret->moves[0].kbgrowth = 0.0f;
+	ret->moves[0].kbangle = -10.0;
 	ret->moves[0].attack = 3;
 	ret->moves[0].maxtime = 20;
 	ret->moves[0].mintime = 10;
@@ -134,8 +136,9 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->moves[1].aw = 0.00f;
 	ret->moves[1].ah = 0.00f;
 	ret->moves[1].vw = 0.0f;
-	ret->moves[1].xknockback = 1.0f;
-	ret->moves[1].yknockback = 4.5f;
+	ret->moves[1].kb = 0.1f;
+	ret->moves[1].kbgrowth = 2.0f;
+	ret->moves[1].kbangle = -60.0;
 	ret->moves[1].attack = 6;
 	ret->moves[1].maxtime = 20;
 	ret->moves[1].mintime = 10;
@@ -159,8 +162,9 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->moves[2].aw = 0.00f;
 	ret->moves[2].ah = 0.00f;
 	ret->moves[2].vw = 0.0f;
-	ret->moves[2].xknockback = 0.0f;
-	ret->moves[2].yknockback = 6.5f;
+	ret->moves[2].kb = 2.0f;
+	ret->moves[2].kbgrowth = 1.0f;
+	ret->moves[2].kbangle = -90.0;
 	ret->moves[2].attack = 9;
 	ret->moves[2].maxtime = 20;
 	ret->moves[2].mintime = 10;
@@ -247,8 +251,9 @@ void hitbox_spawn(tfighter *t, hitbox *src, hitbox *dest){
 	dest->ah = src->ah;
 
 	dest->attack = src->attack;
-	dest->xknockback = src->xknockback;
-	dest->yknockback = src->yknockback;
+	dest->kb = src->kb;
+	dest->kbangle = src->kbangle;
+	dest->kbgrowth = src->kbgrowth;
 	dest->owner = src->owner;
 	dest->hit = 0;
 
@@ -324,11 +329,12 @@ void tfighter_update(tfighter *t, tlevel *tl){
 
 	for(i=0; i<tl->MAX_BOXES; ++i){
 		tfighter *owner = tl->boxes[i].owner;
-		if((owner != NULL) && owner != t && tl->boxes[i].tick > tl->boxes[i].delay && !(tl->boxes[i].hit & t->id) && intersects(&t->rect, &tl->boxes[i].rect)){
-			t->vy -= 0.1f * tl->boxes[i].yknockback * ((1 + t->damage / 100.0f));
-			t->vx += 0.1f * tl->boxes[i].xknockback * (tl->boxes[i].left ? -1 : 1) * (1 + t->damage / 100.0f);
-			tl->boxes[i].hit |= t->id;
-			t->damage += tl->boxes[i].attack;
+		hitbox *box = &tl->boxes[i];
+		if((owner != NULL) && owner != t && box->tick > box->delay && !(box->hit & t->id) && intersects(&t->rect, &box->rect)){
+			t->vy += (float)(0.1 * sin(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth * 0.1)));
+			t->vx += (float)(0.1 * cos(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth * 0.1)) * (box->left ? -1 : 1));
+			box->hit |= t->id;
+			t->damage += box->attack;
 		}
 	}
 
