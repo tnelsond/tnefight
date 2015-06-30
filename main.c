@@ -72,7 +72,7 @@ void fillrect_simp(int x, int y, int w, int h){
 
 void draw(float alpha){
 	int i;
-	char disp[] = "  %";
+	char disp[] = "   %";
 	SDL_SetRenderDrawColor(gren, 0x00, 0x00, 0x00, 0xFF);
 	SDL_RenderClear(gren);
 
@@ -114,8 +114,9 @@ void draw(float alpha){
 			fillrect(&camera, &level.boxes[i].rect, &level.boxes[i].prect, alpha);
 		}
 	}
-	disp[1] = '0' + fighters[0]->damage % 10;
-	disp[0] = '0' + fighters[0]->damage / 10;
+	disp[2] = '0' + fighters[0]->damage % 10;
+	disp[1] = '0' + (fighters[0]->damage % 100) / 10;
+	disp[0] = '0' + fighters[0]->damage / 100;
 	drawtext(disp, 0.1f, 0.1f, 0.05f, 0.1f);
 }
 
