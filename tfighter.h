@@ -107,5 +107,6 @@ void tlevel_free(tlevel *tl);
 
 void project(tcamera *tc, trect *t, trect *p, SDL_Rect *r, float alpha);
 void project2(tcamera *tc, trect *t, SDL_Rect *r, float alpha);
+void projecthud(tcamera *tc, SDL_Rect *r, float x, float y, float w, float h);
 
 void tcamera_track(tcamera *tc, trect *a, trect *b);

@@ -25,6 +25,13 @@ void project2(tcamera *tc, trect *t, SDL_Rect *r, float alpha){
 	r->h = (int)(t->h * terp(tc->pscale, tc->scale, alpha) + 0.5f);
 }
 
+void projecthud(tcamera *tc, SDL_Rect *r, float x, float y, float w, float h){
+	r->x = (int)(x * tc->swidth + 0.5f);
+	r->y = (int)(y * tc->swidth + 0.5f);
+	r->w = (int)(w * tc->swidth + 0.5f);
+	r->h = (int)(h * tc->swidth + 0.5f);
+}
+
 void tcamera_track(tcamera *tc, trect *a, trect *b){
 	float height, width, x, y;
 	tc->px = tc->x;

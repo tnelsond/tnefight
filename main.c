@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 #include "tfighter.h"
 
@@ -7,6 +8,9 @@
 
 SDL_Window *gwin = NULL;
 SDL_Renderer *gren = NULL;
+
+SDL_Texture *atlas;
+SDL_Rect text[] = {{0, 0, 15, 15}};
 
 tcamera camera = {0, 0, 1, 800, 600};
 tlevel level;
@@ -42,6 +46,14 @@ void fillrect(tcamera *tc, trect *t, trect *p, float alpha){
 
 void fillrect2(tcamera *tc, trect *t, float alpha){
 	project2(tc, t, &temprect, alpha);
+	SDL_RenderFillRect(gren, &temprect);
+}
+
+void fillrect_simp(int x, int y, int w, int h){
+	temprect.x = x;
+	temprect.y = y;
+	temprect.w = w;
+	temprect.h = h;
 	SDL_RenderFillRect(gren, &temprect);
 }
 
@@ -88,6 +100,16 @@ void draw(float alpha){
 			fillrect(&camera, &level.boxes[i].rect, &level.boxes[i].prect, alpha);
 		}
 	}
+	projecthud(&camera, &temprect, 0.05f, 0.02f, 0.3f, 0.05f);
+  SDL_RenderCopy(gren, atlas, &text[0], &temprect);
+}
+
+void loadfont(){
+	SDL_Surface *surf = IMG_Load("font.gif");
+	check(surf != NULL);
+	atlas = SDL_CreateTextureFromSurface(gren, surf);
+	check(atlas != NULL);
+	SDL_FreeSurface(surf);
 }
 
 int main(int argc, char *argv[]){
@@ -119,11 +141,16 @@ int main(int argc, char *argv[]){
 	}
 	
 	check(SDL_Init(SDL_INIT_VIDEO) >= 0);
+
 	gwin = SDL_CreateWindow("SDL TEST", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, camera.swidth, camera.sheight, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 	check(gwin != NULL);
+
 	gren = SDL_CreateRenderer(gwin, -1, SDL_RENDERER_ACCELERATED);
 	check(gren != NULL);
-	
+
+	check(IMG_Init(IMG_INIT_JPG));
+	loadfont();
+
 	oldtime = SDL_GetTicks();
 	time = oldtime;
 
@@ -134,7 +161,7 @@ int main(int argc, char *argv[]){
 		oldtime = time;
 		time = SDL_GetTicks();
 		delta = time - oldtime;
-		accumulator += min(delta, 500);
+		accumulator += min(delta, 100);
 		while(accumulator >= physicsstep){
 			while(SDL_PollEvent(&e) != 0){
 				if(e.type == SDL_QUIT){
@@ -173,7 +200,6 @@ int main(int argc, char *argv[]){
 		alpha = ((float)accumulator) / physicsstep;
 		draw(alpha);
 		SDL_RenderPresent(gren);
-		/* SDL_Delay(200); For testing */
 		
 		timesleep = vfps - delta;
 		if(timesleep > 0)
