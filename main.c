@@ -9,14 +9,27 @@
 SDL_Window *gwin = NULL;
 SDL_Renderer *gren = NULL;
 
-SDL_Texture *atlas;
-SDL_Rect text[] = {{0, 0, 15, 15}};
+SDL_Texture *gatlas;
+int glinew = 32;
+SDL_Rect charrect = {0, 0, 6, 12};
 
 tcamera camera = {0, 0, 1, 800, 600};
 tlevel level;
 tfighter *fighters[PLAYERS] = {NULL, NULL};
 
 SDL_Rect temprect;
+
+void drawtext(char *str, float x, float y, float w, float h){
+	int i;
+	projecthud(&camera, &temprect, x, y, w, h);
+	for(i=0; str[i]; ++i){
+		charrect.x = (str[i] % 32) * charrect.w;
+		charrect.y = (str[i] / 32 - 1) * charrect.h;
+		SDL_RenderCopy(gren, gatlas, &charrect, &temprect);	
+		temprect.x += temprect.w;
+	}
+}
+
 
 void close_game(){
 	if(gren)
@@ -59,6 +72,7 @@ void fillrect_simp(int x, int y, int w, int h){
 
 void draw(float alpha){
 	int i;
+	char disp[] = "  %";
 	SDL_SetRenderDrawColor(gren, 0x00, 0x00, 0x00, 0xFF);
 	SDL_RenderClear(gren);
 
@@ -100,15 +114,16 @@ void draw(float alpha){
 			fillrect(&camera, &level.boxes[i].rect, &level.boxes[i].prect, alpha);
 		}
 	}
-	projecthud(&camera, &temprect, 0.05f, 0.02f, 0.3f, 0.05f);
-  SDL_RenderCopy(gren, atlas, &text[0], &temprect);
+	disp[1] = '0' + fighters[0]->damage % 10;
+	disp[0] = '0' + fighters[0]->damage / 10;
+	drawtext(disp, 0.1f, 0.1f, 0.05f, 0.1f);
 }
 
 void loadfont(){
 	SDL_Surface *surf = IMG_Load("font.gif");
 	check(surf != NULL);
-	atlas = SDL_CreateTextureFromSurface(gren, surf);
-	check(atlas != NULL);
+	gatlas = SDL_CreateTextureFromSurface(gren, surf);
+	check(gatlas != NULL);
 	SDL_FreeSurface(surf);
 }
 

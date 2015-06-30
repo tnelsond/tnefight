@@ -34,7 +34,8 @@ struct hitbox{
 	trect rect, prect;
 	float vx, vy, ax, ay; /* Location change variables */
 	float vw, vh, aw, ah; /* Size change variables */
-	float attack, xknockback, yknockback;
+	int attack;
+	float xknockback, yknockback;
 	tfighter *owner;
 	char hit;
 	char left;
@@ -82,7 +83,7 @@ struct tfighter{
 	int tick;
 	int state;
 	char usable;
-	float damage;
+	int damage;
 };
 
 tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys);

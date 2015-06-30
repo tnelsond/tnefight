@@ -325,8 +325,8 @@ void tfighter_update(tfighter *t, tlevel *tl){
 	for(i=0; i<tl->MAX_BOXES; ++i){
 		tfighter *owner = tl->boxes[i].owner;
 		if((owner != NULL) && owner != t && tl->boxes[i].tick > tl->boxes[i].delay && !(tl->boxes[i].hit & t->id) && intersects(&t->rect, &tl->boxes[i].rect)){
-			t->vy -= 0.1f * tl->boxes[i].yknockback * ((t->damage + 50)/100);
-			t->vx += 0.1f * tl->boxes[i].xknockback * (tl->boxes[i].left ? -1 : 1) * ((t->damage + 50)/100);
+			t->vy -= 0.1f * tl->boxes[i].yknockback * ((t->damage));
+			t->vx += 0.1f * tl->boxes[i].xknockback * (tl->boxes[i].left ? -1 : 1) * (t->damage);
 			tl->boxes[i].hit |= t->id;
 			t->damage += tl->boxes[i].attack;
 		}
