@@ -191,9 +191,9 @@ void hitbox_update(hitbox *h){
 	h->prect.y = h->rect.y;
 	h->prect.w = h->rect.w;
 	h->prect.h = h->rect.h;
-	if(~h->type & PROJECTILE){
-		h->rect.x += h->owner->vx;
-		h->rect.y += h->owner->vy;
+	if(~h->type & PROJECTILE || h->tick < h->delay){
+		h->rect.x += h->owner->rect.x - h->owner->prect.x;
+		h->rect.y += h->owner->rect.y - h->owner->prect.y;
 	}
 	if(h->tick < h->delay)
 		return;

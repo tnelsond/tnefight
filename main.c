@@ -118,6 +118,12 @@ void draw(float alpha){
 		disp[2] = '0' + fighters[i]->damage % 10;
 		disp[1] = '0' + (fighters[i]->damage % 100) / 10;
 		disp[0] = '0' + fighters[i]->damage / 100;
+		if(disp[0] == '0'){
+			disp[0] = ' ';
+			if(disp[1] == '0'){
+				disp[1] = ' ';
+			}
+		}
 		drawtext(disp, 0.01f + 0.05f * 5 * i, 0.01f, 0.05f, 0.1f);
 	}
 }
