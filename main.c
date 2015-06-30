@@ -114,10 +114,12 @@ void draw(float alpha){
 			fillrect(&camera, &level.boxes[i].rect, &level.boxes[i].prect, alpha);
 		}
 	}
-	disp[2] = '0' + fighters[0]->damage % 10;
-	disp[1] = '0' + (fighters[0]->damage % 100) / 10;
-	disp[0] = '0' + fighters[0]->damage / 100;
-	drawtext(disp, 0.1f, 0.1f, 0.05f, 0.1f);
+	for(i=0; i<PLAYERS; ++i){
+		disp[2] = '0' + fighters[i]->damage % 10;
+		disp[1] = '0' + (fighters[i]->damage % 100) / 10;
+		disp[0] = '0' + fighters[i]->damage / 100;
+		drawtext(disp, 0.01f + 0.05f * 5 * i, 0.01f, 0.05f, 0.1f);
+	}
 }
 
 void loadfont(){
