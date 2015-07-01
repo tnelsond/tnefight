@@ -362,7 +362,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 				--t->tick;
 				if(t->tick <= 0){
 					t->tick = 0;
-					t->state = t->state - ATTACKING;
+					t->state -= ATTACKING;
 				}
 			}
 			else if(t->state & LEFT){
@@ -385,7 +385,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 			t->vy += (float)(0.1 * sin(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth * 0.05)));
 			t->vx += (float)(0.1 * cos(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth * 0.05)) * (box->left ? -1 : 1));
 			box->hit |= t->id;
-			box->owner->state &= ~ATTACKING;
+			t->state &= ~ATTACKING;
 			t->state |= TUMBLING;
 			t->tick = (int)(box->kbgrowth * t->damage / 5);
 			t->damage += box->attack;
