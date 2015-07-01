@@ -234,8 +234,9 @@ void hitbox_update(hitbox *h){
 		h->rect.x += h->owner->rect.x - h->owner->prect.x;
 		h->rect.y += h->owner->rect.y - h->owner->prect.y;
 	}
-	if(h->tick < h->delay)
+	if(h->tick < h->delay){
 		return;
+	}
 	if(h->tick > h->maxtime + h->delay){
 		h->owner = NULL;
 		return;
@@ -244,7 +245,7 @@ void hitbox_update(hitbox *h){
 	h->rect.w += (h->vw += h->aw);
 	h->rect.h += (h->vh += h->ah);
 	if(h->left){
-	h->rect.x -= h->vw;
+		h->rect.x -= h->vw;
 	}
 	if(h->type & MOVEMENT){
 		h->owner->vx = h->vx;
@@ -446,8 +447,8 @@ void tlevel_add_hitbox(tlevel *tl, tfighter *t, hitbox *h){
 		h->usable = 0;
 	}
 	tl->cbox = (tl->cbox + 1) % tl->MAX_BOXES;
-	if(h->type & MOVEMENT){
+	/*if(h->type & MOVEMENT){
 		t->vy = h->vy;
 		t->vx = h->vx;
-	}
+	}*/
 }
