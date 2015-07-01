@@ -1,5 +1,4 @@
 #include <SDL2/SDL.h>
-#include <math.h>
 
 /* hitbox type */
 #define ATTACK (1 << 0)
@@ -16,7 +15,7 @@
 #define DOWN (1 << 3)
 #define JUMP (1 << 4)
 #define ATTACKING (1 << 5)
-#define STUNNED (1 << 6)
+#define TUMBLING (1 << 6)
 
 #define NUMKEYS 5;
 #define PI 3.14159265358979323846 
@@ -46,6 +45,7 @@ struct hitbox{
 	int lag, delay, mintime, maxtime; /* In Frames */
 	int type; 
 	int tick;
+	int hitlag;
 	char usable;
 };
 
@@ -88,6 +88,7 @@ struct tfighter{
 	int state;
 	char usable;
 	int damage;
+	int hitlag;
 };
 
 tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys);
