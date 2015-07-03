@@ -15,8 +15,11 @@
 #define DOWN (1 << 3)
 #define JUMP (1 << 4)
 #define ATTACKING (1 << 5)
-#define TUMBLING (1 << 6)
+#define HITSTUN (1 << 6)
+#define HELPLESS (1 << 7)
+#define HOLDING (1 << 8)
 
+/* Other Constants */
 #define NUMKEYS 5;
 #define PI 3.14159265358979323846 
 
@@ -35,18 +38,17 @@ struct hitbox{
 	trect rect, prect;
 	float vx, vy, ax, ay; /* Location change variables */
 	float vw, vh, aw, ah; /* Size change variables */
-	int attack;
+	int attack, maxattack;
 	float kb;
 	float kbgrowth;
 	double kbangle;
 	tfighter *owner;
 	char hit;
 	char left;
-	int lag, delay, mintime, maxtime; /* In Frames */
+	int mindelay, maxdelay, time, endlag; /* In Frames */
 	int type; 
 	int tick;
 	int hitlag;
-	char usable;
 };
 
 typedef struct hitbox hitbox;
@@ -86,7 +88,6 @@ struct tfighter{
 	SDL_Keycode *keys;
 	int tick;
 	int state;
-	char usable;
 	int damage;
 	int hitlag;
 };

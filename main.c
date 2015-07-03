@@ -81,7 +81,7 @@ void draw(float alpha){
 
 	for(i=0; i<PLAYERS; ++i){
 		SDL_SetRenderDrawColor(gren, fighters[i]->red, fighters[i]->green, fighters[i]->blue, 0xFF);
-		if(fighters[i]->state & TUMBLING && fighters[i]->tick % 3 == 0){
+		if(fighters[i]->state & HITSTUN && fighters[i]->tick % 3 == 0){
 			SDL_SetRenderDrawColor(gren, 0x77, 0, 0, 0xFF);
 		}
 		fillrect(&camera, &fighters[i]->rect, &fighters[i]->prect, alpha);
@@ -108,7 +108,7 @@ void draw(float alpha){
 	SDL_SetRenderDrawColor(gren, 0xFF, 0x00, 0x00, 0x11);
 	for(i=0; i<level.MAX_BOXES; ++i){
 		if(level.boxes[i].owner){
-			if(level.boxes[i].tick < level.boxes[i].delay){
+			if(level.boxes[i].tick < level.boxes[i].maxdelay){
 				SDL_SetRenderDrawColor(gren, 0x00, 0xFF, 0x00, 0xFF);
 			}
 			else{
