@@ -92,6 +92,8 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->vx = 0;
 	ret->vy = 0;
 	ret->accel = 0.08f;
+	ret->walk = 0.1f;
+	ret->run = 0.3f;
 	ret->speed = 0.3f;
 	ret->gravity = 0.03f;
 	ret->hitlag = 0;
@@ -344,13 +346,23 @@ void tfighter_input(tfighter *t, tlevel *tl, int keydown, SDL_Keycode key){
 		int x = NATTACK;
 		if(t->state & UP)
 			x = UATTACK;
-		else if(t->state & (LEFT | RIGHT))
-			x = OATTACK;
 		else if(t->state & DOWN)
 			x = DATTACK;
+		else if(t->state & (LEFT | RIGHT))
+			x = OATTACK;
 		t->state |= CHARGING;
 		tlevel_add_hitbox(tl, t, &t->moves[x]);
 		t->tick = t->moves[x].maxdelay + t->moves[x].time + t->moves[x].endlag; 
+	}
+	/* MOVING */
+	t->state &= ~(WALKING | RUNNING);
+	if((~prevstate & WALKING) && ~t->state && (ATTACKING | HITSTUN | CHARGING)){
+		if(t->state & RIGHT && (t->vx > t->walk / 2))
+			t->state |= RUNNING;
+		else if(t->state & LEFT && (t->vx < -t->walk / 2))
+			t->state |= RUNNING;
+		else if(t->state & (LEFT | RIGHT))
+			t->state |= WALKING;
 	}
 }
 
@@ -391,6 +403,12 @@ void tfighter_update(tfighter *t, tlevel *tl){
 		}
 		/* Attacking & Movement */
 		else{
+			if(t->state & RUNNING){
+				t->speed = t->run;
+			}
+			else{
+				t->speed = t->walk;
+			}
 			if(t->state & ATTACKING){
 				--t->tick;
 				if(t->tick <= 0){
@@ -418,7 +436,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 		t->rect.y += t->vy;
 		for(i=0; i < tl->len; ++i){
 			if(intersects(&t->rect, &tl->blocks[i])){
-				if(t->vy > 0){
+				if(t->vy > 0 && (tl->blocks[i].h >= 0.9f || !(t->state & DOWN))){
 					t->vy = 0;
 					t->jump = 0;
 					t->state &= ~HELPLESS;
