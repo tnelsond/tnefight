@@ -14,8 +14,8 @@
 #define UP (1 << 2)
 #define DOWN (1 << 3)
 #define JUMP (1 << 4)
-#define ATTACKING (1 << 5)
-#define CHARGING (1 << 6)
+#define CHARGING (1 << 5)
+#define ATTACKING (1 << 6)
 #define HITSTUN (1 << 7)
 #define HELPLESS (1 << 8)
 #define GROUND (1 << 9)
@@ -31,6 +31,7 @@
 /* Other Constants */
 #define NUMKEYS 5;
 #define PI 3.14159265358979323846 
+#define JOYDEADZONE 8000
 
 typedef struct{
 	float x, y, w, h;
@@ -94,25 +95,31 @@ struct tfighter{
 	int blue;
 	hitbox *moves;
 	SDL_Keycode *keys;
+	Uint8 *jbuttons;
+	SDL_JoystickID joy;
+	int joyxoffset;
+	int joyyoffset;
 	int tick;
-	int state;
+	int state, pstate;
 	int damage;
 	int hitlag;
 };
 
-tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys);
+tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys, Uint8 *joybuttons, SDL_JoystickID joy, int joyxoffset, int joyyoffset);
 
 void tfighter_free(tfighter *t);
 
 void tfighter_update(tfighter *t, tlevel *tl);
 
-void tfighter_input(tfighter *t, tlevel *tl, int down, SDL_Keycode key);
+void tfighter_input(tfighter *t, tlevel *tl, SDL_Event *e);
 
 void hitbox_update(hitbox *h);
 
 void hitbox_spawn(tfighter *t, hitbox *src, hitbox *dest);
 
+int xintersects(trect *r, trect *o);
 int intersects(trect *r, trect *o);
+int yintersects(trect *r, trect *o);
 
 tlevel *tlevel_new(int len);
 

@@ -8,6 +8,8 @@
 
 SDL_Window *gwin = NULL;
 SDL_Renderer *gren = NULL;
+SDL_Joystick* gjoy = NULL;
+SDL_Joystick* gjoy2 = NULL;
 
 SDL_Texture *gatlas;
 int glinew = 32;
@@ -155,9 +157,10 @@ int main(int argc, char *argv[]){
 	Uint32 vfps = 1000 / 60; /* 60 fps */
 	SDL_Event e;
 	SDL_Keycode c1[] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_j, SDLK_k};
+	Uint8 b1[] = {CHARGING, 0, 0, JUMP, 0};
 	SDL_Keycode c2[] = {SDLK_LEFT, SDLK_RIGHT, SDLK_UP, SDLK_DOWN, SDLK_KP_0, SDLK_KP_PERIOD};
-	fighters[0] = tfighter_new(34, 15, 0x77, 0x55, 0x00, c1);
-	fighters[1] = tfighter_new(36, 15, 0x00, 0x66, 0xbb, c2);
+	fighters[0] = tfighter_new(34, 15, 0x77, 0x55, 0x00, c1, b1, 0, SDL_JoystickGetAxis(gjoy, 0), SDL_JoystickGetAxis(gjoy, 1));
+	fighters[1] = tfighter_new(36, 15, 0x00, 0x66, 0xbb, c2, b1, 1, SDL_JoystickGetAxis(gjoy2, 0), SDL_JoystickGetAxis(gjoy2, 1));
 	level.blocks = levelblocks;
 	level.len = 8;
 	level.rect.x = 0;
@@ -172,7 +175,7 @@ int main(int argc, char *argv[]){
 		boxes[i].owner = NULL;
 	}
 	
-	check(SDL_Init(SDL_INIT_VIDEO) >= 0);
+	check(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) >= 0);
 
 	gwin = SDL_CreateWindow("SDL TEST", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, camera.swidth, camera.sheight, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 	check(gwin != NULL);
@@ -182,6 +185,11 @@ int main(int argc, char *argv[]){
 
 	check(IMG_Init(IMG_INIT_JPG));
 	loadfont();
+
+	gjoy = SDL_JoystickOpen( 0 );
+	check(gjoy != NULL);
+	gjoy2 = SDL_JoystickOpen( 1 );
+	check(gjoy2 != NULL);
 
 	oldtime = SDL_GetTicks();
 	time = oldtime;
@@ -200,19 +208,14 @@ int main(int argc, char *argv[]){
 					quit = 1;
 					close_game();
 				}
-				else if(e.type == SDL_KEYDOWN){
-					for(i=0; i<PLAYERS; ++i){
-						tfighter_input(fighters[i], &level, 1, e.key.keysym.sym);
-					}
-				}
-				else if(e.type == SDL_KEYUP){
-					for(i=0; i<PLAYERS; ++i){
-						tfighter_input(fighters[i], &level, 0, e.key.keysym.sym);
-					}
-				}
 				else if(e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_RESIZED){
 					camera.swidth = e.window.data1;
 					camera.sheight = e.window.data2;
+				}
+				else{
+					for(i=0; i<PLAYERS; ++i){
+						tfighter_input(fighters[i], &level, &e);
+					}
 				}
 			}
 

@@ -5,9 +5,21 @@
 
 #define terp(p, c, alpha) (p + (c - p) * alpha)
 
+#define TOLERANCE 0.1f
+
 int gid = 1;
 
+int xintersects(trect *r, trect *o){
+	return r->x + r->w > o->x && r->x < o->x + o->w 
+			&& r->y + r->h > o->y && r->y < o->y + o->h;
+}
+
 int intersects(trect *r, trect *o){
+	return r->x + r->w > o->x && r->x < o->x + o->w 
+			&& r->y + r->h > o->y && r->y < o->y + o->h;
+}
+
+int yintersects(trect *r, trect *o){
 	return r->x + r->w > o->x && r->x < o->x + o->w 
 			&& r->y + r->h > o->y && r->y < o->y + o->h;
 }
@@ -69,14 +81,17 @@ void tlevel_free(tlevel *tl){
 	tl = NULL;
 }
 
-tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys){
+tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys, Uint8 *joybuttons, SDL_JoystickID joy, int joyxoffset, int joyyoffset){
 	tfighter *ret = malloc(sizeof(tfighter));
+	ret->joyxoffset = joyxoffset;
+	ret->joyyoffset = joyyoffset;
 	ret->tick = 0;
 	ret->damage = 0;
 	ret->red = red;
 	ret->green = green;
 	ret->blue = blue;
 	ret->state = 0;
+	ret->pstate = 0;
 	ret->keys = keys;
 	ret->prect.x = x;
 	ret->prect.y = y;
@@ -98,6 +113,8 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->gravity = 0.03f;
 	ret->hitlag = 0;
 	ret->id = gid;
+	ret->joy = joy;
+	ret->jbuttons = joybuttons;
 	gid = gid << 1;
 
 	ret->moves = malloc(sizeof(hitbox)*4);
@@ -175,8 +192,8 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->moves[1].type = ATTACK | MOVEMENT | AIRONCE;
 	ret->moves[1].owner = ret;
 	ret->moves[1].tick = 0;
-	ret->moves[1].mindelay = 30;
-	ret->moves[1].maxdelay = 50;
+	ret->moves[1].mindelay = 5;
+	ret->moves[1].maxdelay = 20;
 	ret->moves[1].left = 1;
 	ret->moves[1].hit = 0;
 	ret->moves[1].endlag = 30;
@@ -316,17 +333,20 @@ void hitbox_spawn(tfighter *t, hitbox *src, hitbox *dest){
 	dest->tick = 0;
 }
 
-void tfighter_input(tfighter *t, tlevel *tl, int keydown, SDL_Keycode key){
+void tfighter_input(tfighter *t, tlevel *tl, SDL_Event *e){
 	int i;
-	int prevstate = t->state;
-	for(i=0; i<6; ++i){
-		if(key == t->keys[i]){
-			if(keydown){
+	if(e->type == SDL_KEYDOWN){
+		for(i=0; i<6; ++i){
+			if(e->key.keysym.sym == t->keys[i]){
 				t->state = t->state | (1 << i);
 			}
-			else{
+		}
+	}
+	else if(e->type == SDL_KEYUP){
+		for(i=0; i<6; ++i){
+			if(e->key.keysym.sym == t->keys[i]){
 				if((1 << i) != ATTACKING){
-					t->state = t->state & ~(1 << i);
+					t->state &= ~(1 << i);
 				}
 				else{
 					t->state &= ~CHARGING;
@@ -334,15 +354,88 @@ void tfighter_input(tfighter *t, tlevel *tl, int keydown, SDL_Keycode key){
 			}
 		}
 	}
+	else if(e->type == SDL_JOYAXISMOTION && e->jaxis.which == t->joy){
+		if(e->jaxis.axis == 0){	
+			if(e->jaxis.value + t->joyxoffset < -JOYDEADZONE){
+				t->state &= ~RIGHT;
+				t->state |= LEFT;
+			}
+			else if(e->jaxis.value + t->joyxoffset > JOYDEADZONE){
+				t->state &= ~LEFT;
+				t->state |= RIGHT;
+			}
+			else{
+				t->state &= ~(LEFT | RIGHT);
+			}
+		}
+		else if(e->jaxis.axis == 1){
+			if(e->jaxis.value + t->joyyoffset < -JOYDEADZONE){
+				t->state &= ~DOWN;
+				t->state |= UP;
+			}
+			else if(e->jaxis.value + t->joyyoffset > JOYDEADZONE){
+				t->state &= ~UP;
+				t->state |= DOWN;
+			}
+			else{
+				t->state &= ~(UP | DOWN);
+			}
+		}
+	}
+	else if((e->type == SDL_JOYBUTTONDOWN || e->type == SDL_JOYBUTTONUP) && e->jbutton.which == t->joy){
+		for(i=0; i<5; ++i){
+			if(e->jbutton.state == SDL_PRESSED){
+				if(i == e->jbutton.button){
+					t->state |= t->jbuttons[i];
+				}
+			}
+			else{
+				if(t->jbuttons[i] != ATTACKING){
+					t->state &= ~(t->jbuttons[i]);
+				}
+				else{
+					t->state &= ~CHARGING;
+				}
+			}
+		}
+	}
+	else if(e->type == SDL_JOYBUTTONUP){
+		for(i=0; i<5; ++i){
+			
+		}
+	}
+}
+
+void tfighter_update(tfighter *t, tlevel *tl){
+	int i;
+	t->prect.x = t->rect.x;
+	t->prect.y = t->rect.y;
+	t->prect.w = t->rect.w;
+	t->prect.h = t->rect.h;
+
+	/* DEATH */
+	if(t->rect.x > tl->rect.w + 1 || t->rect.x < -1 || t->rect.y < -4 || t->rect.y > tl->rect.h + 1){
+		t->state = 0;
+		t->rect.x = 50;
+		t->rect.y = 15;
+		t->vx = 0;
+		t->vy = 0;
+		t->damage = 0;
+	}
+
+	if(t->state & CHARGING){
+		t->state |= ATTACKING;
+	}
+
 	/* Jumping */
-	if((~prevstate & JUMP) && (t->state & JUMP) && t->tick <= 0){
+	if((~t->pstate & JUMP) && (t->state & JUMP) && t->tick <= 0){
 		if(t->jump < t->MAXJUMPS){
 			t->vy = -t->jumpvel;
 			++t->jump;
 		}
 	}
 	/* Attacking */
-	if((~prevstate & ATTACKING) && (t->state & ATTACKING) && (~prevstate & CHARGING)){
+	if((~t->pstate & ATTACKING) && (t->state & ATTACKING) && (~t->pstate & CHARGING)){
 		int x = NATTACK;
 		if(t->state & UP)
 			x = UATTACK;
@@ -354,25 +447,18 @@ void tfighter_input(tfighter *t, tlevel *tl, int keydown, SDL_Keycode key){
 		tlevel_add_hitbox(tl, t, &t->moves[x]);
 		t->tick = t->moves[x].maxdelay + t->moves[x].time + t->moves[x].endlag; 
 	}
-	/* MOVING */
-	t->state &= ~(WALKING | RUNNING);
-	if((~prevstate & WALKING) && ~t->state && (ATTACKING | HITSTUN | CHARGING)){
-		if(t->state & RIGHT && (t->vx > t->walk / 2))
+	/* Moving */
+	if(!(t->pstate & WALKING) && !(t->state & (ATTACKING | HITSTUN | CHARGING))){
+		if((t->state & RIGHT) && (t->vx > t->walk/2))
 			t->state |= RUNNING;
-		else if(t->state & LEFT && (t->vx < -t->walk / 2))
+		else if((t->state & LEFT) && (t->vx < -t->walk/2))
 			t->state |= RUNNING;
 		else if(t->state & (LEFT | RIGHT))
 			t->state |= WALKING;
 	}
-}
 
-void tfighter_update(tfighter *t, tlevel *tl){
-	int i;
-	t->prect.x = t->rect.x;
-	t->prect.y = t->rect.y;
-	t->prect.w = t->rect.w;
-	t->prect.h = t->rect.h;
 
+	/* Checking hitboxes */
 	for(i=0; i<tl->MAX_BOXES; ++i){
 		tfighter *owner = tl->boxes[i].owner;
 		hitbox *box = &tl->boxes[i];
@@ -435,16 +521,21 @@ void tfighter_update(tfighter *t, tlevel *tl){
 		t->vy += t->gravity;
 		t->rect.y += t->vy;
 		for(i=0; i < tl->len; ++i){
-			if(intersects(&t->rect, &tl->blocks[i])){
-				if(t->vy > 0 && (tl->blocks[i].h >= 0.9f || !(t->state & DOWN))){
-					t->vy = 0;
-					t->jump = 0;
-					t->state &= ~HELPLESS;
-					t->rect.y = tl->blocks[i].y - t->rect.h;
+			if(yintersects(&t->rect, &tl->blocks[i])){
+				if(t->state & HITSTUN){
+					t->vy = -t->vy;
 				}
-				else if(tl->blocks[i].h >= 0.9f){
-					t->vy = 0;	
-					t->rect.y = tl->blocks[i].y + tl->blocks[i].h;
+				else{
+					if(t->vy > 0 && (tl->blocks[i].h >= 0.9f || !(t->state & DOWN))){
+						t->vy = 0;
+						t->jump = 0;
+						t->state &= ~HELPLESS;
+						t->rect.y = tl->blocks[i].y - t->rect.h;
+					}
+					else if(tl->blocks[i].h >= 0.9f){
+						t->vy = 0;	
+						t->rect.y = tl->blocks[i].y + tl->blocks[i].h;
+					}
 				}
 			}
 		}
@@ -452,14 +543,19 @@ void tfighter_update(tfighter *t, tlevel *tl){
 		t->rect.x += t->vx;
 		for(i=0; i < tl->len; ++i){
 			if(tl->blocks[i].h >= 1.0f){
-				if(intersects(&t->rect, &tl->blocks[i])){
-					if(t->vx > 0){
-						t->vx = 0;	
-						t->rect.x = tl->blocks[i].x - t->rect.w;
+				if(xintersects(&t->rect, &tl->blocks[i])){
+					if(t->state & HITSTUN){
+						t->vx = -t->vx;
 					}
 					else{
-						t->vx = 0;
-						t->rect.x = tl->blocks[i].x + tl->blocks[i].w;
+						if(t->vx > 0){
+							t->vx = 0;	
+							t->rect.x = tl->blocks[i].x - t->rect.w;
+						}
+						else{
+							t->vx = 0;
+							t->rect.x = tl->blocks[i].x + tl->blocks[i].w;
+						}
 					}
 				}
 			}
@@ -468,6 +564,8 @@ void tfighter_update(tfighter *t, tlevel *tl){
 	else{
 		--t->hitlag;
 	}
+	t->pstate = t->state;
+	t->state &= ~(WALKING | RUNNING);
 }
 
 void tlevel_add_hitbox(tlevel *tl, tfighter *t, hitbox *h){
