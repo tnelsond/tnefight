@@ -91,8 +91,8 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->jump = 2;
 	ret->vx = 0;
 	ret->vy = 0;
-	ret->accel = 0.03f;
-	ret->speed = 1.0f;
+	ret->accel = 0.08f;
+	ret->speed = 0.3f;
 	ret->gravity = 0.03f;
 	ret->hitlag = 0;
 	ret->id = gid;
@@ -173,7 +173,7 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->moves[0].maxdelay = 50;
 	ret->moves[2].left = 1;
 	ret->moves[2].hit = 0;
-	ret->moves[2].endlag = 5;
+	ret->moves[2].endlag = 30;
 
 	ret->moves[3].rect.x = 0.5f;
 	ret->moves[3].rect.y = 0.0f;
@@ -196,7 +196,7 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->moves[3].tick = 0;
 	ret->moves[3].mindelay = 4;
 	ret->moves[3].maxdelay = 80;
-	ret->moves[3].endlag = 5;
+	ret->moves[3].endlag = 10;
 	ret->moves[3].left = 1;
 	ret->moves[3].hit = 0;
 
@@ -378,10 +378,14 @@ void tfighter_update(tfighter *t, tlevel *tl){
 			}
 			else if(t->state & LEFT){
 				t->vx -= t->accel;
+				if(t->vx <= -t->speed)
+					t->vx = -t->speed;
 				t->left = 1;
 			}
 			else if(t->state & RIGHT){
 				t->vx += t->accel;
+				if(t->vx >= t->speed)
+					t->vx = t->speed;
 				t->left = 0;
 			}
 			else if(t->state & DOWN){
@@ -396,7 +400,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 			t->vy += (float)(0.1 * sin(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth * 0.05)));
 			t->vx += (float)(0.1 * cos(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth * 0.05)) * (box->left ? -1 : 1));
 			box->hit |= t->id;
-			t->state &= ~ATTACKING;
+			t->state &= ~(ATTACKING | HELPLESS);
 			t->state |= HITSTUN;
 			t->tick = (int)(box->kbgrowth * t->damage / 5);
 			t->damage += box->attack;
@@ -414,7 +418,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 		for(i=0; i < tl->len; ++i){
 			if(intersects(&t->rect, &tl->blocks[i])){
 				if(t->vy > 0){
-					t->vy = 0;	
+					t->vy = 0;
 					t->jump = 0;
 					t->state &= ~HELPLESS;
 					t->rect.y = tl->blocks[i].y - t->rect.h;
@@ -450,6 +454,7 @@ void tlevel_add_hitbox(tlevel *tl, tfighter *t, hitbox *h){
 	}
 	hitbox_spawn(t, h, &tl->boxes[tl->cbox]);
 	if(h->type & AIRONCE){
+		t->rect.y -= 0.001f;
 		t->jump = t->MAXJUMPS;	
 		t->state |= HELPLESS;
 	}
