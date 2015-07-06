@@ -15,9 +15,18 @@
 #define DOWN (1 << 3)
 #define JUMP (1 << 4)
 #define ATTACKING (1 << 5)
-#define HITSTUN (1 << 6)
-#define HELPLESS (1 << 7)
-#define HOLDING (1 << 8)
+#define CHARGING (1 << 6)
+#define HITSTUN (1 << 7)
+#define HELPLESS (1 << 8)
+#define GROUND (1 << 9)
+#define WALKING (1 << 10)
+#define RUNNING (1 << 11)
+
+/* tfighter attack numbers */
+#define OATTACK 0
+#define UATTACK 1
+#define DATTACK 3
+#define NATTACK 2
 
 /* Other Constants */
 #define NUMKEYS 5;
@@ -71,8 +80,7 @@ typedef struct{
 struct tfighter{
 	trect rect, prect;
 	float vx, vy;
-	float speed;
-	float accel;
+	float walk, run, speed, accel;
 	float attack;
 	float defense;
 	float jumpvel;

@@ -99,6 +99,8 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	gid = gid << 1;
 
 	ret->moves = malloc(sizeof(hitbox)*4);
+
+	/* Over-Attack */
 	ret->moves[0].rect.x = 0;
 	ret->moves[0].rect.y = 0.7f;
 	ret->moves[0].rect.w = 1.0f;
@@ -125,80 +127,83 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->moves[0].hit = 0;
 	ret->moves[0].endlag = 5;
 
-	ret->moves[1].rect.x = 1.0f;
-	ret->moves[1].rect.y = 0.5f;
-	ret->moves[1].rect.w = 1.0f;
+	/* Down-Attack */
+	ret->moves[3].rect.x = 1.0f;
+	ret->moves[3].rect.y = 0.5f;
+	ret->moves[3].rect.w = 1.0f;
+	ret->moves[3].rect.h = 1.0f;
+	ret->moves[3].vx = 0.5f;
+	ret->moves[3].vy = 0.5f;
+	ret->moves[3].ax = 0.00f;
+	ret->moves[3].ay = 0.01f;
+	ret->moves[3].aw = 0.00f;
+	ret->moves[3].ah = 0.00f;
+	ret->moves[3].vw = 0.0f;
+	ret->moves[3].kb = 0.1f;
+	ret->moves[3].kbgrowth = 0.5f;
+	ret->moves[3].kbangle = -60.0;
+	ret->moves[3].attack = 6;
+	ret->moves[3].time = 20;
+	ret->moves[3].type = ATTACK | PROJECTILE;
+	ret->moves[3].owner = ret;
+	ret->moves[3].tick = 0;
+	ret->moves[3].mindelay = 10;
+	ret->moves[3].maxdelay = 50;
+	ret->moves[3].left = 1;
+	ret->moves[3].hit = 0;
+	ret->moves[3].endlag = 5;
+
+	/* Up-Attack */
+	ret->moves[1].rect.x = 0.0f;
+	ret->moves[1].rect.y = 0.0f;
+	ret->moves[1].rect.w = 2.0f;
 	ret->moves[1].rect.h = 1.0f;
-	ret->moves[1].vx = 0.5f;
-	ret->moves[1].vy = 0.5f;
+	ret->moves[1].vx = 0.0f;
+	ret->moves[1].vy = -0.5f;
 	ret->moves[1].ax = 0.00f;
 	ret->moves[1].ay = 0.01f;
 	ret->moves[1].aw = 0.00f;
 	ret->moves[1].ah = 0.00f;
 	ret->moves[1].vw = 0.0f;
-	ret->moves[1].kb = 0.1f;
-	ret->moves[1].kbgrowth = 0.5f;
-	ret->moves[1].kbangle = -60.0;
-	ret->moves[1].attack = 6;
-	ret->moves[1].time = 20;
-	ret->moves[1].type = ATTACK | PROJECTILE;
+	ret->moves[1].kb = 2.0f;
+	ret->moves[1].kbgrowth = 1.0f;
+	ret->moves[1].kbangle = -90.0;
+	ret->moves[1].attack = 9;
+	ret->moves[1].time = 30;
+	ret->moves[1].type = ATTACK | MOVEMENT | AIRONCE;
 	ret->moves[1].owner = ret;
 	ret->moves[1].tick = 0;
-	ret->moves[1].mindelay = 10;
+	ret->moves[1].mindelay = 30;
 	ret->moves[1].maxdelay = 50;
 	ret->moves[1].left = 1;
 	ret->moves[1].hit = 0;
-	ret->moves[1].endlag = 5;
+	ret->moves[1].endlag = 30;
 
-	ret->moves[2].rect.x = 0.0f;
+	/* Neutral-Attack */
+	ret->moves[2].rect.x = 0.5f;
 	ret->moves[2].rect.y = 0.0f;
-	ret->moves[2].rect.w = 2.0f;
+	ret->moves[2].rect.w = 1.0f;
 	ret->moves[2].rect.h = 1.0f;
-	ret->moves[2].vx = 0.0f;
-	ret->moves[2].vy = -0.5f;
-	ret->moves[2].ax = 0.00f;
-	ret->moves[2].ay = 0.01f;
+	ret->moves[2].vx = 0.2f;
+	ret->moves[2].vy = 0.0f;
+	ret->moves[2].ax = -0.01f;
+	ret->moves[2].ay = 0.00f;
 	ret->moves[2].aw = 0.00f;
 	ret->moves[2].ah = 0.00f;
 	ret->moves[2].vw = 0.0f;
-	ret->moves[2].kb = 2.0f;
-	ret->moves[2].kbgrowth = 1.0f;
-	ret->moves[2].kbangle = -90.0;
-	ret->moves[2].attack = 9;
-	ret->moves[2].time = 30;
-	ret->moves[2].type = ATTACK | MOVEMENT | AIRONCE;
+	ret->moves[2].kb = 5.0f;
+	ret->moves[2].kbgrowth = 1.5f;
+	ret->moves[2].kbangle = -45.0;
+	ret->moves[2].attack = 15;
+	ret->moves[2].time = 15;
+	ret->moves[2].type = ATTACK;
 	ret->moves[2].owner = ret;
 	ret->moves[2].tick = 0;
-	ret->moves[0].mindelay = 30;
-	ret->moves[0].maxdelay = 50;
+	ret->moves[2].mindelay = 4;
+	ret->moves[2].maxdelay = 80;
+	ret->moves[2].endlag = 10;
 	ret->moves[2].left = 1;
 	ret->moves[2].hit = 0;
-	ret->moves[2].endlag = 30;
-
-	ret->moves[3].rect.x = 0.5f;
-	ret->moves[3].rect.y = 0.0f;
-	ret->moves[3].rect.w = 1.0f;
-	ret->moves[3].rect.h = 1.0f;
-	ret->moves[3].vx = 0.2f;
-	ret->moves[3].vy = 0.0f;
-	ret->moves[3].ax = -0.01f;
-	ret->moves[3].ay = 0.00f;
-	ret->moves[3].aw = 0.00f;
-	ret->moves[3].ah = 0.00f;
-	ret->moves[3].vw = 0.0f;
-	ret->moves[3].kb = 5.0f;
-	ret->moves[3].kbgrowth = 1.5f;
-	ret->moves[3].kbangle = -45.0;
-	ret->moves[3].attack = 15;
-	ret->moves[3].time = 15;
-	ret->moves[3].type = ATTACK;
-	ret->moves[3].owner = ret;
-	ret->moves[3].tick = 0;
-	ret->moves[3].mindelay = 4;
-	ret->moves[3].maxdelay = 80;
-	ret->moves[3].endlag = 10;
-	ret->moves[3].left = 1;
-	ret->moves[3].hit = 0;
 
 	ret->left = 1;
 	return ret;
@@ -232,7 +237,7 @@ void hitbox_update(hitbox *h){
 		h->rect.y += h->owner->rect.y - h->owner->prect.y;
 	}
 	if(h->tick < h->maxdelay){
-		if(!(h->owner->state & HOLDING) && h->tick >= h->mindelay){
+		if(!(h->owner->state & CHARGING) && h->tick >= h->mindelay){
 			h->attack = ((double)h->maxattack - h->attack) * (h->tick - h->mindelay) / (h->maxdelay - h->mindelay) + h->attack;
 			h->tick = h->maxdelay + 1;
 		}
@@ -322,35 +327,30 @@ void tfighter_input(tfighter *t, tlevel *tl, int keydown, SDL_Keycode key){
 					t->state = t->state & ~(1 << i);
 				}
 				else{
-					t->state &= ~HOLDING;
+					t->state &= ~CHARGING;
 				}
 			}
 		}
 	}
-	if(!(prevstate & JUMP) && (t->state & JUMP) && t->tick <= 0){
+	/* Jumping */
+	if((~prevstate & JUMP) && (t->state & JUMP) && t->tick <= 0){
 		if(t->jump < t->MAXJUMPS){
 			t->vy = -t->jumpvel;
 			++t->jump;
 		}
 	}
-	if((~prevstate & ATTACKING) && (t->state & ATTACKING) && (~prevstate & HOLDING)){
-		t->state |= HOLDING;
-		if(t->state & DOWN){
-			tlevel_add_hitbox(tl, t, &t->moves[1]);
-			t->tick = t->moves[1].maxdelay + t->moves[1].time + t->moves[1].endlag; 
-		}
-		else if(t->state & UP){
-			tlevel_add_hitbox(tl, t, &t->moves[2]);
-			t->tick = t->moves[2].maxdelay + t->moves[2].time + t->moves[2].endlag; 
-		}
-		else if(t->state & LEFT || t->state & RIGHT){
-			tlevel_add_hitbox(tl, t, &t->moves[0]);
-			t->tick = t->moves[0].maxdelay + t->moves[0].time + t->moves[0].endlag; 
-		}
-		else{
-			tlevel_add_hitbox(tl, t, &t->moves[3]);
-			t->tick = t->moves[3].maxdelay + t->moves[3].time + t->moves[3].endlag; 
-		}
+	/* Attacking */
+	if((~prevstate & ATTACKING) && (t->state & ATTACKING) && (~prevstate & CHARGING)){
+		int x = NATTACK;
+		if(t->state & UP)
+			x = UATTACK;
+		else if(t->state & (LEFT | RIGHT))
+			x = OATTACK;
+		else if(t->state & DOWN)
+			x = DATTACK;
+		t->state |= CHARGING;
+		tlevel_add_hitbox(tl, t, &t->moves[x]);
+		t->tick = t->moves[x].maxdelay + t->moves[x].time + t->moves[x].endlag; 
 	}
 }
 
@@ -360,20 +360,42 @@ void tfighter_update(tfighter *t, tlevel *tl){
 	t->prect.y = t->rect.y;
 	t->prect.w = t->rect.w;
 	t->prect.h = t->rect.h;
-	--t->hitlag;
-	if(t->hitlag <= 0){
-		if(t->state & HITSTUN){
-			--t->tick;
-			if(t->tick <= 0){
-				t->state -= HITSTUN;
+
+	for(i=0; i<tl->MAX_BOXES; ++i){
+		tfighter *owner = tl->boxes[i].owner;
+		hitbox *box = &tl->boxes[i];
+		if((owner != NULL) && owner != t && box->tick > box->maxdelay && !(box->hit & t->id) && intersects(&t->rect, &box->rect)){
+			t->vy += (float)(0.1 * sin(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth * 0.05)));
+			t->vx += (float)(0.1 * cos(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth * 0.05)) * (box->left ? -1 : 1));
+			box->hit |= t->id;
+			t->state &= ~(ATTACKING | HELPLESS);
+			t->state |= HITSTUN;
+			t->tick = (int)(box->kbgrowth * t->damage / 4);
+			t->damage += box->attack;
+			t->hitlag = box->attack*3/4;
+			box->hitlag = box->attack/2;
+			if(~box->type & PROJECTILE){
+				box->owner->hitlag = box->attack/2;
 			}
+			t->jump = 0;
 		}
+	}
+
+	if(t->hitlag <= 0){
+		/* Hitstun */
+		if(t->state & HITSTUN){
+				--t->tick;
+				if(t->tick <= 0){
+					t->state -= HITSTUN;
+				}
+		}
+		/* Attacking & Movement */
 		else{
 			if(t->state & ATTACKING){
 				--t->tick;
 				if(t->tick <= 0){
 					t->tick = 0;
-					t->state -= ATTACKING;
+					t->state &= ~(ATTACKING | CHARGING);
 				}
 			}
 			else if(t->state & LEFT){
@@ -392,27 +414,6 @@ void tfighter_update(tfighter *t, tlevel *tl){
 				t->vy += t->accel;
 			}
 		}
-	}
-	for(i=0; i<tl->MAX_BOXES; ++i){
-		tfighter *owner = tl->boxes[i].owner;
-		hitbox *box = &tl->boxes[i];
-		if((owner != NULL) && owner != t && box->tick > box->maxdelay && !(box->hit & t->id) && intersects(&t->rect, &box->rect)){
-			t->vy += (float)(0.1 * sin(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth * 0.05)));
-			t->vx += (float)(0.1 * cos(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth * 0.05)) * (box->left ? -1 : 1));
-			box->hit |= t->id;
-			t->state &= ~(ATTACKING | HELPLESS);
-			t->state |= HITSTUN;
-			t->tick = (int)(box->kbgrowth * t->damage / 5);
-			t->damage += box->attack;
-			t->hitlag = box->attack/2;
-			box->hitlag = box->attack/2;
-			if(~box->type & PROJECTILE){
-				box->owner->hitlag = box->attack/2;
-			}
-			t->jump = 0;
-		}
-	}
-	if(t->hitlag <= 0){
 		t->vy += t->gravity;
 		t->rect.y += t->vy;
 		for(i=0; i < tl->len; ++i){
@@ -446,6 +447,9 @@ void tfighter_update(tfighter *t, tlevel *tl){
 			}
 		}
 	}
+	else{
+		--t->hitlag;
+	}
 }
 
 void tlevel_add_hitbox(tlevel *tl, tfighter *t, hitbox *h){
@@ -454,7 +458,6 @@ void tlevel_add_hitbox(tlevel *tl, tfighter *t, hitbox *h){
 	}
 	hitbox_spawn(t, h, &tl->boxes[tl->cbox]);
 	if(h->type & AIRONCE){
-		t->rect.y -= 0.001f;
 		t->jump = t->MAXJUMPS;	
 		t->state |= HELPLESS;
 	}
