@@ -90,6 +90,9 @@ void draw(float alpha){
 		else if(fighters[i]->state & ATTACKING){
 			SDL_SetRenderDrawColor(gren, 0, 0, 0xFF, 0x77);
 		}
+		else if(fighters[i]->state & SPECIAL){
+			SDL_SetRenderDrawColor(gren, 0x99, 0x99, 0x00, 0x77);
+		}
 		else{
 			SDL_SetRenderDrawColor(gren, fighters[i]->red/2, fighters[i]->green/2, fighters[i]->blue/2, 0xFF);
 		}

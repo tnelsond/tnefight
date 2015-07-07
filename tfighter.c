@@ -537,7 +537,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 		t->damage = 0;
 	}
 
-	if((t->state & SPECIAL) || t->state & ATTACKING){
+	if((t->state & (SPECIAL | ATTACKING) && !(t->pstate & (SPECIAL | ATTACKING)))){
 		t->state |= CHARGING;
 	}
 
