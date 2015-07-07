@@ -16,11 +16,12 @@
 #define JUMP (1 << 4)
 #define CHARGING (1 << 5)
 #define ATTACKING (1 << 6)
-#define HITSTUN (1 << 7)
-#define HELPLESS (1 << 8)
-#define GROUND (1 << 9)
-#define WALKING (1 << 10)
-#define RUNNING (1 << 11)
+#define SPECIAL (1 << 7)
+#define HITSTUN (1 << 8)
+#define HELPLESS (1 << 9)
+#define GROUND (1 << 10)
+#define WALKING (1 << 11)
+#define RUNNING (1 << 12)
 
 /* tfighter attack numbers */
 #define OATTACK 0
@@ -95,17 +96,17 @@ struct tfighter{
 	int blue;
 	hitbox *moves;
 	SDL_Keycode *keys;
-	Uint8 *jbuttons;
+	Uint32 *jbuttons;
 	SDL_JoystickID joy;
 	int joyxoffset;
 	int joyyoffset;
 	int tick;
-	int state, pstate;
+	Uint32 state, pstate;
 	int damage;
 	int hitlag;
 };
 
-tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys, Uint8 *joybuttons, SDL_JoystickID joy, int joyxoffset, int joyyoffset);
+tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys, Uint32 *joybuttons, SDL_JoystickID joy, int joyxoffset, int joyyoffset);
 
 void tfighter_free(tfighter *t);
 
