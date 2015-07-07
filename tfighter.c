@@ -522,20 +522,25 @@ void tfighter_update(tfighter *t, tlevel *tl){
 		t->rect.y += t->vy;
 		for(i=0; i < tl->len; ++i){
 			if(yintersects(&t->rect, &tl->blocks[i])){
-				if(t->state & HITSTUN){
-					t->vy = -t->vy;
-				}
-				else{
-					if(t->vy > 0 && (tl->blocks[i].h >= 0.9f || !(t->state & DOWN))){
+				if(t->vy > 0 && (tl->blocks[i].h >= 0.9f || !(t->state & DOWN))){
+					if(t->state & HITSTUN){
+						t->vy *= -1;
+					}
+					else{
 						t->vy = 0;
 						t->jump = 0;
 						t->state &= ~HELPLESS;
-						t->rect.y = tl->blocks[i].y - t->rect.h;
 					}
-					else if(tl->blocks[i].h >= 0.9f){
+					t->rect.y = tl->blocks[i].y - t->rect.h;
+				}
+				else if(tl->blocks[i].h >= 0.9f){
+					if(t->state & HITSTUN){
+						t->vy *= -1;
+					}
+					else{
 						t->vy = 0;	
-						t->rect.y = tl->blocks[i].y + tl->blocks[i].h;
 					}
+					t->rect.y = tl->blocks[i].y + tl->blocks[i].h;
 				}
 			}
 		}
@@ -544,18 +549,23 @@ void tfighter_update(tfighter *t, tlevel *tl){
 		for(i=0; i < tl->len; ++i){
 			if(tl->blocks[i].h >= 1.0f){
 				if(xintersects(&t->rect, &tl->blocks[i])){
-					if(t->state & HITSTUN){
-						t->vx = -t->vx;
+					if(t->vx > 0){
+						if(t->state & HITSTUN){
+							t->vx *= -1;	
+						}
+						else{
+							t->vx = 0;	
+						}
+						t->rect.x = tl->blocks[i].x - t->rect.w;
 					}
 					else{
-						if(t->vx > 0){
-							t->vx = 0;	
-							t->rect.x = tl->blocks[i].x - t->rect.w;
+						if(t->state & HITSTUN){
+							t->vx *= -1;	
 						}
 						else{
 							t->vx = 0;
-							t->rect.x = tl->blocks[i].x + tl->blocks[i].w;
 						}
+						t->rect.x = tl->blocks[i].x + tl->blocks[i].w;
 					}
 				}
 			}
