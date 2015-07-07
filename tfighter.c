@@ -137,7 +137,6 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->moves[0].kbangle = -30.0;
 	ret->moves[0].attack = 5;
 	ret->moves[0].maxattack = 30;
-	ret->moves[0].maxattack = 20;
 	ret->moves[0].time = 15;
 	ret->moves[0].type = ATTACK;
 	ret->moves[0].owner = ret;
@@ -318,20 +317,20 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 
 	/* DOWN-SPECIAL */
 	ret->moves[7].rect.x = 2.0f;
-	ret->moves[7].rect.y = 0.5f;
+	ret->moves[7].rect.y = -1.5f;
 	ret->moves[7].rect.w = 1.0f;
 	ret->moves[7].rect.h = 1.0f;
 	ret->moves[7].vx = 0.3f;
 	ret->moves[7].vy = 0.1f;
-	ret->moves[7].ax = -0.1f;
-	ret->moves[7].ay = 0.00f;
+	ret->moves[7].ax = 0.0f;
+	ret->moves[7].ay = -0.01f;
 	ret->moves[7].aw = 0.00f;
 	ret->moves[7].ah = 0.00f;
 	ret->moves[7].vw = 0.0f;
 	ret->moves[7].vh = 0.0f;
-	ret->moves[7].kb = 0.1f;
+	ret->moves[7].kb = 0.5f;
 	ret->moves[7].kbgrowth = 0.5f;
-	ret->moves[7].kbangle = -80.0;
+	ret->moves[7].kbangle = -10.0;
 	ret->moves[7].attack = 6;
 	ret->moves[7].maxattack = 20;
 	ret->moves[7].time = 12;
@@ -403,7 +402,7 @@ void hitbox_update(hitbox *h){
 	else{
 		h->vx += h->ax;
 		h->vy += h->ay;
-		h->rect.x += h->vx;
+		h->rect.x += h->vx + h->vw / 2;
 		h->rect.y += h->vy + h->vh / 2;
 	}
 }
@@ -456,14 +455,14 @@ void hitbox_spawn(tfighter *t, hitbox *src, hitbox *dest){
 void tfighter_input(tfighter *t, tlevel *tl, SDL_Event *e){
 	int i;
 	if(e->type == SDL_KEYDOWN){
-		for(i=0; i<6; ++i){
+		for(i=0; i<7; ++i){
 			if(e->key.keysym.sym == t->keys[i]){
 				t->state = t->state | (1 << i);
 			}
 		}
 	}
 	else if(e->type == SDL_KEYUP){
-		for(i=0; i<6; ++i){
+		for(i=0; i<7; ++i){
 			if(e->key.keysym.sym == t->keys[i]){
 				if(((1 << i) != ATTACKING) && (1 << i) != SPECIAL){
 					t->state &= ~(1 << i);
