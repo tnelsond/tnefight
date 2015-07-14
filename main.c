@@ -13,9 +13,11 @@ SDL_Joystick* gjoy2 = NULL;
 
 SDL_Texture *gatlas;
 int glinew = 32;
+int gnlines = 3;
 SDL_Rect charrect = {0, 0, 6, 12};
+SDL_Rect imgrect = {0, 0, 7, 7};
 
-tcamera camera = {0, 0, 1, 800, 600};
+tcamera camera = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 50, 800, 600};
 tlevel level;
 tfighter *fighters[PLAYERS] = {NULL, NULL};
 
@@ -25,8 +27,8 @@ void drawtext(char *str, float x, float y, float w, float h){
 	int i;
 	projecthud(&camera, &temprect, x, y, w, h);
 	for(i=0; str[i]; ++i){
-		charrect.x = (str[i] % 32) * charrect.w;
-		charrect.y = (str[i] / 32 - 1) * charrect.h;
+		charrect.x = (str[i] % glinew) * charrect.w;
+		charrect.y = (str[i] / glinew - 1) * charrect.h;
 		SDL_RenderCopy(gren, gatlas, &charrect, &temprect);	
 		temprect.x += temprect.w;
 	}
@@ -83,7 +85,13 @@ void draw(float alpha){
 
 	for(i=0; i<PLAYERS; ++i){
 		SDL_SetRenderDrawColor(gren, fighters[i]->red, fighters[i]->green, fighters[i]->blue, 0xFF);
-		fillrect(&camera, &fighters[i]->rect, &fighters[i]->prect, alpha);
+		project(&camera, &fighters[i]->rect, &fighters[i]->prect, &temprect, alpha);
+		imgrect.y = charrect.h * gnlines + fighters[i]->imgindex/glinew;
+		imgrect.x = (fighters[i]->imgindex % glinew) * imgrect.w;
+		SDL_SetTextureColorMod(gatlas, fighters[i]->red, fighters[i]->green, fighters[i]->blue);
+		SDL_RenderCopy(gren, gatlas, &imgrect, &temprect);	
+		/*fillrect(&camera, &fighters[i]->rect, &fighters[i]->prect, alpha);*/
+
 		if(fighters[i]->state & HITSTUN){
 			SDL_SetRenderDrawColor(gren, 0x77, 0, 0, 0xFF);
 		}
@@ -118,7 +126,10 @@ void draw(float alpha){
 	SDL_SetRenderDrawColor(gren, 0xFF, 0x00, 0x00, 0x11);
 	for(i=0; i<level.MAX_BOXES; ++i){
 		if(level.boxes[i].owner){
-			if(level.boxes[i].tick < level.boxes[i].maxdelay){
+			if(level.boxes[i].type & SHIELD){
+				SDL_SetRenderDrawColor(gren, 0x00, 0x44, 0xFF, 0xFF);
+			}
+			else if(level.boxes[i].tick < level.boxes[i].maxdelay){
 				SDL_SetRenderDrawColor(gren, 0x00, 0xFF, 0x00, 0xFF);
 			}
 			else{
@@ -144,6 +155,7 @@ void draw(float alpha){
 void loadfont(){
 	SDL_Surface *surf = IMG_Load("font.gif");
 	check(surf != NULL);
+	SDL_SetColorKey(surf, SDL_TRUE, SDL_MapRGB(surf->format, 0x0, 0x0, 0x0));
 	gatlas = SDL_CreateTextureFromSurface(gren, surf);
 	check(gatlas != NULL);
 	SDL_FreeSurface(surf);
@@ -160,16 +172,18 @@ int main(int argc, char *argv[]){
 	Uint32 vfps = 1000 / 60; /* 60 fps */
 	SDL_Event e;
 	SDL_Keycode c1[] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_j, SDLK_k, SDLK_l};
-	Uint32 b1[] = {ATTACKING, SPECIAL, 0, JUMP, 0};
+	Uint32 b1[] = {ATTACKING, SPECIAL, 0, JUMP, SHIELDING};
 	SDL_Keycode c2[] = {SDLK_LEFT, SDLK_RIGHT, SDLK_UP, SDLK_DOWN, SDLK_KP_0, SDLK_KP_PERIOD, SDLK_KP_ENTER};
-	fighters[0] = tfighter_new(34, 15, 0x77, 0x55, 0x00, c1, b1, 0, SDL_JoystickGetAxis(gjoy, 0), SDL_JoystickGetAxis(gjoy, 1));
-	fighters[1] = tfighter_new(36, 15, 0x00, 0x66, 0xbb, c2, b1, 1, SDL_JoystickGetAxis(gjoy2, 0), SDL_JoystickGetAxis(gjoy2, 1));
+	fighters[0] = tfighter_new(34, 15, 0x77, 0x55, 0x00, c1, b1, 0, SDL_JoystickGetAxis(gjoy, 0), SDL_JoystickGetAxis(gjoy, 1), 1);
+	fighters[1] = tfighter_new(36, 15, 0x00, 0x66, 0xbb, c2, b1, 1, SDL_JoystickGetAxis(gjoy2, 0), SDL_JoystickGetAxis(gjoy2, 1), 2);
 	level.blocks = levelblocks;
 	level.len = 8;
 	level.rect.x = 0;
 	level.rect.y = 0;
 	level.rect.w = 100;
 	level.rect.h = 52;
+	camera.bw = level.rect.w;
+	camera.bh = level.rect.h;
 	level.boxes = boxes;
 	level.cbox = 0;
 	level.MAX_BOXES = 30;
@@ -190,9 +204,9 @@ int main(int argc, char *argv[]){
 	loadfont();
 
 	gjoy = SDL_JoystickOpen( 0 );
-	check(gjoy != NULL);
+	/*check(gjoy != NULL);*/
 	gjoy2 = SDL_JoystickOpen( 1 );
-	check(gjoy2 != NULL);
+	/*check(gjoy2 != NULL);*/
 
 	oldtime = SDL_GetTicks();
 	time = oldtime;

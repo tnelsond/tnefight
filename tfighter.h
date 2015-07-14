@@ -7,6 +7,7 @@
 #define REFLECT (1 << 3)
 #define PROJECTILE (1 << 4)
 #define AIRONCE (1 << 5)
+#define SHIELD (1 << 6)
 
 /* tfighter state */
 #define LEFT (1 << 0)
@@ -16,12 +17,13 @@
 #define JUMP (1 << 4)
 #define ATTACKING (1 << 5)
 #define SPECIAL (1 << 6)
-#define CHARGING (1 << 7)
-#define HITSTUN (1 << 8)
-#define HELPLESS (1 << 9)
-#define GROUND (1 << 10)
-#define WALKING (1 << 11)
-#define RUNNING (1 << 12)
+#define SHIELDING (1 << 7)
+#define CHARGING (1 << 8)
+#define HITSTUN (1 << 9)
+#define HELPLESS (1 << 10)
+#define GROUND (1 << 11)
+#define WALKING (1 << 12)
+#define RUNNING (1 << 13)
 
 /* tfighter attack numbers */
 #define OATTACK 0
@@ -39,7 +41,7 @@ typedef struct{
 } trect;
 
 typedef struct{
-	float px, py, x, y, cx, cy, pscale, scale;
+	float px, py, x, y, cx, cy, pscale, scale, bx, by, bw, bh;
 	int swidth, sheight;
 } tcamera;
 
@@ -104,9 +106,10 @@ struct tfighter{
 	Uint32 state, pstate;
 	int damage;
 	int hitlag;
+	int imgindex;
 };
 
-tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys, Uint32 *joybuttons, SDL_JoystickID joy, int joyxoffset, int joyyoffset);
+tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys, Uint32 *joybuttons, SDL_JoystickID joy, int joyxoffset, int joyyoffset, int imgindex);
 
 void tfighter_free(tfighter *t);
 
@@ -118,9 +121,7 @@ void hitbox_update(hitbox *h);
 
 void hitbox_spawn(tfighter *t, hitbox *src, hitbox *dest);
 
-int xintersects(trect *r, trect *o);
 int intersects(trect *r, trect *o);
-int yintersects(trect *r, trect *o);
 
 tlevel *tlevel_new(int len);
 
