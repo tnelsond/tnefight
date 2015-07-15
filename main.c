@@ -15,7 +15,7 @@ SDL_Texture *gatlas;
 int glinew = 32;
 int gnlines = 3;
 SDL_Rect charrect = {0, 0, 6, 12};
-SDL_Rect imgrect = {0, 0, 7, 7};
+SDL_Rect imgrect = {0, 0, 7, 8};
 
 tcamera camera = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 50, 800, 600};
 tlevel level;
@@ -89,7 +89,7 @@ void draw(float alpha){
 		imgrect.y = charrect.h * gnlines + fighters[i]->skin[0]/glinew;
 		imgrect.x = (fighters[i]->skin[0] % glinew) * imgrect.w;
 		SDL_SetTextureColorMod(gatlas, fighters[i]->red, fighters[i]->green, fighters[i]->blue);
-		SDL_RenderCopy(gren, gatlas, &imgrect, &temprect);	
+		SDL_RenderCopyEx(gren, gatlas, &imgrect, &temprect, fighters[i]->state & HITSTUN ? fighters[i]->tick * 5 * (fighters[i]->vx > 0 ? 1 : -1) : 0, NULL, fighters[i]->left);	
 		/*fillrect(&camera, &fighters[i]->rect, &fighters[i]->prect, alpha);*/
 
 		if(fighters[i]->state & HITSTUN){
@@ -119,7 +119,7 @@ void draw(float alpha){
 		}
 		imgrect.y = charrect.h * gnlines + fighters[i]->skin[1]/glinew;
 		imgrect.x = (fighters[i]->skin[1] % glinew) * imgrect.w;
-		SDL_RenderCopy(gren, gatlas, &imgrect, &temprect);	
+		SDL_RenderCopyEx(gren, gatlas, &imgrect, &temprect, fighters[i]->tick * (fighters[i]->vx > 0 ? 1 : -1) * (fighters[i]->state & HITSTUN ? 10 : 1), NULL, fighters[i]->left);	
 	}
 
 	SDL_SetRenderDrawColor(gren, 0x44, 0x44, 0x44, 0xFF);
