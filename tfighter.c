@@ -93,9 +93,9 @@ void tlevel_free(tlevel *tl){
 	tl = NULL;
 }
 
-tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys, Uint32 *joybuttons, SDL_JoystickID joy, int joyxoffset, int joyyoffset, int imgindex){
+tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys, Uint32 *joybuttons, SDL_JoystickID joy, int joyxoffset, int joyyoffset, Uint8 *skin){
 	tfighter *ret = malloc(sizeof(tfighter));
-	ret->imgindex = imgindex;
+	ret->skin = skin;
 	ret->joyxoffset = joyxoffset;
 	ret->joyyoffset = joyyoffset;
 	ret->tick = 0;
@@ -113,7 +113,7 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->rect.x = x;
 	ret->rect.y = y;
 	ret->rect.w = 2;
-	ret->rect.h = 2;
+	ret->rect.h = 3;
 	ret->jumpvel = 0.7f;
 	ret->MAXJUMPS = 2;
 	ret->jump = 2;

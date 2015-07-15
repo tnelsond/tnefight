@@ -86,36 +86,40 @@ void draw(float alpha){
 	for(i=0; i<PLAYERS; ++i){
 		SDL_SetRenderDrawColor(gren, fighters[i]->red, fighters[i]->green, fighters[i]->blue, 0xFF);
 		project(&camera, &fighters[i]->rect, &fighters[i]->prect, &temprect, alpha);
-		imgrect.y = charrect.h * gnlines + fighters[i]->imgindex/glinew;
-		imgrect.x = (fighters[i]->imgindex % glinew) * imgrect.w;
+		imgrect.y = charrect.h * gnlines + fighters[i]->skin[0]/glinew;
+		imgrect.x = (fighters[i]->skin[0] % glinew) * imgrect.w;
 		SDL_SetTextureColorMod(gatlas, fighters[i]->red, fighters[i]->green, fighters[i]->blue);
 		SDL_RenderCopy(gren, gatlas, &imgrect, &temprect);	
 		/*fillrect(&camera, &fighters[i]->rect, &fighters[i]->prect, alpha);*/
 
 		if(fighters[i]->state & HITSTUN){
-			SDL_SetRenderDrawColor(gren, 0x77, 0, 0, 0xFF);
+			SDL_SetTextureColorMod(gatlas, 0x77, 0x0, 0x0);
 		}
 		else if(fighters[i]->state & ATTACKING){
-			SDL_SetRenderDrawColor(gren, 0, 0, 0xFF, 0x77);
+			SDL_SetTextureColorMod(gatlas, 0x0, 0xFF, 0x77);
 		}
 		else if(fighters[i]->state & SPECIAL){
-			SDL_SetRenderDrawColor(gren, 0x99, 0x99, 0x00, 0x77);
+			SDL_SetTextureColorMod(gatlas, 0x99, 0x99, 0x00);
 		}
 		else{
-			SDL_SetRenderDrawColor(gren, fighters[i]->red/2, fighters[i]->green/2, fighters[i]->blue/2, 0xFF);
+			SDL_SetTextureColorMod(gatlas, fighters[i]->red*3/4, fighters[i]->green*3/4, fighters[i]->blue*3/4);
 		}
-		temprect.w /= 2;
-		temprect.h /= 2;
+		temprect.y -= temprect.h/2;
+		temprect.w = temprect.w*3/4;
+		temprect.h = temprect.h*3/4;
+		temprect.x -= temprect.w/10;
 		if(fighters[i]->state & DOWN){
-			temprect.y += temprect.h;
-		}
-		else if(~fighters[i]->state & UP){
 			temprect.y += temprect.h/2;
 		}
-		if(!fighters[i]->left){
-			temprect.x += temprect.w;
+		else if(~fighters[i]->state & UP){
+			temprect.y += temprect.h/4;
 		}
-		SDL_RenderFillRect(gren, &temprect);
+		if(!fighters[i]->left){
+			temprect.x += temprect.w/2;
+		}
+		imgrect.y = charrect.h * gnlines + fighters[i]->skin[1]/glinew;
+		imgrect.x = (fighters[i]->skin[1] % glinew) * imgrect.w;
+		SDL_RenderCopy(gren, gatlas, &imgrect, &temprect);	
 	}
 
 	SDL_SetRenderDrawColor(gren, 0x44, 0x44, 0x44, 0xFF);
@@ -138,6 +142,7 @@ void draw(float alpha){
 			fillrect(&camera, &level.boxes[i].rect, &level.boxes[i].prect, alpha);
 		}
 	}
+	SDL_SetTextureColorMod(gatlas, 0, 0, 0);
 	for(i=0; i<PLAYERS; ++i){
 		disp[2] = '0' + fighters[i]->damage % 10;
 		disp[1] = '0' + (fighters[i]->damage % 100) / 10;
@@ -174,8 +179,10 @@ int main(int argc, char *argv[]){
 	SDL_Keycode c1[] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_j, SDLK_k, SDLK_l};
 	Uint32 b1[] = {ATTACKING, SPECIAL, 0, JUMP, SHIELDING};
 	SDL_Keycode c2[] = {SDLK_LEFT, SDLK_RIGHT, SDLK_UP, SDLK_DOWN, SDLK_KP_0, SDLK_KP_PERIOD, SDLK_KP_ENTER};
-	fighters[0] = tfighter_new(34, 15, 0x77, 0x55, 0x00, c1, b1, 0, SDL_JoystickGetAxis(gjoy, 0), SDL_JoystickGetAxis(gjoy, 1), 1);
-	fighters[1] = tfighter_new(36, 15, 0x00, 0x66, 0xbb, c2, b1, 1, SDL_JoystickGetAxis(gjoy2, 0), SDL_JoystickGetAxis(gjoy2, 1), 2);
+	Uint8 skin1[] = {4, 1};
+	Uint8 skin2[] = {5, 2};
+	fighters[0] = tfighter_new(34, 15, 0x77, 0x55, 0x00, c1, b1, 0, SDL_JoystickGetAxis(gjoy, 0), SDL_JoystickGetAxis(gjoy, 1), skin1);
+	fighters[1] = tfighter_new(36, 15, 0x00, 0x66, 0xbb, c2, b1, 1, SDL_JoystickGetAxis(gjoy2, 0), SDL_JoystickGetAxis(gjoy2, 1), skin2);
 	level.blocks = levelblocks;
 	level.len = 8;
 	level.rect.x = 0;

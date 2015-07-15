@@ -106,10 +106,10 @@ struct tfighter{
 	Uint32 state, pstate;
 	int damage;
 	int hitlag;
-	int imgindex;
+	Uint8 *skin;
 };
 
-tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys, Uint32 *joybuttons, SDL_JoystickID joy, int joyxoffset, int joyyoffset, int imgindex);
+tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys, Uint32 *joybuttons, SDL_JoystickID joy, int joyxoffset, int joyyoffset, Uint8 *skin);
 
 void tfighter_free(tfighter *t);
 
