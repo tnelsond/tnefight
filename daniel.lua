@@ -1,0 +1,1 @@
+setcolor(0xFF, 0, 0x77)

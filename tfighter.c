@@ -55,6 +55,7 @@ void tcamera_track(tcamera *tc, trect *a, trect *b){
 	tc->x = tc->cx - tc->swidth/tc->scale/2;
 	tc->y = tc->cy - tc->sheight/tc->scale/2;
 
+	/*
 	if(tc->scale > tc->bw/2){
 		tc->scale = tc->bw/2;
 	}
@@ -78,6 +79,7 @@ void tcamera_track(tcamera *tc, trect *a, trect *b){
 		tc->cx = tc->bw - tc->scale;
 		tc->x = tc->cx - tc->scale;
 	}
+	*/
 }
 
 tlevel *tlevel_new(int len){
@@ -159,6 +161,7 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->moves[0].left = 1;
 	ret->moves[0].hit = 0;
 	ret->moves[0].endlag = 20;
+	ret->moves[0].image = 12;
 	/* Up-Attack */
 	ret->moves[1].rect.x = 0.0f;
 	ret->moves[1].rect.y = 0.0f;
@@ -186,6 +189,7 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->moves[1].left = 1;
 	ret->moves[1].hit = 0;
 	ret->moves[1].endlag = 30;
+	ret->moves[1].image = 12;
 
 	/* Neutral-Attack */
 	ret->moves[2].rect.x = 0.5f;
@@ -214,6 +218,7 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->moves[2].endlag = 10;
 	ret->moves[2].left = 1;
 	ret->moves[2].hit = 0;
+	ret->moves[2].image = 12;
 
 	/* Down-Attack */
 	ret->moves[3].rect.x = 2.0f;
@@ -242,6 +247,7 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->moves[3].left = 1;
 	ret->moves[3].hit = 0;
 	ret->moves[3].endlag = 15;
+	ret->moves[3].image = 12;
 
 	/* Over-Special */
 	ret->moves[4].rect.x = 2.0f;
@@ -270,7 +276,7 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->moves[4].left = 1;
 	ret->moves[4].hit = 0;
 	ret->moves[4].endlag = 15;
-
+	ret->moves[4].image = 12;
 
 	/* Up-Special */
 	ret->moves[5].rect.x = 2.0f;
@@ -299,6 +305,7 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->moves[5].left = 1;
 	ret->moves[5].hit = 0;
 	ret->moves[5].endlag = 15;
+	ret->moves[5].image = 12;
 
 	/* Neutral-Special */
 	ret->moves[6].rect.x = 2.0f;
@@ -327,6 +334,7 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->moves[6].left = 1;
 	ret->moves[6].hit = 0;
 	ret->moves[6].endlag = 15;
+	ret->moves[6].image = 12;
 
 	/* DOWN-SPECIAL */
 	ret->moves[7].rect.x = 2.0f;
@@ -355,6 +363,7 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->moves[7].left = 1;
 	ret->moves[7].hit = 0;
 	ret->moves[7].endlag = 15;
+	ret->moves[7].image = 12;
 	
 	/* SHIELD */
 	ret->moves[8].rect.x = 0.0f;
@@ -383,6 +392,7 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->moves[8].left = 1;
 	ret->moves[8].hit = 0;
 	ret->moves[8].endlag = 15;
+	ret->moves[8].image = 12;
 
 	ret->left = 1;
 	return ret;
@@ -494,6 +504,7 @@ void hitbox_spawn(tfighter *t, hitbox *src, hitbox *dest){
 
 	dest->type = src->type;
 	dest->tick = 0;
+	dest->image = src->image;
 }
 
 void tfighter_input(tfighter *t, tlevel *tl, SDL_Event *e){
@@ -641,8 +652,8 @@ void tfighter_update(tfighter *t, tlevel *tl){
 			t->state |= HITSTUN;
 			t->tick = (int)(box->kb + box->kbgrowth * t->damage / 10);
 			t->damage += box->attack;
-			t->hitlag = box->attack*3/4;
-			box->hitlag = box->attack/2;
+			t->hitlag = box->attack;
+			box->hitlag = box->attack;
 			if(~box->type & PROJECTILE){
 				box->owner->hitlag = box->attack/2;
 			}

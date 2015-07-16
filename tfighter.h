@@ -1,3 +1,6 @@
+#ifndef TFIGHTER_H
+#define TFIGHTER_H
+
 #include <SDL2/SDL.h>
 
 /* hitbox type */
@@ -62,6 +65,7 @@ struct hitbox{
 	int type; 
 	int tick;
 	int hitlag;
+	int image;
 };
 
 typedef struct hitbox hitbox;
@@ -134,3 +138,5 @@ void project2(tcamera *tc, trect *t, SDL_Rect *r, float alpha);
 void projecthud(tcamera *tc, SDL_Rect *r, float x, float y, float w, float h);
 
 void tcamera_track(tcamera *tc, trect *a, trect *b);
+
+#endif
