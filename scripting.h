@@ -11,6 +11,7 @@ tfighter *cfighter;
 lua_State *l;
 
 int lsetcolor(lua_State *l);
+int lsetskin(lua_State *l);
 void linit();
 void lclose();
 
