@@ -26,6 +26,13 @@ void project2(tcamera *tc, trect *t, SDL_Rect *r, float alpha){
 	r->h = (int)(t->h * terp(tc->pscale, tc->scale, alpha) + 0.5f);
 }
 
+void project3(tcamera *tc, SDL_Rect *r, float alpha, float x, float y, float w, float h){
+	r->x = (int)((x - terp(tc->px, tc->x, alpha)) * terp(tc->pscale, tc->scale, alpha) + 0.5f);
+	r->y = (int)((y - terp(tc->py, tc->y, alpha)) * terp(tc->pscale, tc->scale, alpha) + 0.5f);
+	r->w = (int)(w * terp(tc->pscale, tc->scale, alpha) + 0.5f);
+	r->h = (int)(h * terp(tc->pscale, tc->scale, alpha) + 0.5f);
+}
+
 void projecthud(tcamera *tc, SDL_Rect *r, float x, float y, float w, float h){
 	r->x = (int)(x * tc->swidth + 0.5f);
 	r->y = (int)(y * tc->swidth + 0.5f);
@@ -130,6 +137,7 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->id = gid;
 	ret->joy = joy;
 	ret->jbuttons = joybuttons;
+	ret->name = "Unnamed";
 	gid = gid << 1;
 
 	ret->moves = malloc(sizeof(hitbox)*9);

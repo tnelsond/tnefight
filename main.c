@@ -24,14 +24,20 @@ tfighter *fighters[PLAYERS] = {NULL, NULL};
 
 SDL_Rect temprect;
 
-void drawtext(char *str, float x, float y, float w, float h){
+void drawtext(char *str, float alpha, float x, float y, float w, float h, int dynamic){
 	int i;
-	projecthud(&camera, &temprect, x, y, w, h);
+	SDL_Rect temp2;
+	if(dynamic){
+		project3(&camera, &temp2, alpha, x, y, w, h);
+	}
+	else{
+		projecthud(&camera, &temp2, x, y, w, h);
+	}
 	for(i=0; str[i]; ++i){
 		charrect.x = (str[i] % glinew) * charrect.w;
 		charrect.y = (str[i] / glinew - 1) * charrect.h;
-		SDL_RenderCopy(gren, gatlas, &charrect, &temprect);	
-		temprect.x += temprect.w;
+		SDL_RenderCopy(gren, gatlas, &charrect, &temp2);	
+		temp2.x += temp2.w;
 	}
 }
 
@@ -97,6 +103,7 @@ void draw(float alpha){
 		SDL_RenderCopyEx(gren, gatlas, &imgrect, &temprect, fighters[i]->state & HITSTUN ? fighters[i]->tick * 5 * (fighters[i]->vx > 0 ? 1 : -1) : 0, NULL, fighters[i]->left);	
 		/*fillrect(&camera, &fighters[i]->rect, &fighters[i]->prect, alpha);*/
 
+
 		if(fighters[i]->state & HITSTUN){
 			SDL_SetTextureColorMod(gatlas, 0x77, 0x0, 0x0);
 		}
@@ -124,6 +131,8 @@ void draw(float alpha){
 		}
 		setimgrect(fighters[i]->skin[1]);
 		SDL_RenderCopyEx(gren, gatlas, &imgrect, &temprect, fighters[i]->tick * (fighters[i]->vx > 0 ? 1 : -1) * (fighters[i]->state & HITSTUN ? 10 : 1), NULL, fighters[i]->left);	
+		SDL_SetTextureColorMod(gatlas, 0, 0, 0);
+		drawtext(fighters[i]->name, alpha, fighters[i]->rect.x, fighters[i]->rect.y - 1.8f, 1, 1, 1);/*fighters[i]->rect.x, fighters[i]->rect.y - 0.1f, 1.0f, 0.5f, 1); */
 	}
 
 	SDL_SetRenderDrawColor(gren, 0x44, 0x44, 0x44, 0xFF);
@@ -160,7 +169,7 @@ void draw(float alpha){
 				disp[1] = ' ';
 			}
 		}
-		drawtext(disp, 0.01f + 0.05f * 5 * i, 0.01f, 0.05f, 0.1f);
+		drawtext(disp, alpha, 0.01f + 0.05f * 5 * i, 0.01f, 0.05f, 0.1f, 0);
 	}
 }
 
@@ -223,10 +232,9 @@ int main(int argc, char *argv[]){
 	/*check(gjoy2 != NULL);*/
 
 	linit();
-	for(i = 0; i < argc - 1; ++i){
+	for(i = 0; i < argc - 1 && i < PLAYERS; ++i){
 		cfighter = fighters[i];
-		luaL_dofile(l, argv[i + 1]);
-		SDL_Log("Loaded one file");
+		lrunscript(argv[i + 1]);
 	}
 	lclose();
 

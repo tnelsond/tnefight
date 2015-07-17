@@ -111,6 +111,7 @@ struct tfighter{
 	int damage;
 	int hitlag;
 	Uint8 *skin;
+	char *name;
 };
 
 tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys, Uint32 *joybuttons, SDL_JoystickID joy, int joyxoffset, int joyyoffset, Uint8 *skin);
@@ -135,6 +136,7 @@ void tlevel_free(tlevel *tl);
 
 void project(tcamera *tc, trect *t, trect *p, SDL_Rect *r, float alpha);
 void project2(tcamera *tc, trect *t, SDL_Rect *r, float alpha);
+void project3(tcamera *tc, SDL_Rect *r, float alpha, float x, float y, float w, float h);
 void projecthud(tcamera *tc, SDL_Rect *r, float x, float y, float w, float h);
 
 void tcamera_track(tcamera *tc, trect *a, trect *b);
