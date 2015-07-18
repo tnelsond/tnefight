@@ -36,6 +36,19 @@ int lsetskin(lua_State *l){
 	return -1;
 }
 
+
+int lsetmove(lua_State *l){
+	if(lua_gettop(l) >= 3 && lua_isnumber(l, -1) && lua_isnumber(l, -2) && lua_isnumber(l, -3) && lua_isnumber(l, 4) && cfighter != NULL){
+		int i;
+		i = lua_tonumber(l, -4);
+		cfighter->moves[i].mindelay = lua_tonumber(l, -3);
+		cfighter->moves[i].vx = lua_tonumber(l, -2);
+		cfighter->moves[i].vy = lua_tonumber(l, -1);
+		return 0;
+	}
+	return -1;
+}
+
 int lsetbruiserness(lua_State *l){
 	if(lua_gettop(l) >= 0 && lua_isnumber(l, -1)){
 		int temp = lua_tonumber(l, -1);
@@ -92,6 +105,7 @@ void linit(){
 	lua_register(l, "setbruiserness", lsetbruiserness);
 	lua_register(l, "setskin", lsetskin);
 	lua_register(l, "setsize", lsetsize);
+	lua_register(l, "setmove", lsetmove);
 
 	lua_register(l, "addblock", laddblock);
 	lua_register(l, "setscale", lsetscale);
