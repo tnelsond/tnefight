@@ -10,6 +10,15 @@ int lsetcolor(lua_State *l){
 	return -1;
 }
 
+int lsetsize(lua_State *l){
+	if(lua_gettop(l) >= 1 && lua_isnumber(l, -1) && lua_isnumber(l, -2)){
+		cfighter->rect.w = lua_tonumber(l, -1);
+		cfighter->rect.h = lua_tonumber(l, -2);
+		return 0;
+	}
+	return -1;
+}
+
 int lrunscript(char *str){
 	if(luaL_dofile(l, str)){
 		error(l, "Cannot run lua script: %s", lua_tostring(l, -1));
@@ -51,7 +60,7 @@ int laddblock(lua_State *l){
 	return 0;
 }
 
-int lsetsize(lua_State *l){
+int lsetscale(lua_State *l){
 	if(lua_gettop(l) >= 1 && lua_isnumber(l, -1) && lua_isnumber(l, -2)){
 		level.rect.w = lua_tonumber(l, -2);	
 		level.rect.h = lua_tonumber(l, -1);	
@@ -82,8 +91,10 @@ void linit(){
 	lua_register(l, "setname", lsetname);
 	lua_register(l, "setbruiserness", lsetbruiserness);
 	lua_register(l, "setskin", lsetskin);
-	lua_register(l, "addblock", laddblock);
 	lua_register(l, "setsize", lsetsize);
+
+	lua_register(l, "addblock", laddblock);
+	lua_register(l, "setscale", lsetscale);
 }
 
 void lclose(){

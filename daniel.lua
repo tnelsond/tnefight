@@ -1,4 +1,5 @@
 setname("Daniel")
+setsize(4.0, 4.0)
 setcolor(0xFF, 0, 0x77)
 setskin(4, 1)
 setbruiserness(-10)

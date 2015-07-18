@@ -1,4 +1,5 @@
 setname("Tnel")
+setsize(2.0, 2.0)
 setcolor(0, 0xAA, 0)
 setskin(6, 2)
 setbruiserness(10)

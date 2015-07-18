@@ -55,7 +55,7 @@ struct hitbox{
 	trect rect, prect;
 	float vx, vy, ax, ay; /* Location change variables */
 	float vw, vh, aw, ah; /* Size change variables */
-	int attack, maxattack;
+	int attack, minattack;
 	float kb;
 	float kbgrowth;
 	double kbangle;
