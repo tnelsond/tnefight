@@ -10,11 +10,8 @@
 tfighter *cfighter;
 lua_State *l;
 
-int lrunscript(char *str);
-int lsetcolor(lua_State *l);
-int lsetskin(lua_State *l);
-int lsetbruiserness(lua_State *l);
 void linit();
+int lrunscript(char *str);
 void lclose();
 
 #endif

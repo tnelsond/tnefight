@@ -39,6 +39,7 @@
 #define PI 3.14159265358979323846 
 #define JOYDEADZONE 8000
 
+
 typedef struct{
 	float x, y, w, h;
 } trect;
@@ -78,6 +79,8 @@ typedef struct tlevel{
 	int len;
 	int MAX_BOXES;
 } tlevel;
+
+tlevel level;
 
 typedef struct{
 	char bruiserness;

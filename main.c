@@ -18,8 +18,10 @@ int gnlines = 3;
 SDL_Rect charrect = {0, 0, 6, 12};
 SDL_Rect imgrect = {0, 0, 7, 8};
 
+int debug = 1;
+char debugtest[256];
+
 tcamera camera = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 50, 800, 600};
-tlevel level;
 tfighter *fighters[PLAYERS] = {NULL, NULL};
 
 SDL_Rect temprect;
@@ -132,7 +134,9 @@ void draw(float alpha){
 		setimgrect(fighters[i]->skin[1]);
 		SDL_RenderCopyEx(gren, gatlas, &imgrect, &temprect, fighters[i]->tick * (fighters[i]->vx > 0 ? 1 : -1) * (fighters[i]->state & HITSTUN ? 10 : 1), NULL, fighters[i]->left);	
 		SDL_SetTextureColorMod(gatlas, 0, 0, 0);
-		drawtext(fighters[i]->name, alpha, fighters[i]->rect.x, fighters[i]->rect.y - 1.8f, 1, 1, 1);/*fighters[i]->rect.x, fighters[i]->rect.y - 0.1f, 1.0f, 0.5f, 1); */
+		if(fighters[i]->name){
+			drawtext(fighters[i]->name, alpha, fighters[i]->rect.x, fighters[i]->rect.y - 1.8f, 1, 1, 1);/*fighters[i]->rect.x, fighters[i]->rect.y - 0.1f, 1.0f, 0.5f, 1); */
+		}
 	}
 
 	SDL_SetRenderDrawColor(gren, 0x44, 0x44, 0x44, 0xFF);
@@ -171,6 +175,10 @@ void draw(float alpha){
 		}
 		drawtext(disp, alpha, 0.01f + 0.05f * 5 * i, 0.01f, 0.05f, 0.1f, 0);
 	}
+	if(debug){
+		sprintf(debugtest, "%d, %d, %d", fighters[0]->hitlag, fighters[0]->tick, fighters[0]->state);
+		drawtext(debugtest, alpha, 0.01f + 0.05f, 0.1f, 0.05f, 0.1f, 0);
+	}
 }
 
 void loadfont(){
@@ -184,7 +192,6 @@ void loadfont(){
 
 int main(int argc, char *argv[]){
 	Uint32 time, oldtime;
-	trect levelblocks[] = {{20, 35, 4, 20}, {23, 34, 3, 20}, {25, 32, 40, 20}, {47, 16, 5, 0.5f}, {50, 27, 5, 0.5f}, {57, 22, 5, 0.5f}, {60, 36, 20, 20}, {70, 22, 5, 8}};
 	hitbox boxes[30];
 	int quit = 0;
 	int i;
@@ -199,22 +206,10 @@ int main(int argc, char *argv[]){
 	Uint8 skin2[] = {6, 2};
 	fighters[0] = tfighter_new(34, 15, 0x77, 0x55, 0x00, c1, b1, 0, SDL_JoystickGetAxis(gjoy, 0), SDL_JoystickGetAxis(gjoy, 1), skin1);
 	fighters[1] = tfighter_new(36, 15, 0x00, 0x66, 0xbb, c2, b1, 1, SDL_JoystickGetAxis(gjoy2, 0), SDL_JoystickGetAxis(gjoy2, 1), skin2);
-	level.blocks = levelblocks;
-	level.len = 8;
-	level.rect.x = 0;
-	level.rect.y = 0;
-	level.rect.w = 100;
-	level.rect.h = 52;
 	camera.bw = level.rect.w;
 	camera.bh = level.rect.h;
-	level.boxes = boxes;
-	level.cbox = 0;
-	level.MAX_BOXES = 30;
 
-	for(i=0; i<level.MAX_BOXES; ++i){
-		boxes[i].owner = NULL;
-	}
-	
+
 	check(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) >= 0);
 
 	gwin = SDL_CreateWindow("SDL TEST", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, camera.swidth, camera.sheight, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
@@ -231,13 +226,41 @@ int main(int argc, char *argv[]){
 	gjoy2 = SDL_JoystickOpen( 1 );
 	/*check(gjoy2 != NULL);*/
 
+	level.len = 256;
+	level.cbox = 0;
+	level.rect.x = 0;
+	level.rect.y = 0;
 	linit();
-	for(i = 0; i < argc - 1 && i < PLAYERS; ++i){
-		cfighter = fighters[i];
-		lrunscript(argv[i + 1]);
+	for(i = 0; i < argc - 1; ++i){
+		if(strcmp(argv[i + 1], "-level") != 0){
+			if(i < PLAYERS){
+				cfighter = fighters[i];
+				lrunscript(argv[i + 1]);
+			}
+		}
+		else{
+			SDL_Log("Loading level");
+			cfighter = NULL;
+			lrunscript(argv[i + 2]);
+			SDL_Log("Loaded level");
+			break;
+		}
+	}
+	if(level.blocks == NULL){
+		lrunscript("defaultlevel.lua");
 	}
 	lclose();
+	level.len = level.cbox;
+	level.blocks = realloc(level.blocks, sizeof(trect) * level.len);
 
+
+	level.boxes = boxes;
+	level.cbox = 0;
+	level.MAX_BOXES = 30;
+	for(i=0; i<level.MAX_BOXES; ++i){
+		boxes[i].owner = NULL;
+	}
+	
 	oldtime = SDL_GetTicks();
 	time = oldtime;
 
@@ -288,8 +311,11 @@ int main(int argc, char *argv[]){
 			SDL_Delay(timesleep);
 	}
 
-	for(i=0; i<PLAYERS; ++i)
+	for(i=0; i<PLAYERS; ++i){
+		if(fighters[i]->name)
+			free(fighters[i]->name);
 		free(fighters[i]);
+	}
 	close_game();
 	return 0;
 }

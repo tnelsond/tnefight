@@ -137,7 +137,7 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->id = gid;
 	ret->joy = joy;
 	ret->jbuttons = joybuttons;
-	ret->name = "Unnamed";
+	ret->name = NULL;
 	gid = gid << 1;
 
 	ret->moves = malloc(sizeof(hitbox)*9);
@@ -407,6 +407,9 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 }
 
 void tfighter_free(tfighter *t){
+	if(t->name){
+		free(t->name);
+	}
 	free(t->moves);
 	free(t);
 	t = NULL;
@@ -541,12 +544,7 @@ void tfighter_input(tfighter *t, tlevel *tl, SDL_Event *e){
 			if(e->jaxis.value + t->joyxoffset < -JOYDEADZONE){
 				t->state &= ~RIGHT;
 				t->state |= LEFT;
-				if(e->jaxis.value > -JOYDEADZONE * 3){
-					t->state |= WALKING;
-				}
-				else{
-					t->state |= RUNNING;
-				}
+				t->state |= RUNNING;
 			}
 			else if(e->jaxis.value + t->joyxoffset > JOYDEADZONE){
 				t->state &= ~LEFT;
@@ -599,10 +597,11 @@ void tfighter_update(tfighter *t, tlevel *tl){
 	/* DEATH */
 	if(t->rect.x > tl->rect.w + 1 || t->rect.x < -1 || t->rect.y < -4 || t->rect.y > tl->rect.h + 1){
 		t->state = 0;
-		t->rect.x = 50;
-		t->rect.y = 15;
+		t->rect.x = 20;
+		t->rect.y = 5;
 		t->vx = 0;
 		t->vy = 0;
+		t->tick = 0;
 		t->damage = 0;
 	}
 
@@ -675,6 +674,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 				--t->tick;
 				if(t->tick <= 0){
 					t->state -= HITSTUN;
+					t->tick = 0;
 				}
 		}
 		/* Attacking & Movement */
