@@ -129,15 +129,16 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->vx = 0;
 	ret->vy = 0;
 	ret->accel = 0.08f;
-	ret->walk = 0.1f;
-	ret->run = 0.3f;
-	ret->speed = 0.3f;
-	ret->gravity = 0.03f;
+	ret->walk = 0.03f;
+	ret->run = 0.05f;
+	ret->speed = 0.0f;
+	ret->gravity = 0.015f;
 	ret->hitlag = 0;
 	ret->id = gid;
 	ret->joy = joy;
 	ret->jbuttons = joybuttons;
 	ret->name = NULL;
+	ret->strength = 0.5f;
 	gid = gid << 1;
 
 	ret->moves = malloc(sizeof(hitbox)*9);
@@ -474,7 +475,7 @@ void hitbox_update(hitbox *h){
 		h->rect.y += h->vy + h->vh/2;
 	}
 	for(i = 0; i < level.MAX_BOXES; ++i){
-		if(level.boxes[i].owner != NULL && intersects(&level.boxes[i].rect, &h->rect)){
+		if(level.boxes[i].owner != NULL && &level.boxes[i] != h && intersects(&level.boxes[i].rect, &h->rect)){
 			if(level.boxes[i].type & REFLECT){
 				h->vx *= -1;
 				h->ax *= -1;
@@ -483,6 +484,23 @@ void hitbox_update(hitbox *h){
 					h->owner->vx *= -1;
 				}
 				h->owner = level.boxes[i].owner;
+			}
+			else if(level.boxes[i].tick > level.boxes[i].maxdelay && h->tick > h->maxdelay){
+				int diff = h->attack - level.boxes[i].attack;
+				if(diff > ATTACKPRECEDENCE){
+					level.boxes[i].owner->tick = 5;
+					level.boxes[i].owner = NULL;
+				}
+				else if(diff < -ATTACKPRECEDENCE){
+					h->owner->tick = 5;
+					h->owner = NULL;
+				}
+				else{
+					level.boxes[i].owner->tick = 5;
+					h->owner->tick = 5;
+					level.boxes[i].owner = NULL;
+					h->owner = NULL;
+				}
 			}
 		}
 	}
@@ -515,9 +533,9 @@ void hitbox_spawn(tfighter *t, hitbox *src, hitbox *dest){
 	dest->aw = src->aw;
 	dest->ah = src->ah;
 
-	dest->attack = src->attack;
-	dest->minattack = src->minattack;
-	dest->kb = src->kb;
+	dest->attack = src->attack * t->strength;
+	dest->minattack = src->minattack * t->strength;
+	dest->kb = src->kb * t->strength;
 	dest->kbangle = src->kbangle;
 	dest->kbgrowth = src->kbgrowth;
 	dest->owner = src->owner;

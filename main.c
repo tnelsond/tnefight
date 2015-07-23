@@ -177,7 +177,7 @@ void draw(float alpha){
 	}
 	if(debug){
 		sprintf(debugtest, "%d, %d, %d", fighters[0]->hitlag, fighters[0]->tick, fighters[0]->state);
-		drawtext(debugtest, alpha, 0.01f + 0.05f, 0.1f, 0.05f, 0.1f, 0);
+		drawtext(debugtest, alpha, 0.01f + 0.05f, 0.1f, 0.01f, 0.02f, 0);
 	}
 }
 

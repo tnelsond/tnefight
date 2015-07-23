@@ -38,6 +38,7 @@
 #define NUMKEYS 5;
 #define PI 3.14159265358979323846 
 #define JOYDEADZONE 8000
+#define ATTACKPRECEDENCE 9
 
 
 typedef struct{
@@ -92,7 +93,7 @@ struct tfighter{
 	trect rect, prect;
 	float vx, vy;
 	float walk, run, speed, accel;
-	float attack;
+	float strength;
 	float defense;
 	float jumpvel;
 	int MAXJUMPS;

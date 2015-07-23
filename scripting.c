@@ -40,6 +40,7 @@ int lsetskin(lua_State *l){
 int lsetmove(lua_State *l){
 	if(lua_gettop(l) >= 3 && lua_isnumber(l, -1) && lua_isnumber(l, -2) && lua_isnumber(l, -3) && lua_isnumber(l, 4) && cfighter != NULL){
 		int i;
+		int temp = lua_tonumber(l, -3);
 		i = lua_tonumber(l, -4);
 		cfighter->moves[i].mindelay = lua_tonumber(l, -3);
 		cfighter->moves[i].vx = lua_tonumber(l, -2);
@@ -52,8 +53,24 @@ int lsetmove(lua_State *l){
 int lsetbruiserness(lua_State *l){
 	if(lua_gettop(l) >= 0 && lua_isnumber(l, -1)){
 		int temp = lua_tonumber(l, -1);
-		cfighter->gravity = (temp + 20.0f) / 500;
-		cfighter->run = 1.7f - (temp + 20.0f) / 20;
+		if(temp > 100){
+			return -2;
+		}
+		cfighter->run += (100 - temp)/300.0f;
+		cfighter->strength += temp/100.0f;
+		return 0;
+	}
+	return -1;
+}
+
+int lsetjump(lua_State *l){
+	if(lua_gettop(l) >= 0 && lua_isnumber(l, -1)){
+		int temp = lua_tonumber(l, -1);
+		if(temp > 100){
+			return -2;
+		}
+		cfighter->gravity += temp/2000.0f;
+		cfighter->jumpvel += temp/200.0f;
 		return 0;
 	}
 	return -1;
@@ -109,6 +126,7 @@ void linit(){
 
 	lua_register(l, "addblock", laddblock);
 	lua_register(l, "setscale", lsetscale);
+	lua_register(l, "setjump", lsetjump);
 }
 
 void lclose(){
