@@ -88,6 +88,20 @@ void setimgrect(int num){
 	imgrect.x = (num % glinew) * imgrect.w;
 }
 
+void copyrect(SDL_Rect *in, SDL_Rect *out){
+	out->x = in->x;
+	out->y = in->y;
+	out->w = in->w;
+	out->h = in->h;
+}
+
+void copytrect(trect *in, trect *out){
+	out->x = in->x;
+	out->y = in->y;
+	out->w = in->w;
+	out->h = in->h;
+}
+
 void draw(float alpha){
 	int i;
 	char disp[] = "   %";
@@ -98,14 +112,34 @@ void draw(float alpha){
 	fillrect2(&camera, &level.rect, alpha);
 
 	for(i=0; i<PLAYERS; ++i){
+		int walktick;
+		SDL_Rect temp2;
 		SDL_SetRenderDrawColor(gren, fighters[i]->red, fighters[i]->green, fighters[i]->blue, 0xFF);
 		project(&camera, &fighters[i]->rect, &fighters[i]->prect, &temprect, alpha);
-		setimgrect(((int)(fighters[i]->rect.x) % 2 == 0 ? 0 : 1) + fighters[i]->skin[0]);
+
+		/* Feet */
+		copyrect(&temprect, &temp2);
+		walktick = (int)(fighters[i]->rect.x / fighters[i]->rect.w * 10) % 10; 
+		temp2.x += walktick * fighters[i]->rect.w * camera.scale / 20;
+		temp2.h /= 2;
+		temp2.w /= 2;
+		temp2.y += temp2.h;
+		setimgrect(fighters[i]->skin[2]);
+		SDL_SetTextureColorMod(gatlas, fighters[i]->red * 8/10, fighters[i]->green * 8/10, fighters[i]->blue * 8/10);
+		SDL_RenderCopyEx(gren, gatlas, &imgrect, &temp2, fighters[i]->state & HITSTUN ? fighters[i]->tick * 5 * (fighters[i]->vx > 0 ? -1 : 1) : walktick * 4 * (fighters[i]->left ? -1 : 1), NULL, fighters[i]->left);	
+		temp2.x = temprect.x * 2 + temprect.w / 2 - temp2.x;
+		SDL_RenderCopyEx(gren, gatlas, &imgrect, &temp2, fighters[i]->state & HITSTUN ? fighters[i]->tick * 5 * (fighters[i]->vx > 0 ? -1 : 1) : 0, NULL, fighters[i]->left);	
+
+		/* Chest */
+		copyrect(&temprect, &temp2);
+		temp2.h = temp2.h * 2 / 3;
+		setimgrect(fighters[i]->skin[0]);
 		SDL_SetTextureColorMod(gatlas, fighters[i]->red, fighters[i]->green, fighters[i]->blue);
-		SDL_RenderCopyEx(gren, gatlas, &imgrect, &temprect, fighters[i]->state & HITSTUN ? fighters[i]->tick * 5 * (fighters[i]->vx > 0 ? 1 : -1) : 0, NULL, fighters[i]->left);	
+		SDL_RenderCopyEx(gren, gatlas, &imgrect, &temp2, fighters[i]->state & HITSTUN ? fighters[i]->tick * 5 * (fighters[i]->vx > 0 ? 1 : -1) : 0, NULL, fighters[i]->left);	
 		/*fillrect(&camera, &fighters[i]->rect, &fighters[i]->prect, alpha);*/
 
 
+		/* Head */
 		if(fighters[i]->state & HITSTUN){
 			SDL_SetTextureColorMod(gatlas, 0x77, 0x0, 0x0);
 		}
@@ -202,8 +236,8 @@ int main(int argc, char *argv[]){
 	SDL_Keycode c1[] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_j, SDLK_k, SDLK_l};
 	Uint32 b1[] = {ATTACKING, SPECIAL, 0, JUMP, SHIELDING};
 	SDL_Keycode c2[] = {SDLK_LEFT, SDLK_RIGHT, SDLK_UP, SDLK_DOWN, SDLK_KP_0, SDLK_KP_PERIOD, SDLK_KP_ENTER};
-	Uint8 skin1[] = {4, 1};
-	Uint8 skin2[] = {6, 2};
+	Uint8 skin1[] = {5, 1, 14};
+	Uint8 skin2[] = {8, 2, 13};
 	fighters[0] = tfighter_new(34, 15, 0x77, 0x55, 0x00, c1, b1, 0, SDL_JoystickGetAxis(gjoy, 0), SDL_JoystickGetAxis(gjoy, 1), skin1);
 	fighters[1] = tfighter_new(36, 15, 0x00, 0x66, 0xbb, c2, b1, 1, SDL_JoystickGetAxis(gjoy2, 0), SDL_JoystickGetAxis(gjoy2, 1), skin2);
 	camera.bw = level.rect.w;

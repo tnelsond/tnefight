@@ -12,8 +12,8 @@ int lsetcolor(lua_State *l){
 
 int lsetsize(lua_State *l){
 	if(lua_gettop(l) >= 1 && lua_isnumber(l, -1) && lua_isnumber(l, -2)){
-		cfighter->rect.w = lua_tonumber(l, -1);
-		cfighter->rect.h = lua_tonumber(l, -2);
+		cfighter->rect.w = lua_tonumber(l, -2);
+		cfighter->rect.h = lua_tonumber(l, -1);
 		return 0;
 	}
 	return -1;

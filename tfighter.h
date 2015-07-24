@@ -39,6 +39,7 @@
 #define PI 3.14159265358979323846 
 #define JOYDEADZONE 8000
 #define ATTACKPRECEDENCE 9
+#define DAMPENING 0.9f
 
 
 typedef struct{

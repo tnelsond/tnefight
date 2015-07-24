@@ -483,6 +483,9 @@ void hitbox_update(hitbox *h){
 				if(~h->type & PROJECTILE){
 					h->owner->vx *= -1;
 				}
+				if(h->owner->tick > 5){
+					h->owner->tick = 5;
+				}
 				h->owner = level.boxes[i].owner;
 			}
 			else if(level.boxes[i].tick > level.boxes[i].maxdelay && h->tick > h->maxdelay){
@@ -490,16 +493,19 @@ void hitbox_update(hitbox *h){
 				if(diff > ATTACKPRECEDENCE){
 					level.boxes[i].owner->tick = 5;
 					level.boxes[i].owner = NULL;
+					return;
 				}
 				else if(diff < -ATTACKPRECEDENCE){
 					h->owner->tick = 5;
 					h->owner = NULL;
+					return;
 				}
 				else{
 					level.boxes[i].owner->tick = 5;
 					h->owner->tick = 5;
 					level.boxes[i].owner = NULL;
 					h->owner = NULL;
+					return;
 				}
 			}
 		}
@@ -695,7 +701,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 			box->hit |= t->id;
 			t->state &= ~(ATTACKING | HELPLESS | SPECIAL | WALKING | RUNNING | JUMP | CHARGING);
 			t->state |= HITSTUN;
-			t->tick = (int)(box->kb + box->kbgrowth * t->damage / 10);
+			t->tick = (int)(box->kb + box->kbgrowth * t->damage / 5);
 			t->damage += box->attack;
 			t->hitlag = box->attack;
 			box->hitlag = box->attack;
@@ -753,7 +759,9 @@ void tfighter_update(tfighter *t, tlevel *tl){
 			if(intersects(&t->rect, &tl->blocks[i])){
 				if(t->vy > 0 && (tl->blocks[i].h >= 0.9f || !(t->state & DOWN))){
 					if(t->state & HITSTUN){
-						t->vy *= -1;
+						t->hitlag = 2;
+						t->vy *= -DAMPENING;
+						t->vx *= DAMPENING;
 					}
 					else{
 						t->vy = 0;
@@ -764,7 +772,9 @@ void tfighter_update(tfighter *t, tlevel *tl){
 				}
 				else if(tl->blocks[i].h >= 0.9f){
 					if(t->state & HITSTUN){
-						t->vy *= -1;
+						t->hitlag = 2;
+						t->vy *= -DAMPENING;
+						t->vx *= DAMPENING;
 					}
 					else{
 						t->vy = 0;	
@@ -782,7 +792,9 @@ void tfighter_update(tfighter *t, tlevel *tl){
 				if(intersects(&t->rect, &tl->blocks[i])){
 					if(t->vx > 0){
 						if(t->state & HITSTUN){
-							t->vx *= -1;	
+							t->hitlag = 10;
+							t->vx *= -DAMPENING;	
+							t->vy *= DAMPENING;
 						}
 						else{
 							t->vx = 0;	
@@ -791,7 +803,9 @@ void tfighter_update(tfighter *t, tlevel *tl){
 					}
 					else{
 						if(t->state & HITSTUN){
-							t->vx *= -1;	
+							t->hitlag = 10;
+							t->vx *= -DAMPENING;	
+							t->vy *= DAMPENING;
 						}
 						else{
 							t->vx = 0;
