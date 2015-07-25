@@ -1,28 +1,31 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
+#include <stdlib.h>
+#include <time.h>
+
 #include "scripting.h"
 #include "tfighter.h"
 
 #define min(a, b) a < b ? a : b
-#define PLAYERS 2
 
 SDL_Window *gwin = NULL;
 SDL_Renderer *gren = NULL;
-SDL_Joystick* gjoy = NULL;
-SDL_Joystick* gjoy2 = NULL;
+SDL_Joystick **gjoy = NULL;
 
-SDL_Texture *gatlas;
+SDL_Texture *gatlas = NULL;
 int glinew = 32;
 int gnlines = 3;
+int PLAYERS = 0;
+int MAXPLAYERS = 8;
 SDL_Rect charrect = {0, 0, 6, 12};
 SDL_Rect imgrect = {0, 0, 7, 8};
 
-int debug = 1;
+int debug = 0;
 char debugtest[256];
 
 tcamera camera = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 50, 800, 600};
-tfighter *fighters[PLAYERS] = {NULL, NULL};
+tfighter **fighters = NULL;
 
 SDL_Rect temprect;
 
@@ -105,6 +108,7 @@ void copytrect(trect *in, trect *out){
 void draw(float alpha){
 	int i;
 	char disp[] = "   %";
+
 	SDL_SetRenderDrawColor(gren, 0x00, 0x00, 0x00, 0xFF);
 	SDL_RenderClear(gren);
 
@@ -113,7 +117,11 @@ void draw(float alpha){
 
 	for(i=0; i<PLAYERS; ++i){
 		int walktick;
+		if(fighters[i] == NULL){
+			break;
+		}
 		SDL_Rect temp2;
+		setimgrect(fighters[i]->skin[1]);
 		SDL_SetRenderDrawColor(gren, fighters[i]->red, fighters[i]->green, fighters[i]->blue, 0xFF);
 		project(&camera, &fighters[i]->rect, &fighters[i]->prect, &temprect, alpha);
 
@@ -207,7 +215,7 @@ void draw(float alpha){
 				disp[1] = ' ';
 			}
 		}
-		drawtext(disp, alpha, 0.01f + 0.05f * 5 * i, 0.01f, 0.05f, 0.1f, 0);
+		drawtext(disp, alpha, 0.01f + 0.025f * 5 * i, 0.01f, 0.025f, 0.04f, 0);
 	}
 	if(debug){
 		sprintf(debugtest, "%d, %d, %d", fighters[0]->hitlag, fighters[0]->tick, fighters[0]->state);
@@ -225,7 +233,7 @@ void loadfont(){
 }
 
 int main(int argc, char *argv[]){
-	Uint32 time, oldtime;
+	Uint32 ttime, oldtime;
 	hitbox boxes[30];
 	int quit = 0;
 	int i;
@@ -233,13 +241,16 @@ int main(int argc, char *argv[]){
 	Uint32 physicsstep = 1000 / 60; /* 60 fps physics */
 	Uint32 vfps = 1000 / 60; /* 60 fps */
 	SDL_Event e;
-	SDL_Keycode c1[] = {SDLK_a, SDLK_d, SDLK_w, SDLK_s, SDLK_j, SDLK_k, SDLK_l};
-	Uint32 b1[] = {ATTACKING, SPECIAL, 0, JUMP, SHIELDING};
-	SDL_Keycode c2[] = {SDLK_LEFT, SDLK_RIGHT, SDLK_UP, SDLK_DOWN, SDLK_KP_0, SDLK_KP_PERIOD, SDLK_KP_ENTER};
-	Uint8 skin1[] = {5, 1, 14};
-	Uint8 skin2[] = {8, 2, 13};
-	fighters[0] = tfighter_new(34, 15, 0x77, 0x55, 0x00, c1, b1, 0, SDL_JoystickGetAxis(gjoy, 0), SDL_JoystickGetAxis(gjoy, 1), skin1);
-	fighters[1] = tfighter_new(36, 15, 0x00, 0x66, 0xbb, c2, b1, 1, SDL_JoystickGetAxis(gjoy2, 0), SDL_JoystickGetAxis(gjoy2, 1), skin2);
+	SDL_Keycode c[][8] = {{SDLK_1, SDLK_2, SDLK_3, SDLK_4, SDLK_7, SDLK_8, SDLK_9, SDLK_0},
+											{SDLK_q, SDLK_w, SDLK_e, SDLK_r, SDLK_u, SDLK_i, SDLK_o, SDLK_p},
+											{SDLK_LEFT, SDLK_RIGHT, SDLK_UP, SDLK_DOWN, SDLK_KP_0, SDLK_KP_PERIOD, SDLK_KP_ENTER, SDLK_KP_1},
+											{SDLK_a, SDLK_s, SDLK_d, SDLK_f, SDLK_j, SDLK_k, SDLK_l, SDLK_SEMICOLON},
+											{SDLK_z, SDLK_x, SDLK_c, SDLK_v, SDLK_m, SDLK_LESS, SDLK_GREATER, SDLK_QUESTION}
+											};
+	Uint32 b[] = {ATTACKING, SPECIAL, 0, JUMP, SHIELDING};
+	fighters = malloc(sizeof(*fighters) * MAXPLAYERS);
+	Uint8 *skin = malloc(sizeof(Uint8) * 3 * MAXPLAYERS);
+	gjoy = malloc(sizeof(*gjoy) * MAXPLAYERS);
 	camera.bw = level.rect.w;
 	camera.bh = level.rect.h;
 
@@ -255,22 +266,21 @@ int main(int argc, char *argv[]){
 	check(IMG_Init(IMG_INIT_JPG));
 	loadfont();
 
-	gjoy = SDL_JoystickOpen( 0 );
-	/*check(gjoy != NULL);*/
-	gjoy2 = SDL_JoystickOpen( 1 );
-	/*check(gjoy2 != NULL);*/
-
 	level.len = 256;
 	level.cbox = 0;
 	level.rect.x = 0;
 	level.rect.y = 0;
 	linit();
+	srand(time(NULL));
 	for(i = 0; i < argc - 1; ++i){
 		if(strcmp(argv[i + 1], "-level") != 0){
-			if(i < PLAYERS){
-				cfighter = fighters[i];
-				lrunscript(argv[i + 1]);
-			}
+			gjoy[i] = SDL_JoystickOpen(i);
+			fighters[i] = tfighter_new(34 + i * 2, 10, 0x77, 0x55, 0x00, c[i], b, i, SDL_JoystickGetAxis(gjoy[i], 0), SDL_JoystickGetAxis(gjoy[i], 1), &skin[i]);
+			cfighter = fighters[i];
+			PLAYERS = i + 1;
+			lua_pushnumber(l, rand());
+			lua_setglobal(l, "seed");	
+			lrunscript(argv[i + 1]);
 		}
 		else{
 			SDL_Log("Loading level");
@@ -296,15 +306,15 @@ int main(int argc, char *argv[]){
 	}
 	
 	oldtime = SDL_GetTicks();
-	time = oldtime;
+	ttime = oldtime;
 
 	while(!quit){
 		Uint32 delta;
 		int timesleep;
 		float alpha = 0;
-		oldtime = time;
-		time = SDL_GetTicks();
-		delta = time - oldtime;
+		oldtime = ttime;
+		ttime = SDL_GetTicks();
+		delta = ttime - oldtime;
 		accumulator += min(delta, 100);
 		while(accumulator >= physicsstep){
 			while(SDL_PollEvent(&e) != 0){
@@ -323,7 +333,7 @@ int main(int argc, char *argv[]){
 				}
 			}
 
-			tcamera_track(&camera, &fighters[0]->rect, &fighters[1]->rect);
+			tcamera_track(&camera, fighters, PLAYERS);
 
 			for(i=0; i<PLAYERS; ++i){
 				tfighter_update(fighters[i], &level);
@@ -346,10 +356,20 @@ int main(int argc, char *argv[]){
 	}
 
 	for(i=0; i<PLAYERS; ++i){
-		if(fighters[i]->name)
+		if(fighters[i]->name){
 			free(fighters[i]->name);
+		}
 		free(fighters[i]);
+		/* BUGGY 
+		if(gjoy[i] != NULL){
+			SDL_JoystickClose(gjoy[i]);
+			gjoy[i] = NULL;
+		}
+		*/
 	}
+	free(fighters);
+	free(skin);
+	free(gjoy);
 	close_game();
 	return 0;
 }

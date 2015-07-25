@@ -40,53 +40,46 @@ void projecthud(tcamera *tc, SDL_Rect *r, float x, float y, float w, float h){
 	r->h = (int)(h * tc->swidth + 0.5f);
 }
 
-void tcamera_track(tcamera *tc, trect *a, trect *b){
-	float height, width, x, y;
+void tcamera_track(tcamera *tc, tfighter **t, int len){
+	float height, width, x, y, minx, miny, maxx, maxy;
+	height = width = x = y = minx = miny = maxx = maxy = 0;
+	int i;
+
 	tc->px = tc->x;
 	tc->py = tc->y;
 	tc->pscale = tc->scale;
-	width = (a->x + a->w/2) - (b->x + b->w/2);
-	if(width < 0){
-		width = -width;
-	}
-	height = (a->y + a->h/2) - (b->y + b->h/2);
-	if(height < 0){
-		height = -height;
+
+	for(i = 0; i < len; ++i){
+		if(i == 0){
+			maxx = t[i]->rect.x + t[i]->rect.w;
+			minx = t[i]->rect.x;
+			maxy = t[i]->rect.y + t[i]->rect.h; 
+			miny = t[i]->rect.y;
+		}
+		else if(t[i]->rect.x < minx){
+			minx = t[i]->rect.x;
+		}
+		else if(t[i]->rect.x + t[i]->rect.w > maxx){
+			maxx = t[i]->rect.x + t[i]->rect.w;
+		}
+		else if(t[i]->rect.y < miny){
+			miny = t[i]->rect.y;
+		}
+		else if(t[i]->rect.y + t[i]->rect.h > maxy){
+			maxy = t[i]->rect.y + t[i]->rect.h;
+		}
 	}
 
-	x = ((a->x + a->w/2) + (b->x + b->w/2)) / 2;
-	y = ((a->y + a->h/2) + (b->y + b->h/2)) / 2;
+	width = maxx - minx;
+	height = maxy - miny;
+
+	x = (maxx + minx) / 2;
+	y = (maxy + miny) / 2;
 	tc->scale = tc->swidth / (width > height ? width + 20 : height + 20);
 	tc->cx = x;
 	tc->cy = y;
 	tc->x = tc->cx - tc->swidth/tc->scale/2;
 	tc->y = tc->cy - tc->sheight/tc->scale/2;
-
-	/*
-	if(tc->scale > tc->bw/2){
-		tc->scale = tc->bw/2;
-	}
-	if(tc->scale > tc->bh/2){
-		tc->scale = tc->bh/2;
-	}
-
-	if(tc->x < tc->bx){
-		tc->x = tc->bx;
-		tc->cx = tc->x + tc->scale;
-	}
-	if(tc->y < tc->by){
-		tc->y = tc->by;
-		tc->cy = tc->y + tc->scale;
-	}
-	if(tc->cy + tc->scale > tc->bh){
-		tc->cy = tc->bh - tc->scale;
-		tc->y = tc->cy - tc->scale;
-	}
-	if(tc->cx + tc->scale > tc->bw){
-		tc->cx = tc->bw - tc->scale;
-		tc->x = tc->cx - tc->scale;
-	}
-	*/
 }
 
 tlevel *tlevel_new(int len){

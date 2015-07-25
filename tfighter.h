@@ -40,6 +40,7 @@
 #define JOYDEADZONE 8000
 #define ATTACKPRECEDENCE 9
 #define DAMPENING 0.9f
+#define MAXSKIN 13
 
 
 typedef struct{
@@ -144,6 +145,6 @@ void project2(tcamera *tc, trect *t, SDL_Rect *r, float alpha);
 void project3(tcamera *tc, SDL_Rect *r, float alpha, float x, float y, float w, float h);
 void projecthud(tcamera *tc, SDL_Rect *r, float x, float y, float w, float h);
 
-void tcamera_track(tcamera *tc, trect *a, trect *b);
+void tcamera_track(tcamera *tc, tfighter **t, int len);
 
 #endif
