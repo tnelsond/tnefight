@@ -40,9 +40,9 @@ void projecthud(tcamera *tc, SDL_Rect *r, float x, float y, float w, float h){
 	r->h = (int)(h * tc->swidth + 0.5f);
 }
 
-void tcamera_track(tcamera *tc, tfighter **t, int len){
-	float height, width, x, y, minx, miny, maxx, maxy;
-	height = width = x = y = minx = miny = maxx = maxy = 0;
+void tcamera_track(tcamera *tc, tlevel *tl, tfighter **t, int len){
+	float height, width, minx, miny, maxx, maxy;
+	height = width = minx = miny = maxx = maxy = 0;
 	int i;
 
 	tc->px = tc->x;
@@ -53,33 +53,56 @@ void tcamera_track(tcamera *tc, tfighter **t, int len){
 		if(i == 0){
 			maxx = t[i]->rect.x + t[i]->rect.w;
 			minx = t[i]->rect.x;
-			maxy = t[i]->rect.y + t[i]->rect.h; 
-			miny = t[i]->rect.y;
+			maxy = t[i]->rect.y; 
+			miny = t[i]->rect.y - t[i]->rect.h;
 		}
-		else if(t[i]->rect.x < minx){
-			minx = t[i]->rect.x;
-		}
-		else if(t[i]->rect.x + t[i]->rect.w > maxx){
-			maxx = t[i]->rect.x + t[i]->rect.w;
-		}
-		else if(t[i]->rect.y < miny){
-			miny = t[i]->rect.y;
-		}
-		else if(t[i]->rect.y + t[i]->rect.h > maxy){
-			maxy = t[i]->rect.y + t[i]->rect.h;
+		else{
+			if(t[i]->rect.x < minx){
+				minx = t[i]->rect.x;
+			}
+			if(t[i]->rect.x + t[i]->rect.w > maxx){
+				maxx = t[i]->rect.x + t[i]->rect.w;
+			}
+			if(t[i]->rect.y - t[i]->rect.h < miny){
+				miny = t[i]->rect.y - t[i]->rect.h;
+			}
+			if(t[i]->rect.y > maxy){
+				maxy = t[i]->rect.y;
+			}
 		}
 	}
 
+	minx -= CAMERABORDER;
+	miny -= CAMERABORDER;
+	maxx += CAMERABORDER;
+	maxy += CAMERABORDER;
+
+	if(minx < tl->rect.x)
+		minx = tl->rect.x;
+	else if(minx >= tl->rect.x + tl->rect.w)
+		minx = tl->rect.x + tl->rect.w - CAMERABORDER;
+	if(maxx <= tl->rect.x)
+		maxx = tl->rect.x + CAMERABORDER;
+	else if(maxx > tl->rect.x + tl->rect.w)
+		maxx = tl->rect.x + tl->rect.w;
+
+	if(miny < tl->rect.y)
+		miny = tl->rect.y;
+	else if(miny >= tl->rect.y + tl->rect.h)
+		miny = tl->rect.y + tl->rect.h - CAMERABORDER;
+	if(maxy <= tl->rect.y)
+		maxy = tl->rect.y + CAMERABORDER;
+	else if(maxy > tl->rect.y + tl->rect.h)
+		maxy = tl->rect.y + tl->rect.h;
+
 	width = maxx - minx;
 	height = maxy - miny;
-
-	x = (maxx + minx) / 2;
-	y = (maxy + miny) / 2;
-	tc->scale = tc->swidth / (width > height ? width + 20 : height + 20);
-	tc->cx = x;
-	tc->cy = y;
-	tc->x = tc->cx - tc->swidth/tc->scale/2;
-	tc->y = tc->cy - tc->sheight/tc->scale/2;
+	tc->scale = (tc->swidth/width < tc->sheight/height ? tc->swidth/width : tc->sheight/height);
+	tc->x = minx;
+	tc->y = miny;
+	if(tc->y + tc->sheight/tc->scale > tl->rect.y + tl->rect.h){
+		tc->y = tl->rect.y + tl->rect.h - tc->sheight/tc->scale;
+	}
 }
 
 tlevel *tlevel_new(int len){
@@ -631,11 +654,11 @@ void tfighter_update(tfighter *t, tlevel *tl){
 	t->prect.h = t->rect.h;
 
 	/* DEATH */
-	if(t->rect.x > tl->rect.w + 1 || t->rect.x < -1 || t->rect.y < -4 || t->rect.y > tl->rect.h + 1){
+	if(t->rect.x > tl->rect.x + tl->rect.w + 1 || t->rect.x + t->rect.w < tl->rect.x || t->rect.y + t->rect.h < tl->rect.y - 4 || t->rect.y > tl->rect.y + tl->rect.h + 1){
 		t->state = 0;
 		t->jump = 0;
-		t->rect.x = 20;
-		t->rect.y = 5;
+		t->rect.x = tl->rect.x + tl->spawnx - t->rect.w / 2;
+		t->rect.y = tl->rect.y + tl->spawny;
 		t->vx = 0;
 		t->vy = 0;
 		t->tick = 0;

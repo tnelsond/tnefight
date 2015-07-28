@@ -41,6 +41,7 @@
 #define ATTACKPRECEDENCE 9
 #define DAMPENING 0.9f
 #define MAXSKIN 13
+#define CAMERABORDER 20
 
 
 typedef struct{
@@ -48,7 +49,7 @@ typedef struct{
 } trect;
 
 typedef struct{
-	float px, py, x, y, cx, cy, pscale, scale, bx, by, bw, bh;
+	float px, py, x, y, pscale, scale;
 	int swidth, sheight;
 } tcamera;
 
@@ -81,6 +82,8 @@ typedef struct tlevel{
 	trect rect;
 	int len;
 	int MAX_BOXES;
+	float spawnx;
+	float spawny;
 } tlevel;
 
 tlevel level;
@@ -145,6 +148,6 @@ void project2(tcamera *tc, trect *t, SDL_Rect *r, float alpha);
 void project3(tcamera *tc, SDL_Rect *r, float alpha, float x, float y, float w, float h);
 void projecthud(tcamera *tc, SDL_Rect *r, float x, float y, float w, float h);
 
-void tcamera_track(tcamera *tc, tfighter **t, int len);
+void tcamera_track(tcamera *tc, tlevel *tl, tfighter **t, int len);
 
 #endif

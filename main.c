@@ -24,7 +24,7 @@ SDL_Rect imgrect = {0, 0, 7, 8};
 int debug = 0;
 char debugtest[256];
 
-tcamera camera = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 50, 50, 800, 600};
+tcamera camera = {0, 0, 0, 0, 0, 0, 800, 600};
 tfighter **fighters = NULL;
 
 SDL_Rect temprect;
@@ -251,8 +251,6 @@ int main(int argc, char *argv[]){
 	fighters = malloc(sizeof(*fighters) * MAXPLAYERS);
 	Uint8 *skin = malloc(sizeof(Uint8) * 3 * MAXPLAYERS);
 	gjoy = malloc(sizeof(*gjoy) * MAXPLAYERS);
-	camera.bw = level.rect.w;
-	camera.bh = level.rect.h;
 
 
 	check(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) >= 0);
@@ -294,9 +292,14 @@ int main(int argc, char *argv[]){
 		lrunscript("defaultlevel.lua");
 	}
 	lclose();
+	level.spawnx = level.rect.w / 2;
+	level.spawny = level.rect.y + 2;
 	level.len = level.cbox;
 	level.blocks = realloc(level.blocks, sizeof(trect) * level.len);
-
+	for(i=0; i<PLAYERS; ++i){
+		fighters[i]->rect.x = level.spawnx;
+		fighters[i]->rect.y = level.spawny;
+	}
 
 	level.boxes = boxes;
 	level.cbox = 0;
@@ -333,7 +336,7 @@ int main(int argc, char *argv[]){
 				}
 			}
 
-			tcamera_track(&camera, fighters, PLAYERS);
+			tcamera_track(&camera, &level, fighters, PLAYERS);
 
 			for(i=0; i<PLAYERS; ++i){
 				tfighter_update(fighters[i], &level);
