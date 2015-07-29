@@ -107,9 +107,7 @@ void tcamera_track(tcamera *tc, tlevel *tl, tfighter **t, int len){
 
 tlevel *tlevel_new(int len){
 	tlevel *tl = malloc(sizeof(tlevel));
-	SDL_Log("Malloc level: %p", tl);
 	tl->blocks = malloc(sizeof(trect)*len);
-	SDL_Log("Malloc blocks: %p", tl->blocks);
 	tl->len = len;
 	return tl;
 }
@@ -121,7 +119,6 @@ void tlevel_free(tlevel *tl){
 }
 
 void tfighter_setmove(tfighter *t, int index, int attack, int growth, int duration, int endlag, int width, int height, float angle, float speed, int type){
-	SDL_Log("S1");
 	if(attack < 0){
 		attack *= -1;
 	}
@@ -158,7 +155,6 @@ void tfighter_setmove(tfighter *t, int index, int attack, int growth, int durati
 	if(height < 0.25f){
 		height = 0.25f;
 	}
-	SDL_Log("S2");
 	t->moves[index].type = type;
 	angle = angle * PI / 180;
 	t->moves[index].vx = (float)cos(angle) * speed * (type & PROJECTILE ? 2 : 1) * (type & MOVEMENT && !(type & AIRONCE) ? 0.25f : 1);
@@ -173,20 +169,16 @@ void tfighter_setmove(tfighter *t, int index, int attack, int growth, int durati
 	t->moves[index].kbgrowth = attack / (t->moves[index].vx * t->moves[index].vy);
 	if(t->moves[index].kbgrowth < 0)
 		t->moves[index].kbgrowth *= -1;
-/*
-	t->moves[index].mindelay = (int)((attack * growth / 4.0f) / endlag) * duration / 2;
+	t->moves[index].mindelay = (int)((attack * growth / 4.0f) / endlag) * duration / 20;
 	t->moves[index].maxdelay = t->moves[index].mindelay * growth;
-	t->moves[index].endlag = (int)(endlag * 1.5f * duration / (type & PROJECTILE ? 4 : 2));
+	t->moves[index].endlag = (int)(endlag * 1.5f * duration / (type & PROJECTILE ? 40 : 20));
 	t->moves[index].time = duration;
 	t->moves[index].hitlag = t->moves[index].attack * t->moves[index].kbgrowth;
-*/
-	SDL_Log("S3");
 }
 
 tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys, Uint32 *joybuttons, SDL_JoystickID joy, int joyxoffset, int joyyoffset, Uint8 *skin){
 	int i;
 	tfighter *ret = malloc(sizeof(tfighter));
-	SDL_Log("Malloc fighter: %p", ret);
 	ret->skin = skin;
 	ret->joyxoffset = joyxoffset;
 	ret->joyyoffset = joyyoffset;
@@ -225,7 +217,6 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	gid = gid << 1;
 
 	ret->moves = malloc(sizeof(hitbox)*MAXMOVES);
-	SDL_Log("Malloc moves: %p", ret->moves);
 	for(i = 0; i<MAXMOVES; ++i){
 		ret->moves[i].rect.x = 0;
 		ret->moves[i].rect.y = 0.0f;
@@ -254,7 +245,7 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 		ret->moves[i].hit = 0;
 		ret->moves[i].endlag = 0;
 		ret->moves[i].image = 12;
-		tfighter_setmove(ret, i, 1, 30, 40, 20, 2, 2, 45, 0.4f, MOVEMENT);
+		tfighter_setmove(ret, i, 10, 10, 40, 30, 2, 2, 45, 0.4f, MOVEMENT);
 	}
 
 	ret->left = 1;
@@ -435,7 +426,7 @@ void tfighter_input(tfighter *t, tlevel *tl, SDL_Event *e){
 			}
 		}
 	}
-	else if(e->type == SDL_JOYAXISMOTION && e->jaxis.which == t->joy){
+	if(e->type == SDL_JOYAXISMOTION && e->jaxis.which == t->joy){
 		if(e->jaxis.axis == 0){	
 			if(e->jaxis.value + t->joyxoffset < -JOYDEADZONE){
 				t->state &= ~RIGHT;

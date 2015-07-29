@@ -246,14 +246,11 @@ int main(int argc, char *argv[]){
 											};
 	Uint32 b[] = {ATTACKING, SPECIAL, 0, JUMP, SHIELDING};
 	fighters = malloc(sizeof(*fighters) * MAXPLAYERS);
-	SDL_Log("Malloc fighters: %p", fighters);
 	Uint8 *skin = malloc(sizeof(Uint8) * 3 * MAXPLAYERS);
-	for(i = 0; i < 3 * MAXPLAYERS; ++i){
+	/*for(i = 0; i < 3 * MAXPLAYERS; ++i){
 		skin[i] = 0;
-	}
-	SDL_Log("Malloc skin: %p", skin);
+	}*/
 	gjoy = malloc(sizeof(*gjoy) * MAXPLAYERS);
-	SDL_Log("Malloc joysticks: %p", gjoy);
 
 
 	check(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) >= 0);
@@ -271,19 +268,15 @@ int main(int argc, char *argv[]){
 	level.rect.y = 0;
 	linit();
 	srand(time(NULL));
-	SDL_Log("M1");
 	for(i = 0; i < argc - 1; ++i){
 		if(strcmp(argv[i + 1], "-level") != 0){
-			SDL_Log("M2");
 			gjoy[i] = SDL_JoystickOpen(i);
 			fighters[i] = tfighter_new(34 + i * 2, 10, 0x77, 0x55, 0x00, (i <= 1) ?  c[i] : NULL, b, i, SDL_JoystickGetAxis(gjoy[i], 0), SDL_JoystickGetAxis(gjoy[i], 1), &skin[i]);
 			cfighter = fighters[i];
-			SDL_Log("cfighter: %p", cfighter);
 			PLAYERS = i + 1;
 			lua_pushnumber(l, rand());
 			lua_setglobal(l, "seed");	
 			lrunscript(argv[i + 1]);
-			SDL_Log("M3");
 		}
 		else{
 			SDL_Log("Loading level");
