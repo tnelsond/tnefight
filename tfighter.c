@@ -107,7 +107,9 @@ void tcamera_track(tcamera *tc, tlevel *tl, tfighter **t, int len){
 
 tlevel *tlevel_new(int len){
 	tlevel *tl = malloc(sizeof(tlevel));
+	SDL_Log("Malloc level: %p", tl);
 	tl->blocks = malloc(sizeof(trect)*len);
+	SDL_Log("Malloc blocks: %p", tl->blocks);
 	tl->len = len;
 	return tl;
 }
@@ -118,8 +120,73 @@ void tlevel_free(tlevel *tl){
 	tl = NULL;
 }
 
+void tfighter_setmove(tfighter *t, int index, int attack, int growth, int duration, int endlag, int width, int height, float angle, float speed, int type){
+	SDL_Log("S1");
+	if(attack < 0){
+		attack *= -1;
+	}
+	if(attack > 100){
+		attack = 100;
+	}
+	if(growth < 0){
+		growth *= -1;
+	}
+	if(growth > 100){
+		growth = 100;
+	}
+	if(endlag < 0){
+		endlag *= -1;
+	}
+	if(endlag > 100){
+		endlag = 100;
+	}
+	if(speed < 0){
+		speed *= -1;
+	}
+	if(speed > 1){
+		speed = 1;
+	}
+	if(duration < 0){
+		duration *= -1;
+	}
+	if(duration > 100){
+		duration = 100;
+	}
+	if(width < 0.25f){
+		width = 0.25f;
+	}
+	if(height < 0.25f){
+		height = 0.25f;
+	}
+	SDL_Log("S2");
+	t->moves[index].type = type;
+	angle = angle * PI / 180;
+	t->moves[index].vx = (float)cos(angle) * speed * (type & PROJECTILE ? 2 : 1) * (type & MOVEMENT && !(type & AIRONCE) ? 0.25f : 1);
+	t->moves[index].vy = (float)sin(angle) * speed * (type & PROJECTILE ? 2 : 1) * (type & MOVEMENT && !(type & AIRONCE) ? 0.25f : 1);
+	t->moves[index].rect.w = width;
+	t->moves[index].rect.h = height;
+	t->moves[index].minattack = (int)(attack / (t->moves[index].rect.w * t->moves[index].rect.h * 5) * (type | ATTACK ? 1 : 0) * (type & REFLECT ? 0.1 : (type & PROJECTILE ? 0.3f : 1)));
+	if(t->moves[index].minattack < 0)
+		t->moves[index].minattack *= -1;
+	t->moves[index].attack = (int)(t->moves[index].minattack * (1 + growth / 25.0f));
+	t->moves[index].kb = attack / (t->moves[index].vx * t->moves[index].vy) * (type & (MOVEMENT | REFLECT) ? 0.1f : 1);
+	t->moves[index].kbgrowth = attack / (t->moves[index].vx * t->moves[index].vy);
+	if(t->moves[index].kbgrowth < 0)
+		t->moves[index].kbgrowth *= -1;
+/*
+	t->moves[index].mindelay = (int)((attack * growth / 4.0f) / endlag) * duration / 2;
+	t->moves[index].maxdelay = t->moves[index].mindelay * growth;
+	t->moves[index].endlag = (int)(endlag * 1.5f * duration / (type & PROJECTILE ? 4 : 2));
+	t->moves[index].time = duration;
+	t->moves[index].hitlag = t->moves[index].attack * t->moves[index].kbgrowth;
+*/
+	SDL_Log("S3");
+}
+
 tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys, Uint32 *joybuttons, SDL_JoystickID joy, int joyxoffset, int joyyoffset, Uint8 *skin){
+	int i;
 	tfighter *ret = malloc(sizeof(tfighter));
+	SDL_Log("Malloc fighter: %p", ret);
 	ret->skin = skin;
 	ret->joyxoffset = joyxoffset;
 	ret->joyyoffset = joyyoffset;
@@ -157,267 +224,38 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->strength = 0.5f;
 	gid = gid << 1;
 
-	ret->moves = malloc(sizeof(hitbox)*9);
-
-	/* Over-Attack */
-	ret->moves[0].rect.x = 0;
-	ret->moves[0].rect.y = 0.7f;
-	ret->moves[0].rect.w = 1.0f;
-	ret->moves[0].rect.h = 1.4f;
-	ret->moves[0].vx = 0.2f;
-	ret->moves[0].vy = 0.0f;
-	ret->moves[0].ax = 0.00f;
-	ret->moves[0].ay = 0.00f;
-	ret->moves[0].aw = 0.00f;
-	ret->moves[0].ah = 0.00f;
-	ret->moves[0].vw = 0.1f;
-	ret->moves[0].vh = 0.0f;
-	ret->moves[0].kb = 6.0f;
-	ret->moves[0].kbgrowth = 0.0f;
-	ret->moves[0].kbangle = -30.0;
-	ret->moves[0].minattack = 5;
-	ret->moves[0].attack = 30;
-	ret->moves[0].time = 15;
-	ret->moves[0].type = ATTACK;
-	ret->moves[0].owner = ret;
-	ret->moves[0].tick = 0;
-	ret->moves[0].mindelay = 10;
-	ret->moves[0].maxdelay = 400;
-	ret->moves[0].left = 1;
-	ret->moves[0].hit = 0;
-	ret->moves[0].endlag = 20;
-	ret->moves[0].image = 12;
-	/* Up-Attack */
-	ret->moves[1].rect.x = 0.0f;
-	ret->moves[1].rect.y = 0.0f;
-	ret->moves[1].rect.w = 2.0f;
-	ret->moves[1].rect.h = 1.0f;
-	ret->moves[1].vx = 0.0f;
-	ret->moves[1].vy = -0.5f;
-	ret->moves[1].ax = 0.00f;
-	ret->moves[1].ay = 0.01f;
-	ret->moves[1].aw = 0.00f;
-	ret->moves[1].ah = 0.00f;
-	ret->moves[1].vw = 0.1f;
-	ret->moves[1].vh = 0.1f;
-	ret->moves[1].kb = 2.0f;
-	ret->moves[1].kbgrowth = 1.0f;
-	ret->moves[1].kbangle = -90.0;
-	ret->moves[1].minattack = 9;
-	ret->moves[1].attack = 30;
-	ret->moves[1].time = 30;
-	ret->moves[1].type = ATTACK;
-	ret->moves[1].owner = ret;
-	ret->moves[1].tick = 0;
-	ret->moves[1].mindelay = 30;
-	ret->moves[1].maxdelay = 150;
-	ret->moves[1].left = 1;
-	ret->moves[1].hit = 0;
-	ret->moves[1].endlag = 30;
-	ret->moves[1].image = 12;
-
-	/* Neutral-Attack */
-	ret->moves[2].rect.x = 0.5f;
-	ret->moves[2].rect.y = 0.0f;
-	ret->moves[2].rect.w = 1.0f;
-	ret->moves[2].rect.h = 1.0f;
-	ret->moves[2].vx = 0.2f;
-	ret->moves[2].vy = 0.0f;
-	ret->moves[2].ax = -0.01f;
-	ret->moves[2].ay = 0.00f;
-	ret->moves[2].aw = 0.00f;
-	ret->moves[2].ah = 0.00f;
-	ret->moves[2].vw = 0.0f;
-	ret->moves[2].vh = 0.0f;
-	ret->moves[2].kb = 5.0f;
-	ret->moves[2].kbgrowth = 1.5f;
-	ret->moves[2].kbangle = -45.0;
-	ret->moves[2].minattack = 15;
-	ret->moves[2].attack = 30;
-	ret->moves[2].time = 15;
-	ret->moves[2].type = ATTACK;
-	ret->moves[2].owner = ret;
-	ret->moves[2].tick = 0;
-	ret->moves[2].mindelay = 4;
-	ret->moves[2].maxdelay = 80;
-	ret->moves[2].endlag = 10;
-	ret->moves[2].left = 1;
-	ret->moves[2].hit = 0;
-	ret->moves[2].image = 12;
-
-	/* Down-Attack */
-	ret->moves[3].rect.x = 2.0f;
-	ret->moves[3].rect.y = 0.5f;
-	ret->moves[3].rect.w = 1.0f;
-	ret->moves[3].rect.h = 1.0f;
-	ret->moves[3].vx = 0.3f;
-	ret->moves[3].vy = 0.1f;
-	ret->moves[3].ax = -0.1f;
-	ret->moves[3].ay = 0.00f;
-	ret->moves[3].aw = 0.00f;
-	ret->moves[3].ah = 0.00f;
-	ret->moves[3].vw = 0.0f;
-	ret->moves[3].vh = 0.0f;
-	ret->moves[3].kb = 0.1f;
-	ret->moves[3].kbgrowth = 0.5f;
-	ret->moves[3].kbangle = -80.0;
-	ret->moves[3].minattack = 6;
-	ret->moves[3].attack = 30;
-	ret->moves[3].time = 12;
-	ret->moves[3].type = ATTACK;
-	ret->moves[3].owner = ret;
-	ret->moves[3].tick = 0;
-	ret->moves[3].mindelay = 30;
-	ret->moves[3].maxdelay = 90;
-	ret->moves[3].left = 1;
-	ret->moves[3].hit = 0;
-	ret->moves[3].endlag = 15;
-	ret->moves[3].image = 12;
-
-	/* Over-Special */
-	ret->moves[4].rect.x = 2.0f;
-	ret->moves[4].rect.y = 0.5f;
-	ret->moves[4].rect.w = 1.0f;
-	ret->moves[4].rect.h = 1.0f;
-	ret->moves[4].vx = 0.3f;
-	ret->moves[4].vy = -0.3f;
-	ret->moves[4].ax = -0.1f;
-	ret->moves[4].ay = 0.00f;
-	ret->moves[4].aw = 0.00f;
-	ret->moves[4].ah = 0.00f;
-	ret->moves[4].vw = 0.0f;
-	ret->moves[4].vh = 0.0f;
-	ret->moves[4].kb = 0.1f;
-	ret->moves[4].kbgrowth = 0.5f;
-	ret->moves[4].kbangle = -80.0;
-	ret->moves[4].minattack = 6;
-	ret->moves[4].attack = 10;
-	ret->moves[4].time = 12;
-	ret->moves[4].type = ATTACK | MOVEMENT;
-	ret->moves[4].owner = ret;
-	ret->moves[4].tick = 0;
-	ret->moves[4].mindelay = 5;
-	ret->moves[4].maxdelay = 10;
-	ret->moves[4].left = 1;
-	ret->moves[4].hit = 0;
-	ret->moves[4].endlag = 15;
-	ret->moves[4].image = 12;
-
-	/* Up-Special */
-	ret->moves[5].rect.x = 2.0f;
-	ret->moves[5].rect.y = 0.5f;
-	ret->moves[5].rect.w = 1.0f;
-	ret->moves[5].rect.h = 1.0f;
-	ret->moves[5].vx = 0.3f;
-	ret->moves[5].vy = -0.7f;
-	ret->moves[5].ax = -0.1f;
-	ret->moves[5].ay = 0.00f;
-	ret->moves[5].aw = 0.00f;
-	ret->moves[5].ah = 0.00f;
-	ret->moves[5].vw = 0.0f;
-	ret->moves[5].vh = 0.0f;
-	ret->moves[5].kb = 0.1f;
-	ret->moves[5].kbgrowth = 0.5f;
-	ret->moves[5].kbangle = -80.0;
-	ret->moves[5].minattack = 6;
-	ret->moves[5].attack = 40;
-	ret->moves[5].time = 12;
-	ret->moves[5].type = ATTACK | MOVEMENT | AIRONCE;
-	ret->moves[5].owner = ret;
-	ret->moves[5].tick = 0;
-	ret->moves[5].mindelay = 5;
-	ret->moves[5].maxdelay = 5;
-	ret->moves[5].left = 1;
-	ret->moves[5].hit = 0;
-	ret->moves[5].endlag = 15;
-	ret->moves[5].image = 12;
-
-	/* Neutral-Special */
-	ret->moves[6].rect.x = 2.0f;
-	ret->moves[6].rect.y = 0.5f;
-	ret->moves[6].rect.w = 1.0f;
-	ret->moves[6].rect.h = 1.0f;
-	ret->moves[6].vx = 0.3f;
-	ret->moves[6].vy = 0.0f;
-	ret->moves[6].ax = 0.2f;
-	ret->moves[6].ay = 0.00f;
-	ret->moves[6].aw = 0.00f;
-	ret->moves[6].ah = 0.00f;
-	ret->moves[6].vw = 0.0f;
-	ret->moves[6].vh = 0.0f;
-	ret->moves[6].kb = 0.1f;
-	ret->moves[6].kbgrowth = 0.5f;
-	ret->moves[6].kbangle = -80.0;
-	ret->moves[6].minattack = 3;
-	ret->moves[6].attack = 20;
-	ret->moves[6].time = 12;
-	ret->moves[6].type = ATTACK | PROJECTILE;
-	ret->moves[6].owner = ret;
-	ret->moves[6].tick = 0;
-	ret->moves[6].mindelay = 30;
-	ret->moves[6].maxdelay = 90;
-	ret->moves[6].left = 1;
-	ret->moves[6].hit = 0;
-	ret->moves[6].endlag = 15;
-	ret->moves[6].image = 12;
-
-	/* DOWN-SPECIAL */
-	ret->moves[7].rect.x = 2.0f;
-	ret->moves[7].rect.y = -1.5f;
-	ret->moves[7].rect.w = 1.0f;
-	ret->moves[7].rect.h = 1.0f;
-	ret->moves[7].vx = 0.3f;
-	ret->moves[7].vy = 0.3f;
-	ret->moves[7].ax = 0.0f;
-	ret->moves[7].ay = -0.02f;
-	ret->moves[7].aw = 0.00f;
-	ret->moves[7].ah = 0.00f;
-	ret->moves[7].vw = 0.0f;
-	ret->moves[7].vh = 0.0f;
-	ret->moves[7].kb = 0.5f;
-	ret->moves[7].kbgrowth = 0.5f;
-	ret->moves[7].kbangle = -10.0;
-	ret->moves[7].minattack = 6;
-	ret->moves[7].attack = 20;
-	ret->moves[7].time = 12;
-	ret->moves[7].type = ATTACK;
-	ret->moves[7].owner = ret;
-	ret->moves[7].tick = 0;
-	ret->moves[7].mindelay = 30;
-	ret->moves[7].maxdelay = 90;
-	ret->moves[7].left = 1;
-	ret->moves[7].hit = 0;
-	ret->moves[7].endlag = 15;
-	ret->moves[7].image = 12;
-	
-	/* SHIELD */
-	ret->moves[8].rect.x = 0.0f;
-	ret->moves[8].rect.y = 0.0f;
-	ret->moves[8].rect.w = 3.0f;
-	ret->moves[8].rect.h = 3.0f;
-	ret->moves[8].vx = 0.0f;
-	ret->moves[8].vy = 0.0f;
-	ret->moves[8].ax = 0.0f;
-	ret->moves[8].ay = 0.00f;
-	ret->moves[8].aw = -0.01f;
-	ret->moves[8].ah = -0.01f;
-	ret->moves[8].vw = 0.0f;
-	ret->moves[8].vh = 0.0f;
-	ret->moves[8].kb = 10.0f;
-	ret->moves[8].kbgrowth = 0.0f;
-	ret->moves[8].kbangle = 00.0;
-	ret->moves[8].minattack = 0;
-	ret->moves[8].attack = 0;
-	ret->moves[8].time = 12;
-	ret->moves[8].type = ATTACK | REFLECT;
-	ret->moves[8].owner = ret;
-	ret->moves[8].tick = 0;
-	ret->moves[8].mindelay = 5;
-	ret->moves[8].maxdelay = 200;
-	ret->moves[8].left = 1;
-	ret->moves[8].hit = 0;
-	ret->moves[8].endlag = 15;
-	ret->moves[8].image = 12;
+	ret->moves = malloc(sizeof(hitbox)*MAXMOVES);
+	SDL_Log("Malloc moves: %p", ret->moves);
+	for(i = 0; i<MAXMOVES; ++i){
+		ret->moves[i].rect.x = 0;
+		ret->moves[i].rect.y = 0.0f;
+		ret->moves[i].rect.w = 0.0f;
+		ret->moves[i].rect.h = 0.0f;
+		ret->moves[i].vx = 0.0f;
+		ret->moves[i].vy = 0.0f;
+		ret->moves[i].ax = 0.00f;
+		ret->moves[i].ay = 0.00f;
+		ret->moves[i].aw = 0.00f;
+		ret->moves[i].ah = 0.00f;
+		ret->moves[i].vw = 0.0f;
+		ret->moves[i].vh = 0.0f;
+		ret->moves[i].kb = 0.0f;
+		ret->moves[i].kbgrowth = 0.0f;
+		ret->moves[i].kbangle = 0.0;
+		ret->moves[i].minattack = 0;
+		ret->moves[i].attack = 0;
+		ret->moves[i].time = 0;
+		ret->moves[i].type = 0;
+		ret->moves[i].owner = ret;
+		ret->moves[i].tick = 0;
+		ret->moves[i].mindelay = 0;
+		ret->moves[i].maxdelay = 0;
+		ret->moves[i].left = 0;
+		ret->moves[i].hit = 0;
+		ret->moves[i].endlag = 0;
+		ret->moves[i].image = 12;
+		tfighter_setmove(ret, i, 1, 30, 40, 20, 2, 2, 45, 0.4f, MOVEMENT);
+	}
 
 	ret->left = 1;
 	return ret;
@@ -540,8 +378,8 @@ void hitbox_spawn(tfighter *t, hitbox *src, hitbox *dest){
 
 	dest->rect.y = src->rect.y + offset->y;
 
-	dest->rect.w = src->rect.w;
-	dest->rect.h = src->rect.h;
+	dest->rect.w = src->rect.w * t->rect.w / 2;
+	dest->rect.h = src->rect.h * t->rect.h / 2;
 
 	dest->left = t->left;
 
@@ -576,21 +414,23 @@ void hitbox_spawn(tfighter *t, hitbox *src, hitbox *dest){
 
 void tfighter_input(tfighter *t, tlevel *tl, SDL_Event *e){
 	int i;
-	if(e->type == SDL_KEYDOWN){
-		for(i=0; i<7; ++i){
-			if(e->key.keysym.sym == t->keys[i]){
-				t->state = t->state | (1 << i);
+	if(t->keys){
+		if(e->type == SDL_KEYDOWN){
+			for(i=0; i<7; ++i){
+				if(e->key.keysym.sym == t->keys[i]){
+					t->state = t->state | (1 << i);
+				}
 			}
 		}
-	}
-	else if(e->type == SDL_KEYUP){
-		for(i=0; i<7; ++i){
-			if(e->key.keysym.sym == t->keys[i]){
-				if(((1 << i) != ATTACKING) && (1 << i) != SPECIAL){
-					t->state &= ~(1 << i);
-				}
-				else{
-					t->state &= ~CHARGING;
+		else if(e->type == SDL_KEYUP){
+			for(i=0; i<7; ++i){
+				if(e->key.keysym.sym == t->keys[i]){
+					if(((1 << i) != ATTACKING) && (1 << i) != SPECIAL){
+						t->state &= ~(1 << i);
+					}
+					else{
+						t->state &= ~CHARGING;
+					}
 				}
 			}
 		}

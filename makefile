@@ -1,7 +1,7 @@
 CC = gcc -pedantic -Wall -O2 -lSDL2 -lSDL2_image -lm
 
 main.o : main.c tfighter.o scripting.o
-	$(CC) main.c tfighter.o scripting.o -o run.out -llua
+	$(CC) main.c tfighter.o scripting.o -llua -o run.out
 
 tfighter.o : tfighter.c tfighter.h
 	$(CC) tfighter.c -c

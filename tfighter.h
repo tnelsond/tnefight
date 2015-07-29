@@ -5,12 +5,11 @@
 
 /* hitbox type */
 #define ATTACK (1 << 0)
-#define BLOCK (1 << 1)
+#define SHIELD (1 << 1)
 #define MOVEMENT (1 << 2)
 #define REFLECT (1 << 3)
 #define PROJECTILE (1 << 4)
 #define AIRONCE (1 << 5)
-#define SHIELD (1 << 6)
 
 /* tfighter state */
 #define LEFT (1 << 0)
@@ -35,7 +34,8 @@
 #define NATTACK 2
 
 /* Other Constants */
-#define NUMKEYS 5;
+#define NUMKEYS 5
+#define MAXMOVES 9
 #define PI 3.14159265358979323846 
 #define JOYDEADZONE 8000
 #define ATTACKPRECEDENCE 9
@@ -124,6 +124,8 @@ struct tfighter{
 };
 
 tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys, Uint32 *joybuttons, SDL_JoystickID joy, int joyxoffset, int joyyoffset, Uint8 *skin);
+
+void tfighter_setmove(tfighter *t, int index, int attack, int growth, int duration, int endlag, int width, int height, float angle, float speed, int type);
 
 void tfighter_free(tfighter *t);
 

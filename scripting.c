@@ -48,15 +48,22 @@ int lsetskin(lua_State *l){
 
 
 int lsetmove(lua_State *l){
-	if(lua_gettop(l) >= 3 && lua_isnumber(l, -1) && lua_isnumber(l, -2) && lua_isnumber(l, -3) && lua_isnumber(l, 4) && cfighter != NULL){
+	SDL_Log("1");
+	if(lua_gettop(l) >= 10 && cfighter != NULL){
 		int i;
-		int temp = lua_tonumber(l, -3);
-		i = lua_tonumber(l, -4);
-		cfighter->moves[i].mindelay = lua_tonumber(l, -3);
-		cfighter->moves[i].vx = lua_tonumber(l, -2);
-		cfighter->moves[i].vy = lua_tonumber(l, -1);
+		for(i = -10; i <= -1; ++i){
+			if(!lua_isnumber(l, i)){
+				SDL_Log("NAN");
+				return -2;
+			}
+		}
+		SDL_Log("2");
+		tfighter_setmove(cfighter, (int)lua_tonumber(l, -10), (int)lua_tonumber(l, -9), (int)lua_tonumber(l, -8),(int)lua_tonumber(l, -7),(int)lua_tonumber(l, -6),(int)lua_tonumber(l, -5),(int)lua_tonumber(l, -4),(float)lua_tonumber(l, -3),(float)lua_tonumber(l, -2),(int)lua_tonumber(l, -1));
+
+		SDL_Log("3");
 		return 0;
 	}
+	SDL_Log("4");
 	return -1;
 }
 
@@ -90,6 +97,7 @@ int laddblock(lua_State *l){
 	if(lua_gettop(l) >= 3 && lua_isnumber(l, -1) && lua_isnumber(l, -2) && lua_isnumber(l, -3) && lua_isnumber(l, -4)){
 		if(level.blocks == NULL){
 			level.blocks = malloc(sizeof(trect) * level.len);
+			SDL_Log("Malloc level.blocks: %p", level.blocks);
 		}
 		level.blocks[level.cbox].x = lua_tonumber(l, -4);
 		level.blocks[level.cbox].y = lua_tonumber(l, -3);
@@ -114,8 +122,9 @@ int lsetname(lua_State *l){
 		int length;
 		char *temp = lua_tostring(l, -1);
 		length = strlen(temp);
-		cfighter->name = malloc(length);
-		memcpy(cfighter->name, temp, length + 1);
+		cfighter->name = malloc(length*(sizeof(char)));
+		SDL_Log("Malloc name: %p", cfighter->name);
+		strcpy(cfighter->name, temp);
 		return 0;
 	}
 	return -1;
@@ -126,6 +135,13 @@ void linit(){
 	cfighter = NULL;
 	l = luaL_newstate();
 	luaL_openlibs(l);
+
+	lua_pushnumber(l, ATTACK); lua_setglobal(l, "ATTACK");	
+	lua_pushnumber(l, SHIELD); lua_setglobal(l, "SHIELD");	
+	lua_pushnumber(l, MOVEMENT); lua_setglobal(l, "MOVEMENT");	
+	lua_pushnumber(l, REFLECT); lua_setglobal(l, "REFLECT");	
+	lua_pushnumber(l, PROJECTILE); lua_setglobal(l, "PROJECTILE");	
+	lua_pushnumber(l, AIRONCE); lua_setglobal(l, "AIRONCE");	
 
 	lua_register(l, "setcolor", lsetcolor);
 	lua_register(l, "setname", lsetname);
