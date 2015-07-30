@@ -8,3 +8,6 @@ tfighter.o : tfighter.c tfighter.h
 
 scripting.o : scripting.c scripting.h
 	$(CC) scripting.c -c
+
+clean:
+	rm *.o

@@ -5,11 +5,10 @@
 
 /* hitbox type */
 #define ATTACK (1 << 0)
-#define SHIELD (1 << 1)
-#define MOVEMENT (1 << 2)
-#define REFLECT (1 << 3)
-#define PROJECTILE (1 << 4)
-#define AIRONCE (1 << 5)
+#define MOVEMENT (1 << 1)
+#define REFLECT (1 << 2)
+#define PROJECTILE (1 << 3)
+#define AIRONCE (1 << 4)
 
 /* tfighter state */
 #define LEFT (1 << 0)
@@ -42,6 +41,7 @@
 #define DAMPENING 0.9f
 #define MAXSKIN 13
 #define CAMERABORDER 20
+#define KBRESISTANCE 0.2f
 
 
 typedef struct{
@@ -59,7 +59,7 @@ struct hitbox{
 	trect rect, prect;
 	float vx, vy, ax, ay; /* Location change variables */
 	float vw, vh, aw, ah; /* Size change variables */
-	int attack, minattack;
+	int attack, attackmultiply;
 	float kb;
 	float kbgrowth;
 	double kbangle;
@@ -104,6 +104,8 @@ struct tfighter{
 	int MAXJUMPS;
 	int jump;
 	float gravity;
+	float fallspeed, driftspeed;
+	float launchresistance;
 	char id;
 	char left;
 	int red;
@@ -117,7 +119,7 @@ struct tfighter{
 	int joyyoffset;
 	int tick;
 	Uint32 state, pstate;
-	int damage;
+	float damage;
 	int hitlag;
 	Uint8 *skin;
 	char *name;
@@ -125,7 +127,7 @@ struct tfighter{
 
 tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys, Uint32 *joybuttons, SDL_JoystickID joy, int joyxoffset, int joyyoffset, Uint8 *skin);
 
-void tfighter_setmove(tfighter *t, int index, int attack, int growth, int duration, int endlag, int width, int height, float angle, float speed, int type);
+void tfighter_setmove(tfighter *t, int index, int attack, int growth, int duration, int endlag, int width, int height, float angle, float speed, int type, int img);
 
 void tfighter_free(tfighter *t);
 

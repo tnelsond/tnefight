@@ -48,14 +48,14 @@ int lsetskin(lua_State *l){
 
 
 int lsetmove(lua_State *l){
-	if(lua_gettop(l) == 10 && cfighter != NULL){
+	if(lua_gettop(l) == 11 && cfighter != NULL){
 		int i;
 		for(i = -10; i <= -1; ++i){
 			if(!lua_isnumber(l, i)){
 				return -2;
 			}
 		}
-		tfighter_setmove(cfighter, (int)lua_tonumber(l, -10), (int)lua_tonumber(l, -9), (int)lua_tonumber(l, -8),(int)lua_tonumber(l, -7),(int)lua_tonumber(l, -6),(int)lua_tonumber(l, -5),(int)lua_tonumber(l, -4),(float)lua_tonumber(l, -3),(float)lua_tonumber(l, -2),(int)lua_tonumber(l, -1));
+		tfighter_setmove(cfighter, (int)lua_tonumber(l, -11), (int)lua_tonumber(l, -10), (int)lua_tonumber(l, -9), (int)lua_tonumber(l, -8),(int)lua_tonumber(l, -7),(int)lua_tonumber(l, -6),(int)lua_tonumber(l, -5),(float)lua_tonumber(l, -4),(float)lua_tonumber(l, -3),(int)lua_tonumber(l, -2),(int)lua_tonumber(l, -1));
 
 		return 0;
 	}
@@ -130,7 +130,6 @@ void linit(){
 	luaL_openlibs(l);
 
 	lua_pushnumber(l, ATTACK); lua_setglobal(l, "ATTACK");	
-	lua_pushnumber(l, SHIELD); lua_setglobal(l, "SHIELD");	
 	lua_pushnumber(l, MOVEMENT); lua_setglobal(l, "MOVEMENT");	
 	lua_pushnumber(l, REFLECT); lua_setglobal(l, "REFLECT");	
 	lua_pushnumber(l, PROJECTILE); lua_setglobal(l, "PROJECTILE");	

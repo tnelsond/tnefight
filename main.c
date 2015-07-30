@@ -189,14 +189,11 @@ void draw(float alpha){
 	SDL_SetRenderDrawColor(gren, 0xFF, 0x00, 0x00, 0x11);
 	for(i=0; i<level.MAX_BOXES; ++i){
 		if(level.boxes[i].owner){
-			if(level.boxes[i].type & SHIELD){
-				SDL_SetTextureColorMod(gatlas, 0x00, 0x44, 0xFF);
-			}
-			else if(level.boxes[i].tick < level.boxes[i].maxdelay){
-				SDL_SetTextureColorMod(gatlas, 0x00, 0xFF, 0x00);
+			if(level.boxes[i].tick < level.boxes[i].maxdelay){
+				SDL_SetTextureColorMod(gatlas, 0xFF * (level.boxes[i].type & ATTACK) / 2, 0xFF * (level.boxes[i].type & PROJECTILE) / 2, 0xFF * (level.boxes[i].type & REFLECT) / 2);
 			}
 			else{
-				SDL_SetTextureColorMod(gatlas, 0xFF, 0x00, 0x00);
+				SDL_SetTextureColorMod(gatlas, 0xFF * (level.boxes[i].type & ATTACK), 0xFF * (level.boxes[i].type & PROJECTILE), 0xFF * (level.boxes[i].type & REFLECT));
 			}
 			setimgrect(level.boxes[i].hitlag > 0 ? 11 : level.boxes[i].image);
 			project(&camera, &level.boxes[i].rect, &level.boxes[i].prect, &temprect, alpha);
@@ -206,9 +203,9 @@ void draw(float alpha){
 	}
 	SDL_SetTextureColorMod(gatlas, 0, 0, 0);
 	for(i=0; i<PLAYERS; ++i){
-		disp[2] = '0' + fighters[i]->damage % 10;
-		disp[1] = '0' + (fighters[i]->damage % 100) / 10;
-		disp[0] = '0' + fighters[i]->damage / 100;
+		disp[2] = '0' + ((int)fighters[i]->damage) % 10;
+		disp[1] = '0' + (((int)fighters[i]->damage) % 100) / 10;
+		disp[0] = '0' + (int)fighters[i]->damage / 100;
 		if(disp[0] == '0'){
 			disp[0] = ' ';
 			if(disp[1] == '0'){
