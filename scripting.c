@@ -28,14 +28,14 @@ int lrunscript(char *str){
 }
 
 int lsetskin(lua_State *l){
-	if(lua_gettop(l) >= 1 && lua_isnumber(l, -1) && lua_isnumber(l, -2) && lua_isnumber(l, -3) && cfighter != NULL){
-		cfighter->skin[1] = lua_tonumber(l, -1);
-		if(cfighter->skin[1] > MAXSKIN){
-			cfighter->skin[1] = MAXSKIN;
-		}
-		cfighter->skin[0] = lua_tonumber(l, -2);
+	if(lua_gettop(l) >= 2 && lua_isnumber(l, -1) && lua_isnumber(l, -2) && lua_isnumber(l, -3) && cfighter != NULL){
+		cfighter->skin[0] = lua_tonumber(l, -1);
 		if(cfighter->skin[0] > MAXSKIN){
 			cfighter->skin[0] = MAXSKIN;
+		}
+		cfighter->skin[1] = lua_tonumber(l, -2);
+		if(cfighter->skin[1] > MAXSKIN){
+			cfighter->skin[1] = MAXSKIN;
 		}
 		cfighter->skin[2] = lua_tonumber(l, -3);
 		if(cfighter->skin[2] > MAXSKIN){

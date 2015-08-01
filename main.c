@@ -268,7 +268,7 @@ int main(int argc, char *argv[]){
 	for(i = 0; i < argc - 1; ++i){
 		if(strcmp(argv[i + 1], "-level") != 0){
 			gjoy[i] = SDL_JoystickOpen(i);
-			fighters[i] = tfighter_new(34 + i * 2, 10, 0x77, 0x55, 0x00, (i <= 1) ?  c[i] : NULL, b, i, SDL_JoystickGetAxis(gjoy[i], 0), SDL_JoystickGetAxis(gjoy[i], 1), &skin[i]);
+			fighters[i] = tfighter_new(34 + i * 2, 10, 0x77, 0x55, 0x00, (i <= 1) ?  c[i] : NULL, b, i, SDL_JoystickGetAxis(gjoy[i], 0), SDL_JoystickGetAxis(gjoy[i], 1), &skin[i*3]);
 			cfighter = fighters[i];
 			PLAYERS = i + 1;
 			lua_pushnumber(l, rand());

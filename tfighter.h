@@ -41,7 +41,7 @@
 #define DAMPENING 0.9f
 #define MAXSKIN 13
 #define CAMERABORDER 20
-#define KBRESISTANCE 0.2f
+#define KBRESISTANCE 0.03f
 
 
 typedef struct{
