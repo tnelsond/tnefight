@@ -8,6 +8,7 @@
 #include "tfighter.h"
 
 #define min(a, b) a < b ? a : b
+#define MAXPARTICLES 100
 
 SDL_Window *gwin = NULL;
 SDL_Renderer *gren = NULL;
@@ -18,8 +19,11 @@ int glinew = 32;
 int gnlines = 3;
 int PLAYERS = 0;
 int MAXPLAYERS = 8;
+int cparticle = 0;
+
 SDL_Rect charrect = {0, 0, 6, 12};
 SDL_Rect imgrect = {0, 0, 7, 8};
+tparticle particles[MAXPARTICLES];
 
 int debug = 0;
 char debugtest[256];
@@ -29,23 +33,27 @@ tfighter **fighters = NULL;
 
 SDL_Rect temprect;
 
-void drawtext(char *str, float alpha, float x, float y, float w, float h, int dynamic){
+void drawtext(char *str, SDL_Rect *temp){
 	int i;
-	SDL_Rect temp2;
-	if(dynamic){
-		project3(&camera, &temp2, alpha, x, y, w, h);
-	}
-	else{
-		projecthud(&camera, &temp2, x, y, w, h);
-	}
 	for(i=0; str[i]; ++i){
 		charrect.x = (str[i] % glinew) * charrect.w;
 		charrect.y = (str[i] / glinew - 1) * charrect.h;
-		SDL_RenderCopy(gren, gatlas, &charrect, &temp2);	
-		temp2.x += temp2.w;
+		SDL_RenderCopy(gren, gatlas, &charrect, temp);	
+		temp->x += temp->w;
 	}
 }
 
+void drawdynamictext(char *str, float alpha, float x, float y, float w, float h){
+	SDL_Rect temp2;
+	project3(&camera, &temp2, alpha, x, y, w, h);
+	drawtext(str, &temp2);
+}
+
+void drawstatictext(char *str, float x, float y, float w, float h){
+	SDL_Rect temp2;
+	projecthud(&camera, &temp2, x, y, w, h);
+	drawtext(str, &temp2);
+}
 
 void close_game(){
 	if(gren)
@@ -108,6 +116,8 @@ void copytrect(trect *in, trect *out){
 void draw(float alpha){
 	int i;
 	char disp[] = "   %";
+
+	tcamera_interpolate(&camera, alpha);
 
 	SDL_SetRenderDrawColor(gren, 0x00, 0x00, 0x00, 0xFF);
 	SDL_RenderClear(gren);
@@ -177,7 +187,7 @@ void draw(float alpha){
 		SDL_RenderCopyEx(gren, gatlas, &imgrect, &temprect, fighters[i]->tick * (fighters[i]->vx > 0 ? 1 : -1) * (fighters[i]->state & HITSTUN ? 10 : 1), NULL, fighters[i]->left);	
 		SDL_SetTextureColorMod(gatlas, 0, 0, 0);
 		if(fighters[i]->name){
-			drawtext(fighters[i]->name, alpha, fighters[i]->rect.x, fighters[i]->rect.y - 1.8f, 1, 1, 1);/*fighters[i]->rect.x, fighters[i]->rect.y - 0.1f, 1.0f, 0.5f, 1); */
+			drawdynamictext(fighters[i]->name, alpha, fighters[i]->rect.x, fighters[i]->rect.y - 1.8f, 1, 1);
 		}
 	}
 
@@ -186,9 +196,9 @@ void draw(float alpha){
 		fillrect2(&camera, &level.blocks[i], alpha);
 	}
 
-	SDL_SetRenderDrawColor(gren, 0xFF, 0x00, 0x00, 0x11);
 	for(i=0; i<level.MAX_BOXES; ++i){
 		if(level.boxes[i].owner){
+			SDL_SetTextureAlphaMod(gatlas, 0xAA);
 			if(level.boxes[i].tick < level.boxes[i].maxdelay){
 				SDL_SetTextureColorMod(gatlas, 0xFF * (level.boxes[i].type & ATTACK) / 2, 0xFF * (level.boxes[i].type & PROJECTILE) / 2, 0xFF * (level.boxes[i].type & REFLECT) / 2);
 			}
@@ -201,7 +211,19 @@ void draw(float alpha){
 			/*fillrect(&camera, &level.boxes[i].rect, &level.boxes[i].prect, &temprect, alpha);*/
 		}
 	}
-	SDL_SetTextureColorMod(gatlas, 0, 0, 0);
+
+	SDL_SetTextureColorMod(gatlas, 0, 0x55, 0xFF);
+	SDL_SetTextureAlphaMod(gatlas, 0xAA);
+	for(i=0; i<MAXPARTICLES; ++i){
+		if(particles[i].time > 0){
+			setimgrect(12);
+			project_particle(&camera, &temprect, &particles[i], alpha);
+			SDL_RenderCopy(gren, gatlas, &imgrect, &temprect);
+		}
+	}
+
+	SDL_SetTextureAlphaMod(gatlas, 0xFF);
+	SDL_SetTextureColorMod(gatlas, 0, 0xAA, 0);
 	for(i=0; i<PLAYERS; ++i){
 		disp[2] = '0' + ((int)fighters[i]->damage) % 10;
 		disp[1] = '0' + (((int)fighters[i]->damage) % 100) / 10;
@@ -212,11 +234,11 @@ void draw(float alpha){
 				disp[1] = ' ';
 			}
 		}
-		drawtext(disp, alpha, 0.01f + 0.025f * 5 * i, 0.01f, 0.025f, 0.04f, 0);
+		drawstatictext(disp, 0.01f + 0.025f * 5 * i, 0.01f, 0.025f, 0.04f);
 	}
 	if(debug){
 		sprintf(debugtest, "%d, %d, %d", fighters[0]->hitlag, fighters[0]->tick, fighters[0]->state);
-		drawtext(debugtest, alpha, 0.01f + 0.05f, 0.1f, 0.01f, 0.02f, 0);
+		drawstatictext(debugtest, 0.01f + 0.05f, 0.1f, 0.01f, 0.02f);
 	}
 }
 
@@ -338,10 +360,21 @@ int main(int argc, char *argv[]){
 			for(i=0; i<level.MAX_BOXES; ++i){
 				if(level.boxes[i].owner){
 					hitbox_update(&level.boxes[i]);
+					if(level.boxes[i].hitlag > 0){
+						tparticle_set(&particles[cparticle], level.boxes[i].rect.x + ((rand() % 1000) / 1000.0) * level.boxes[i].rect.w, level.boxes[i].rect.y + ((rand() % 1000) / 1000.0) * level.boxes[i].rect.h, (float)cos(level.boxes[i].kbangle * PI / 180) * ((rand() % 1000) / 2000.0), -(float)sin(level.boxes[i].kbangle * PI / 180) * ((rand() % 1000) / 2000.0), 0.5f, 90, 0x0000FF);
+						cparticle = (cparticle + 1) % MAXPARTICLES;
+					}
 				}
 			}
 			accumulator -= physicsstep;
 		}
+
+		for(i=0; i<MAXPARTICLES; ++i){
+			if(particles[i].time > 0){
+				tparticle_update(&particles[i]);
+			}
+		}
+
 		alpha = ((float)accumulator) / physicsstep;
 		draw(alpha);
 		SDL_RenderPresent(gren);

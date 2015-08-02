@@ -43,6 +43,14 @@
 #define CAMERABORDER 20
 #define KBRESISTANCE 0.03f
 
+typedef struct{
+	float px, py, x, y, size;
+	int time;
+	Uint32 color;
+} tparticle;
+
+void tparticle_set(tparticle *part, float x, float y, float vx, float vy, float size, int ttime, Uint32 color);
+void tparticle_update(tparticle *part);
 
 typedef struct{
 	float x, y, w, h;
@@ -51,6 +59,7 @@ typedef struct{
 typedef struct{
 	float px, py, x, y, pscale, scale;
 	int swidth, sheight;
+	float iscale, ix, iy;
 } tcamera;
 
 typedef struct tfighter tfighter;
@@ -59,7 +68,8 @@ struct hitbox{
 	trect rect, prect;
 	float vx, vy, ax, ay; /* Location change variables */
 	float vw, vh, aw, ah; /* Size change variables */
-	int attack, attackmultiply;
+	int attack;
+	float attackmultiply;
 	float kb;
 	float kbgrowth;
 	double kbangle;
@@ -150,8 +160,10 @@ void tlevel_free(tlevel *tl);
 void project(tcamera *tc, trect *t, trect *p, SDL_Rect *r, float alpha);
 void project2(tcamera *tc, trect *t, SDL_Rect *r, float alpha);
 void project3(tcamera *tc, SDL_Rect *r, float alpha, float x, float y, float w, float h);
+void project_particle(tcamera *tc, SDL_Rect *r, tparticle *part, float alpha);
 void projecthud(tcamera *tc, SDL_Rect *r, float x, float y, float w, float h);
 
 void tcamera_track(tcamera *tc, tlevel *tl, tfighter **t, int len);
+void tcamera_interpolate(tcamera *tc, float alpha);
 
 #endif

@@ -13,24 +13,31 @@ int intersects(trect *r, trect *o){
 }
 
 void project(tcamera *tc, trect *t, trect *p, SDL_Rect *r, float alpha){
-	r->x = (int)((terp(p->x, t->x, alpha) - terp(tc->px, tc->x, alpha)) * terp(tc->pscale, tc->scale, alpha) + 0.5f);
-	r->y = (int)((terp(p->y, t->y, alpha) - terp(tc->py, tc->y, alpha)) * terp(tc->pscale, tc->scale, alpha) + 0.5f);
-	r->w = (int)((terp(p->w, t->w, alpha) * terp(tc->pscale, tc->scale, alpha) + 0.5f));
-	r->h = (int)((terp(p->h, t->h, alpha) * terp(tc->pscale, tc->scale, alpha) + 0.5f));
+	r->x = (int)((terp(p->x, t->x, alpha) + tc->ix)  * tc->iscale + 0.5f);
+	r->y = (int)((terp(p->y, t->y, alpha) + tc->iy) * tc->iscale + 0.5f);
+	r->w = (int)((terp(p->w, t->w, alpha) * tc->iscale + 0.5f));
+	r->h = (int)((terp(p->h, t->h, alpha) * tc->iscale + 0.5f));
 }
 
 void project2(tcamera *tc, trect *t, SDL_Rect *r, float alpha){
-	r->x = (int)((t->x - terp(tc->px, tc->x, alpha)) * terp(tc->pscale, tc->scale, alpha) + 0.5f);
-	r->y = (int)((t->y - terp(tc->py, tc->y, alpha)) * terp(tc->pscale, tc->scale, alpha) + 0.5f);
-	r->w = (int)(t->w * terp(tc->pscale, tc->scale, alpha) + 0.5f);
-	r->h = (int)(t->h * terp(tc->pscale, tc->scale, alpha) + 0.5f);
+	r->x = (int)((t->x + tc->ix) * tc->iscale + 0.5f);
+	r->y = (int)((t->y + tc->iy) * tc->iscale + 0.5f);
+	r->w = (int)(t->w * tc->iscale + 0.5f);
+	r->h = (int)(t->h * tc->iscale + 0.5f);
 }
 
 void project3(tcamera *tc, SDL_Rect *r, float alpha, float x, float y, float w, float h){
-	r->x = (int)((x - terp(tc->px, tc->x, alpha)) * terp(tc->pscale, tc->scale, alpha) + 0.5f);
-	r->y = (int)((y - terp(tc->py, tc->y, alpha)) * terp(tc->pscale, tc->scale, alpha) + 0.5f);
-	r->w = (int)(w * terp(tc->pscale, tc->scale, alpha) + 0.5f);
-	r->h = (int)(h * terp(tc->pscale, tc->scale, alpha) + 0.5f);
+	r->x = (int)((x + tc->ix) * tc->iscale + 0.5f);
+	r->y = (int)((y + tc->iy) * tc->iscale + 0.5f);
+	r->w = (int)(w * tc->iscale + 0.5f);
+	r->h = (int)(h * tc->iscale + 0.5f);
+}
+
+void project_particle(tcamera *tc, SDL_Rect *r, tparticle *part, float alpha){
+	r->x = (int)((terp(part->px, part->x, alpha) + tc->ix) * tc->iscale + 0.5f);
+	r->y = (int)((terp(part->py, part->y, alpha) + tc->iy) * tc->iscale + 0.5f);
+	r->w = (int)(part->size * tc->iscale + 0.5f);
+	r->h = r->w;
 }
 
 void projecthud(tcamera *tc, SDL_Rect *r, float x, float y, float w, float h){
@@ -38,6 +45,33 @@ void projecthud(tcamera *tc, SDL_Rect *r, float x, float y, float w, float h){
 	r->y = (int)(y * tc->swidth + 0.5f);
 	r->w = (int)(w * tc->swidth + 0.5f);
 	r->h = (int)(h * tc->swidth + 0.5f);
+}
+
+void tparticle_set(tparticle *part, float x, float y, float vx, float vy, float size, int ttime, Uint32 color){
+	part->px = x;
+	part->py = y;
+	part->x = part->px + vx;
+	part->y = part->py + vy;
+	part->size = size;
+	part->time = ttime;
+	part->color = color;
+}
+
+void tparticle_update(tparticle *part){
+	float tempx, tempy;
+	tempx = part->x;
+	tempy = part->y;
+	part->x += tempx - part->px;
+	part->y += tempy - part->py;
+	part->px = tempx;
+	part->py = tempy;
+	--part->time;
+}
+
+void tcamera_interpolate(tcamera *tc, float alpha){
+	tc->iscale = terp(tc->pscale, tc->scale, alpha);
+	tc->ix = -terp(tc->px, tc->x, alpha);
+	tc->iy = -terp(tc->py, tc->y, alpha);
 }
 
 void tcamera_track(tcamera *tc, tlevel *tl, tfighter **t, int len){
@@ -125,8 +159,8 @@ void tfighter_setmove(tfighter *t, int index, int attack, int growth, int durati
 	if(attack > 100){
 		attack = 100;
 	}
-	if(growth < 0){
-		growth *= -1;
+	if(growth < 1){
+		growth = 1;
 	}
 	if(growth > 100){
 		growth = 100;
@@ -175,12 +209,11 @@ void tfighter_setmove(tfighter *t, int index, int attack, int growth, int durati
 	t->moves[index].vy = (float)sin(angle) * speed * (type & PROJECTILE ? 2 : 1) * (type & MOVEMENT && !(type & AIRONCE) ? 0.10f : 1);
 	t->moves[index].rect.w = width;
 	t->moves[index].rect.h = height;
-	t->moves[index].attack = (int)(attack / (t->moves[index].rect.w * t->moves[index].rect.h) * (type | ATTACK ? 1 : 0) * (type & REFLECT ? 0.1 : (type & PROJECTILE ? 0.3f : 1)));
+	t->moves[index].attack = (int)(attack / (1 + t->moves[index].rect.w * t->moves[index].rect.h) * (type | ATTACK ? 1 : 0) * (type & REFLECT ? 0.1 : (type & PROJECTILE ? 0.3f : 1)) * 50 / growth);
 	if(t->moves[index].attack < 0)
 		t->moves[index].attack *= -1;
-	t->moves[index].attack = (int)(t->moves[index].attack * (1 + growth / 25.0f));
-	t->moves[index].kb = attack / (1 + t->moves[index].vx * t->moves[index].vy) * (type & (MOVEMENT | REFLECT) ? 0.1f : 1);
-	t->moves[index].kbgrowth = attack / (1 + t->moves[index].vx * t->moves[index].vy);
+	t->moves[index].kb = attack / (1 + t->moves[index].vx * t->moves[index].vy * 5) * (type & (MOVEMENT | REFLECT) ? 0.1f : 1);
+	t->moves[index].kbgrowth = growth / (1 + t->moves[index].vx * t->moves[index].vy) / 30;
 	if(t->moves[index].kbgrowth < 0)
 		t->moves[index].kbgrowth *= -1;
 	t->moves[index].mindelay = (int)((attack * growth / 4.0f) / (endlag + 1)) * duration / 160;
@@ -251,7 +284,7 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 		ret->moves[i].kbgrowth = 0.0f;
 		ret->moves[i].kbangle = 45.0f;
 		ret->moves[i].attack = 0;
-		ret->moves[i].attack = 0;
+		ret->moves[i].attackmultiply = 1;
 		ret->moves[i].time = 0;
 		ret->moves[i].type = 0;
 		ret->moves[i].owner = ret;
@@ -303,7 +336,7 @@ void hitbox_update(hitbox *h){
 	if(h->tick < h->maxdelay){
 		if(!(h->owner->state & CHARGING) && h->tick >= h->mindelay){
 			if(h->mindelay < h->maxdelay){
-				h->attackmultiply = (int)(0.4 * h->attack * ((double)h->tick - h->mindelay) / (h->maxdelay - h->mindelay) + h->attack);
+				h->attackmultiply = (float)(0.4f * (h->tick - h->mindelay) / (h->maxdelay - h->mindelay) + 1);
 			}
 			h->tick = h->maxdelay + 1;
 		}
@@ -401,10 +434,10 @@ void hitbox_spawn(tfighter *t, hitbox *src, hitbox *dest){
 	dest->aw = src->aw;
 	dest->ah = src->ah;
 
-	dest->attack = src->attack * t->strength;
+	dest->attack = src->attack;
 	dest->attackmultiply = src->attackmultiply;
 	dest->kb = src->kb * t->strength;
-	dest->kbangle = src->kbangle;
+	dest->kbangle = src->kbangle + (dest->left ? (src->kbangle < 90 || (src->kbangle > 180 && src->kbangle < 270) ? + 90 : - 90) : 0);
 	dest->kbgrowth = src->kbgrowth;
 	dest->owner = src->owner;
 	dest->hit = 0;
@@ -575,9 +608,10 @@ void tfighter_update(tfighter *t, tlevel *tl){
 		tfighter *owner = tl->boxes[i].owner;
 		hitbox *box = &tl->boxes[i];
 		if((owner != NULL) && owner != t && box->tick > box->maxdelay && !(box->hit & t->id) && intersects(&t->rect, &box->rect)){
-			t->damage += box->attack;
-			t->vy += (float)(0.01 * sin(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth * 0.1))/t->launchresistance);
-			t->vx += (float)(0.01 * cos(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth * 0.1)) * (box->left ? -1 : 1)/t->launchresistance);
+			t->damage += box->attack * box->attackmultiply;
+			t->vy += (float)(-0.01 * sin(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth))/t->launchresistance);
+			t->vx += (float)(0.01 * cos(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth))/t->launchresistance);
+			SDL_Log("attack: %d, attackmultiply: %f, kb: %f, kbgrowth: %f, kbangle: %f\n", box->attack, box->attackmultiply, box->kb, box->kbgrowth, box->kbangle);
 			box->hit |= t->id;
 			t->state &= ~(ATTACKING | HELPLESS | SPECIAL | WALKING | RUNNING | JUMP | CHARGING);
 			t->state |= HITSTUN;
@@ -647,8 +681,6 @@ void tfighter_update(tfighter *t, tlevel *tl){
 				if(t->vy > 0 && (tl->blocks[i].h >= 0.9f || !(t->state & DOWN))){
 					if(t->state & HITSTUN){
 						t->hitlag = 2;
-						t->vy *= -DAMPENING;
-						t->vx *= DAMPENING;
 					}
 					else{
 						t->vy = 0;
@@ -661,8 +693,6 @@ void tfighter_update(tfighter *t, tlevel *tl){
 				else if(tl->blocks[i].h >= 0.9f){
 					if(t->state & HITSTUN){
 						t->hitlag = 2;
-						t->vy *= -DAMPENING;
-						t->vx *= DAMPENING;
 					}
 					else{
 						t->vy = 0;
