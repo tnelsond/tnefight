@@ -212,7 +212,7 @@ void tfighter_setmove(tfighter *t, int index, int attack, int growth, int durati
 	t->moves[index].attack = (int)(attack / (1 + t->moves[index].rect.w * t->moves[index].rect.h) * (type | ATTACK ? 1 : 0) * (type & REFLECT ? 0.1 : (type & PROJECTILE ? 0.3f : 1)) * 50 / growth);
 	if(t->moves[index].attack < 0)
 		t->moves[index].attack *= -1;
-	t->moves[index].kb = attack / (1 + t->moves[index].vx * t->moves[index].vy * 5) * (type & (MOVEMENT | REFLECT) ? 0.1f : 1);
+	t->moves[index].kb = 10;/*attack / (1 + t->moves[index].vx * t->moves[index].vy * 5) * (type & (MOVEMENT | REFLECT) ? 0.1f : 1);*/
 	t->moves[index].kbgrowth = growth / (1 + t->moves[index].vx * t->moves[index].vy) / 30;
 	if(t->moves[index].kbgrowth < 0)
 		t->moves[index].kbgrowth *= -1;
@@ -220,7 +220,7 @@ void tfighter_setmove(tfighter *t, int index, int attack, int growth, int durati
 	t->moves[index].maxdelay = t->moves[index].mindelay * growth;
 	t->moves[index].endlag = (int)(endlag * duration / 50.0f / (type & PROJECTILE ? 3 : 1));
 	t->moves[index].time = duration;
-	t->moves[index].hitlag = t->moves[index].attack * t->moves[index].kbgrowth;
+	t->moves[index].hitlag = 5 + (t->moves[index].attack * t->moves[index].kbgrowth);
 }
 
 tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys, Uint32 *joybuttons, SDL_JoystickID joy, int joyxoffset, int joyyoffset, Uint8 *skin){
@@ -609,8 +609,8 @@ void tfighter_update(tfighter *t, tlevel *tl){
 		hitbox *box = &tl->boxes[i];
 		if((owner != NULL) && owner != t && box->tick > box->maxdelay && !(box->hit & t->id) && intersects(&t->rect, &box->rect)){
 			t->damage += box->attack * box->attackmultiply;
-			t->vy += (float)(-0.01 * sin(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth))/t->launchresistance);
-			t->vx += (float)(0.01 * cos(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth))/t->launchresistance);
+			t->vy += (float)(-0.1 * sin(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth))/t->launchresistance);
+			t->vx += (float)(0.1 * cos(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth))/t->launchresistance);
 			SDL_Log("attack: %d, attackmultiply: %f, kb: %f, kbgrowth: %f, kbangle: %f\n", box->attack, box->attackmultiply, box->kb, box->kbgrowth, box->kbangle);
 			box->hit |= t->id;
 			t->state &= ~(ATTACKING | HELPLESS | SPECIAL | WALKING | RUNNING | JUMP | CHARGING);
@@ -619,7 +619,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 			t->hitlag = box->attack*0.1f;
 			box->hitlag = box->attack*0.1f;
 			if(~box->type & PROJECTILE){
-				box->owner->hitlag = box->attack;
+				box->owner->hitlag = box->attack*0.1f;
 			}
 			t->jump = 0;
 		}

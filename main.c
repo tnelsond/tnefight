@@ -213,10 +213,10 @@ void draw(float alpha){
 	}
 
 	SDL_SetTextureColorMod(gatlas, 0, 0x55, 0xFF);
-	SDL_SetTextureAlphaMod(gatlas, 0xAA);
 	for(i=0; i<MAXPARTICLES; ++i){
 		if(particles[i].time > 0){
-			setimgrect(12);
+			SDL_SetTextureAlphaMod(gatlas, particles[i].time % 256 * 2);
+			setimgrect(9);
 			project_particle(&camera, &temprect, &particles[i], alpha);
 			SDL_RenderCopy(gren, gatlas, &imgrect, &temprect);
 		}
@@ -355,15 +355,16 @@ int main(int argc, char *argv[]){
 
 			for(i=0; i<PLAYERS; ++i){
 				tfighter_update(fighters[i], &level);
+				if(fighters[i]->state & HITSTUN){
+					float mag = (float)(rand() % 1000 / 1000.0f);
+					tparticle_set(&particles[cparticle], fighters[i]->rect.x + ((rand() % 1000) / 1000.0) * fighters[i]->rect.w, fighters[i]->rect.y + ((rand() % 1000) / 1000.0) * fighters[i]->rect.h, fighters[i]->vx * mag, fighters[i]->vy * mag, 0.5f, 90, 0x0000FF);
+					cparticle = (cparticle + 1) % MAXPARTICLES;
+				}
 			}
 		
 			for(i=0; i<level.MAX_BOXES; ++i){
 				if(level.boxes[i].owner){
 					hitbox_update(&level.boxes[i]);
-					if(level.boxes[i].hitlag > 0){
-						tparticle_set(&particles[cparticle], level.boxes[i].rect.x + ((rand() % 1000) / 1000.0) * level.boxes[i].rect.w, level.boxes[i].rect.y + ((rand() % 1000) / 1000.0) * level.boxes[i].rect.h, (float)cos(level.boxes[i].kbangle * PI / 180) * ((rand() % 1000) / 2000.0), -(float)sin(level.boxes[i].kbangle * PI / 180) * ((rand() % 1000) / 2000.0), 0.5f, 90, 0x0000FF);
-						cparticle = (cparticle + 1) % MAXPARTICLES;
-					}
 				}
 			}
 			accumulator -= physicsstep;
