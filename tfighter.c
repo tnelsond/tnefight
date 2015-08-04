@@ -155,7 +155,7 @@ void tlevel_free(tlevel *tl){
 	tl = NULL;
 }
 
-void tfighter_setmove(tfighter *t, int index, int attack, int kb, int kbgrowth, int mindelay, int maxdelay, int duration, int endlag, int x, int y, int width, int height, int angle, int kbangle, int speed, int type, int img){
+void tfighter_setmove(tfighter *t, int index, int attack, int kb, int kbgrowth, int mindelay, int chargetime, int duration, int endlag, int x, int y, int width, int height, int angle, int kbangle, int speed, int type, int img){
 	SDL_Log("setmove start");
 	float tempangle;
 	float tempspeed;
@@ -167,8 +167,8 @@ void tfighter_setmove(tfighter *t, int index, int attack, int kb, int kbgrowth, 
 	h->endlag = clamp(endlag, 1, 100);
 	h->rect.x = clamp(x, -100, 100) / 50.0f;
 	h->rect.y = clamp(y, -100, 100) / 50.0f;
-	h->rect.w = clamp(width, 1, 100) / 10.0f;
-	h->rect.h = clamp(height, 1, 100) / 10.0f;
+	h->rect.w = .5f + clamp(width, 1, 100) / 10.0f;
+	h->rect.h = .5f + clamp(height, 1, 100) / 10.0f;
 	tempangle = (angle % 360) * PI / 180.0f;
 	h->kbangle = kbangle % 360;
 	tempspeed = clamp(speed, 0, 100) / 100.0f;
@@ -177,16 +177,26 @@ void tfighter_setmove(tfighter *t, int index, int attack, int kb, int kbgrowth, 
 	h->type = type;
 	h->image = clamp(img, 0, 13);
 	h->mindelay = clamp(mindelay, 1, 200);
-	h->maxdelay = clamp(maxdelay, 1, 200);
+	h->maxdelay = h->mindelay + clamp(chargetime, 1, 200);
 	SDL_Log("%f, %f, %f, %f, %f, %f, %d", h->rect.x, h->rect.y, h->rect.w, h->rect.h, h->vx, h->vy, h->time);
 	SDL_Log("setmove end");
 }
 
-void tfighter_balance_move(tfighter *t, int index, int attack, int kb, int duration, int endlag, int x, int y, int width, int height, int angle, int kbangle, int speed, int type, int img){
+void tfighter_balance_move(tfighter *t, int index, int attack, int kb, int chargetime, int duration, int endlag, int x, int y, int width, int height, int angle, int kbangle, int speed, int type, int img){
 	tfighter_setmove(t, index, 
-			attack - (width - height) / 2,
-			kb,
-			endlag
+			attack - (width + height) / 2, /* Attack */
+			kb, /* KnockBack */
+			(100 - speed), /* KnockBack Growth */
+			(int)(200 - endlag) * 0.9 + duration * 0.1 - (100 - attack) * 0.25, /* Minimum Delay */ 
+			chargetime, /* Max Delay */
+			duration, /* Duration */
+			(int)(endlag - (100 - attack) * .25),
+			x, y, width, height,
+			angle,
+			kbangle,
+			speed,
+			type,
+			img);
 }
 
 tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys, Uint32 *joybuttons, SDL_JoystickID joy, int joyxoffset, int joyyoffset, Uint8 *skin){

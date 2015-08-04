@@ -48,23 +48,61 @@ int lsetskin(lua_State *l){
 
 
 int lsetmove(lua_State *l){
-	SDL_Log("1");
-	if(lua_gettop(l) == 17 && cfighter != NULL){
-		int i;
-		for(i = -17; i <= -1; ++i){
-			if(!lua_isnumber(l, i)){
-				return -2;
-			}
-			SDL_Log("... %d", i);
-		}
-
-		tfighter_setmove(cfighter, (int)lua_tonumber(l, -17), (int)lua_tonumber(l, -16), (int)lua_tonumber(l, -15), (int)lua_tonumber(l, -14), (int)lua_tonumber(l, -13), (int)lua_tonumber(l, -12), (int)lua_tonumber(l, -11), (int)lua_tonumber(l, -10), (int)lua_tonumber(l, -9), (int)lua_tonumber(l, -8), (int)lua_tonumber(l, -7), (int)lua_tonumber(l, -6), (int)lua_tonumber(l, -5), (int)lua_tonumber(l, -4), (int)lua_tonumber(l, -3), (int)lua_tonumber(l, -2), (int)lua_tonumber(l, -1));
-
-		SDL_Log("2");
-
-		return 0;
+	int i;
+	if(lua_gettop(l) != 15){
+		SDL_Log("Wrong number of arguments to setmove! Takes 15.");
+		return -1;
 	}
-	return -1;
+	if(cfighter == NULL){
+		return -3;
+	}
+	for(i = -15; i <= -1; ++i){
+		if(!lua_isnumber(l, i)){
+			SDL_Log("Argument %d in setmove is not a number!", i);
+			return -2;
+		}
+	}
+
+	/*
+	tfighter_setmove(cfighter, (int)lua_tonumber(l, -17), (int)lua_tonumber(l, -16), (int)lua_tonumber(l, -15), (int)lua_tonumber(l, -14), (int)lua_tonumber(l, -13), (int)lua_tonumber(l, -12), (int)lua_tonumber(l, -11), (int)lua_tonumber(l, -10), (int)lua_tonumber(l, -9), (int)lua_tonumber(l, -8), (int)lua_tonumber(l, -7), (int)lua_tonumber(l, -6), (int)lua_tonumber(l, -5), (int)lua_tonumber(l, -4), (int)lua_tonumber(l, -3), (int)lua_tonumber(l, -2), (int)lua_tonumber(l, -1));
+	*/
+
+	tfighter_balance_move(cfighter,
+		lua_tonumber(l, -15),
+		lua_tonumber(l, -14),
+		lua_tonumber(l, -13),
+		lua_tonumber(l, -12),
+		lua_tonumber(l, -11),
+		lua_tonumber(l, -10),
+		lua_tonumber(l, -9),
+		lua_tonumber(l, -8),
+		lua_tonumber(l, -7),
+		lua_tonumber(l, -6),
+		lua_tonumber(l, -5),
+		lua_tonumber(l, -4),
+		lua_tonumber(l, -3),
+		lua_tonumber(l, -2),
+		lua_tonumber(l, -1)
+	);
+	/*
+		int index,
+		int attack,
+		int kb,
+		int chargetime,
+		int duration,
+		int endlag,
+		int x,
+		int y,
+		int width,
+		int height,
+		int angle,
+		int kbangle,
+		int speed,
+		int type,
+		int img);
+	*/
+
+	return 0;
 }
 
 int lsetbruiserness(lua_State *l){
