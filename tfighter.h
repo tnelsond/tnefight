@@ -137,7 +137,7 @@ struct tfighter{
 
 tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys, Uint32 *joybuttons, SDL_JoystickID joy, int joyxoffset, int joyyoffset, Uint8 *skin);
 
-void tfighter_setmove(tfighter *t, int index, int attack, int growth, int duration, int endlag, int width, int height, float angle, float speed, int type, int img);
+void tfighter_setmove(tfighter *t, int index, int attack, int kb, int kbgrowth, int mindelay, int maxdelay, int duration, int endlag, int x, int y, int width, int height, int angle, int kbangle, int speed, int type, int img);
 
 void tfighter_free(tfighter *t);
 

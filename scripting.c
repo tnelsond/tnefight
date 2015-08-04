@@ -48,14 +48,19 @@ int lsetskin(lua_State *l){
 
 
 int lsetmove(lua_State *l){
-	if(lua_gettop(l) == 11 && cfighter != NULL){
+	SDL_Log("1");
+	if(lua_gettop(l) == 17 && cfighter != NULL){
 		int i;
-		for(i = -10; i <= -1; ++i){
+		for(i = -17; i <= -1; ++i){
 			if(!lua_isnumber(l, i)){
 				return -2;
 			}
+			SDL_Log("... %d", i);
 		}
-		tfighter_setmove(cfighter, (int)lua_tonumber(l, -11), (int)lua_tonumber(l, -10), (int)lua_tonumber(l, -9), (int)lua_tonumber(l, -8),(int)lua_tonumber(l, -7),(int)lua_tonumber(l, -6),(int)lua_tonumber(l, -5),(float)lua_tonumber(l, -4),(float)lua_tonumber(l, -3),(int)lua_tonumber(l, -2),(int)lua_tonumber(l, -1));
+
+		tfighter_setmove(cfighter, (int)lua_tonumber(l, -17), (int)lua_tonumber(l, -16), (int)lua_tonumber(l, -15), (int)lua_tonumber(l, -14), (int)lua_tonumber(l, -13), (int)lua_tonumber(l, -12), (int)lua_tonumber(l, -11), (int)lua_tonumber(l, -10), (int)lua_tonumber(l, -9), (int)lua_tonumber(l, -8), (int)lua_tonumber(l, -7), (int)lua_tonumber(l, -6), (int)lua_tonumber(l, -5), (int)lua_tonumber(l, -4), (int)lua_tonumber(l, -3), (int)lua_tonumber(l, -2), (int)lua_tonumber(l, -1));
+
+		SDL_Log("2");
 
 		return 0;
 	}

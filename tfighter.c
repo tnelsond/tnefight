@@ -4,6 +4,9 @@
 #include "tfighter.h"
 
 #define terp(p, c, alpha) (p + (c - p) * alpha)
+#define min(a, b) ((a) < (b)) ? (a) : (b)
+#define max(a, b) ((a) > (b)) ? (a) : (b)
+#define clamp(a, b, c) ((a) < (b) ? (b) : ((a) > (c) ? (c) : (a)))
 
 int gid = 1;
 
@@ -152,7 +155,33 @@ void tlevel_free(tlevel *tl){
 	tl = NULL;
 }
 
-void tfighter_setmove(tfighter *t, int index, int attack, int growth, int duration, int endlag, int width, int height, float angle, float speed, int type, int img){
+void tfighter_setmove(tfighter *t, int index, int attack, int kb, int kbgrowth, int mindelay, int maxdelay, int duration, int endlag, int x, int y, int width, int height, int angle, int kbangle, int speed, int type, int img){
+	SDL_Log("setmove start");
+	float tempangle;
+	float tempspeed;
+	hitbox *h = &t->moves[clamp(index, 0, 8)];
+	h->attack = clamp(attack, 0, 100);
+	h->kb = clamp(kb, 0, 100) / 2.0f;
+	h->kbgrowth = clamp(kbgrowth, 0, 100) / 50.0f;
+	h->time = clamp(duration, 1, 500);
+	h->endlag = clamp(endlag, 1, 100);
+	h->rect.x = clamp(x, -100, 100) / 50.0f;
+	h->rect.y = clamp(y, -100, 100) / 50.0f;
+	h->rect.w = clamp(width, 1, 100) / 10.0f;
+	h->rect.h = clamp(height, 1, 100) / 10.0f;
+	tempangle = (angle % 360) * PI / 180.0f;
+	h->kbangle = kbangle % 360;
+	tempspeed = clamp(speed, 0, 100) / 100.0f;
+	h->vx = tempspeed * cos(tempangle);
+	h->vy = tempspeed * sin(tempangle);
+	h->type = type;
+	h->image = clamp(img, 0, 13);
+	h->mindelay = clamp(mindelay, 1, 200);
+	h->maxdelay = clamp(maxdelay, 1, 200);
+	SDL_Log("%f, %f, %f, %f, %f, %f, %d", h->rect.x, h->rect.y, h->rect.w, h->rect.h, h->vx, h->vy, h->time);
+	SDL_Log("setmove end");
+}
+/*
 	if(attack < 0){
 		attack *= -1;
 	}
@@ -212,7 +241,7 @@ void tfighter_setmove(tfighter *t, int index, int attack, int growth, int durati
 	t->moves[index].attack = (int)(attack / (1 + t->moves[index].rect.w * t->moves[index].rect.h) * (type | ATTACK ? 1 : 0) * (type & REFLECT ? 0.1 : (type & PROJECTILE ? 0.3f : 1)) * 50 / growth);
 	if(t->moves[index].attack < 0)
 		t->moves[index].attack *= -1;
-	t->moves[index].kb = 10;/*attack / (1 + t->moves[index].vx * t->moves[index].vy * 5) * (type & (MOVEMENT | REFLECT) ? 0.1f : 1);*/
+	t->moves[index].kb = 10;
 	t->moves[index].kbgrowth = growth / (1 + t->moves[index].vx * t->moves[index].vy) / 30;
 	if(t->moves[index].kbgrowth < 0)
 		t->moves[index].kbgrowth *= -1;
@@ -221,6 +250,11 @@ void tfighter_setmove(tfighter *t, int index, int attack, int growth, int durati
 	t->moves[index].endlag = (int)(endlag * duration / 50.0f / (type & PROJECTILE ? 3 : 1));
 	t->moves[index].time = duration;
 	t->moves[index].hitlag = 5 + (t->moves[index].attack * t->moves[index].kbgrowth);
+}
+*/
+
+void tfighter_balance_move(){
+
 }
 
 tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys, Uint32 *joybuttons, SDL_JoystickID joy, int joyxoffset, int joyyoffset, Uint8 *skin){
@@ -295,7 +329,7 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 		ret->moves[i].hit = 0;
 		ret->moves[i].endlag = 0;
 		ret->moves[i].image = 12;
-		tfighter_setmove(ret, i, 10, 10, 40, 30, 2, 2, 45, 0.4f, MOVEMENT, 12);
+		tfighter_setmove(ret, i, 50, 50, 50, 20, 70, 10, 5, 10, 0, 20, 20, 0, 45, 10, ATTACK, 12);
 	}
 
 	ret->left = 1;
@@ -437,7 +471,21 @@ void hitbox_spawn(tfighter *t, hitbox *src, hitbox *dest){
 	dest->attack = src->attack;
 	dest->attackmultiply = src->attackmultiply;
 	dest->kb = src->kb * t->strength;
-	dest->kbangle = src->kbangle + (dest->left ? (src->kbangle < 90 || (src->kbangle > 180 && src->kbangle < 270) ? + 90 : - 90) : 0);
+	dest->kbangle = src->kbangle;
+	if(dest->left){
+		if(dest->kbangle < 90){
+			dest->kbangle = (90 - dest->kbangle) + 90;
+		}
+		else if(dest->kbangle < 180){
+			dest->kbangle = (180 - dest->kbangle);
+		}
+		else if(dest->kbangle < 270){
+			dest->kbangle = 360 - (dest->kbangle - 180);
+		}
+		else{
+			dest->kbangle = 180 + (360 - dest->kbangle);
+		}
+	}
 	dest->kbgrowth = src->kbgrowth;
 	dest->owner = src->owner;
 	dest->hit = 0;
@@ -451,6 +499,7 @@ void hitbox_spawn(tfighter *t, hitbox *src, hitbox *dest){
 	dest->type = src->type;
 	dest->tick = 0;
 	dest->image = src->image;
+	SDL_Log("Spawning move");
 }
 
 void tfighter_input(tfighter *t, tlevel *tl, SDL_Event *e){
@@ -609,8 +658,8 @@ void tfighter_update(tfighter *t, tlevel *tl){
 		hitbox *box = &tl->boxes[i];
 		if((owner != NULL) && owner != t && box->tick > box->maxdelay && !(box->hit & t->id) && intersects(&t->rect, &box->rect)){
 			t->damage += box->attack * box->attackmultiply;
-			t->vy += (float)(-0.1 * sin(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth))/t->launchresistance);
-			t->vx += (float)(0.1 * cos(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth))/t->launchresistance);
+			t->vy += (float)(-0.04 * sin(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth))/t->launchresistance);
+			t->vx += (float)(0.04 * cos(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth))/t->launchresistance);
 			SDL_Log("attack: %d, attackmultiply: %f, kb: %f, kbgrowth: %f, kbangle: %f\n", box->attack, box->attackmultiply, box->kb, box->kbgrowth, box->kbangle);
 			box->hit |= t->id;
 			t->state &= ~(ATTACKING | HELPLESS | SPECIAL | WALKING | RUNNING | JUMP | CHARGING);
