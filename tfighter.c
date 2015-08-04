@@ -181,80 +181,12 @@ void tfighter_setmove(tfighter *t, int index, int attack, int kb, int kbgrowth, 
 	SDL_Log("%f, %f, %f, %f, %f, %f, %d", h->rect.x, h->rect.y, h->rect.w, h->rect.h, h->vx, h->vy, h->time);
 	SDL_Log("setmove end");
 }
-/*
-	if(attack < 0){
-		attack *= -1;
-	}
-	if(attack > 100){
-		attack = 100;
-	}
-	if(growth < 1){
-		growth = 1;
-	}
-	if(growth > 100){
-		growth = 100;
-	}
-	if(endlag < 0){
-		endlag *= -1;
-	}
-	if(endlag > 100){
-		endlag = 100;
-	}
-	if(speed < 0){
-		speed *= -1;
-	}
-	if(speed > 1){
-		speed = 1;
-	}
-	if(duration < 0){
-		duration *= -1;
-	}
-	duration += 10;
-	if(duration > 100){
-		duration = 100;
-	}
-	if(width < 0.5f){
-		width = 0.5f;
-	}
-	if(height < 0.5f){
-		height = 0.5f;
-	}
-	if(height > 10.0f){
-		height = 10.0f;
-	}
-	if(width > 10.0f){
-		width = 10.0f;
-	}
-	if(img < 0){
-		img *= -1;
-	}
-	if(img > 12){
-		img = 12;
-	}
-	t->moves[index].image = img;
-	t->moves[index].type = type;
-	angle = angle * PI / 180;
-	t->moves[index].vx = (float)cos(angle) * speed * (type & PROJECTILE ? 2 : 1) * (type & MOVEMENT && !(type & AIRONCE) ? 0.10f : 1);
-	t->moves[index].vy = (float)sin(angle) * speed * (type & PROJECTILE ? 2 : 1) * (type & MOVEMENT && !(type & AIRONCE) ? 0.10f : 1);
-	t->moves[index].rect.w = width;
-	t->moves[index].rect.h = height;
-	t->moves[index].attack = (int)(attack / (1 + t->moves[index].rect.w * t->moves[index].rect.h) * (type | ATTACK ? 1 : 0) * (type & REFLECT ? 0.1 : (type & PROJECTILE ? 0.3f : 1)) * 50 / growth);
-	if(t->moves[index].attack < 0)
-		t->moves[index].attack *= -1;
-	t->moves[index].kb = 10;
-	t->moves[index].kbgrowth = growth / (1 + t->moves[index].vx * t->moves[index].vy) / 30;
-	if(t->moves[index].kbgrowth < 0)
-		t->moves[index].kbgrowth *= -1;
-	t->moves[index].mindelay = (int)((attack * growth / 4.0f) / (endlag + 1)) * duration / 160;
-	t->moves[index].maxdelay = t->moves[index].mindelay * growth;
-	t->moves[index].endlag = (int)(endlag * duration / 50.0f / (type & PROJECTILE ? 3 : 1));
-	t->moves[index].time = duration;
-	t->moves[index].hitlag = 5 + (t->moves[index].attack * t->moves[index].kbgrowth);
-}
-*/
 
-void tfighter_balance_move(){
-
+void tfighter_balance_move(tfighter *t, int index, int attack, int kb, int duration, int endlag, int x, int y, int width, int height, int angle, int kbangle, int speed, int type, int img){
+	tfighter_setmove(t, index, 
+			attack - (width - height) / 2,
+			kb,
+			endlag
 }
 
 tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys, Uint32 *joybuttons, SDL_JoystickID joy, int joyxoffset, int joyyoffset, Uint8 *skin){
