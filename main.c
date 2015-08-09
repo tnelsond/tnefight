@@ -152,12 +152,6 @@ void draw(float alpha){
 		copyrect(&temprect, &temp2);
 		temp2.h = temp2.h * 2 / 3;
 		setimgrect(fighters[i]->skin[0]);
-		SDL_SetTextureColorMod(gatlas, fighters[i]->red, fighters[i]->green, fighters[i]->blue);
-		SDL_RenderCopyEx(gren, gatlas, &imgrect, &temp2, fighters[i]->state & HITSTUN ? fighters[i]->tick * 5 * (fighters[i]->vx > 0 ? 1 : -1) : 0, NULL, fighters[i]->left);	
-		/*fillrect(&camera, &fighters[i]->rect, &fighters[i]->prect, alpha);*/
-
-
-		/* Head */
 		if(fighters[i]->state & HITSTUN){
 			SDL_SetTextureColorMod(gatlas, 0x77, 0x0, 0x0);
 		}
@@ -170,6 +164,12 @@ void draw(float alpha){
 		else{
 			SDL_SetTextureColorMod(gatlas, fighters[i]->red*3/4, fighters[i]->green*3/4, fighters[i]->blue*3/4);
 		}
+		SDL_RenderCopyEx(gren, gatlas, &imgrect, &temp2, fighters[i]->state & HITSTUN ? fighters[i]->tick * 5 * (fighters[i]->vx > 0 ? 1 : -1) : 0, NULL, fighters[i]->left);	
+		/*fillrect(&camera, &fighters[i]->rect, &fighters[i]->prect, alpha);*/
+
+
+		/* Head */
+		SDL_SetTextureColorMod(gatlas, fighters[i]->red, fighters[i]->green, fighters[i]->blue);
 		temprect.y -= temprect.h/2;
 		temprect.w = temprect.w*3/4;
 		temprect.h = temprect.h*3/4;

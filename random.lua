@@ -1,6 +1,6 @@
 require("math")
 math.randomseed(seed)
-setname("Tnel")
+setname("Random")
 width = math.random(2, 3)
 height = width * (1.1 + math.random()*.9)
 setsize(width, height)

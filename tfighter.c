@@ -15,6 +15,16 @@ int intersects(trect *r, trect *o){
 			&& r->y + r->h > o->y && r->y < o->y + o->h;
 }
 
+int yintersects(trect *r, trect *o){
+	return r->x + r->w - INTERSECT_TOLERANCE > o->x && r->x + INTERSECT_TOLERANCE < o->x + o->w 
+			&& r->y + r->h > o->y && r->y < o->y + o->h;
+}
+
+int xintersects(trect *r, trect *o){
+	return r->x + r->w > o->x && r->x < o->x + o->w 
+			&& r->y + r->h - INTERSECT_TOLERANCE > o->y && r->y + INTERSECT_TOLERANCE < o->y + o->h;
+}
+
 void project(tcamera *tc, trect *t, trect *p, SDL_Rect *r, float alpha){
 	r->x = (int)((terp(p->x, t->x, alpha) + tc->ix)  * tc->iscale + 0.5f);
 	r->y = (int)((terp(p->y, t->y, alpha) + tc->iy) * tc->iscale + 0.5f);
@@ -171,9 +181,9 @@ void tfighter_setmove(tfighter *t, int index, int attack, int kb, int kbgrowth, 
 	h->rect.h = .5f + clamp(height, 1, 100) / 10.0f;
 	tempangle = (angle % 360) * PI / 180.0f;
 	h->kbangle = kbangle % 360;
-	tempspeed = clamp(speed, 0, 100) / 100.0f;
+	tempspeed = clamp(speed, 0, 100) / 50.0f;
 	h->vx = tempspeed * cos(tempangle);
-	h->vy = tempspeed * sin(tempangle);
+	h->vy = -tempspeed * sin(tempangle);
 	h->type = type;
 	h->image = clamp(img, 0, 13);
 	h->mindelay = clamp(mindelay, 1, 200);
@@ -184,17 +194,17 @@ void tfighter_setmove(tfighter *t, int index, int attack, int kb, int kbgrowth, 
 
 void tfighter_balance_move(tfighter *t, int index, int attack, int kb, int chargetime, int duration, int endlag, int x, int y, int width, int height, int angle, int kbangle, int speed, int type, int img){
 	tfighter_setmove(t, index, 
-			attack - (width + height) / 2, /* Attack */
+			(attack - (width + height) / 2) / (type & PROJECTILE ? 3 : 1), /* Attack */
 			kb, /* KnockBack */
-			(100 - speed), /* KnockBack Growth */
-			(int)(200 - endlag) * 0.9 + duration * 0.1 - (100 - attack) * 0.25, /* Minimum Delay */ 
+			(100 - (speed + kb / 2)), /* KnockBack Growth */
+			(int)((200 - endlag) * (attack + kb/2.0)/100.0 + duration * 0.03), /* Minimum Delay */ 
 			chargetime, /* Max Delay */
 			duration, /* Duration */
-			(int)(endlag - (100 - attack) * .25),
+			(int)(endlag * attack/100.0 + duration * 0.03),
 			x, y, width, height,
 			angle,
 			kbangle,
-			speed,
+			speed / (!(type & PROJECTILE) ? 3 : 1),
 			type,
 			img);
 }
@@ -393,10 +403,10 @@ void hitbox_spawn(tfighter *t, hitbox *src, hitbox *dest){
 		dest->rect.x = src->rect.x + offset->x - src->rect.w/2 + offset->w/2;
 	}
 
-	dest->rect.y = src->rect.y + offset->y;
-
 	dest->rect.w = src->rect.w * t->rect.w / 2;
 	dest->rect.h = src->rect.h * t->rect.h / 2;
+
+	dest->rect.y = src->rect.y + offset->y  - dest->rect.h/2;
 
 	dest->left = t->left;
 
@@ -606,7 +616,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 			box->hit |= t->id;
 			t->state &= ~(ATTACKING | HELPLESS | SPECIAL | WALKING | RUNNING | JUMP | CHARGING);
 			t->state |= HITSTUN;
-			t->tick = (int)(box->kb + box->kbgrowth * t->damage / 15)/36;
+			t->tick = (int)((box->kb + box->kbgrowth * t->damage) / 3);
 			t->hitlag = box->attack*0.1f;
 			box->hitlag = box->attack*0.1f;
 			if(~box->type & PROJECTILE){
@@ -668,7 +678,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 		}
 		t->rect.y += t->vy;
 		for(i=0; i < tl->len; ++i){
-			if(intersects(&t->rect, &tl->blocks[i])){
+			if(yintersects(&t->rect, &tl->blocks[i])){
 				if(t->vy > 0 && (tl->blocks[i].h >= 0.9f || !(t->state & DOWN))){
 					if(t->state & HITSTUN){
 						t->hitlag = 2;
@@ -698,7 +708,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 		t->rect.x += t->vx;
 		for(i=0; i < tl->len; ++i){
 			if(tl->blocks[i].h >= 1.0f){
-				if(intersects(&t->rect, &tl->blocks[i])){
+				if(xintersects(&t->rect, &tl->blocks[i])){
 					if(t->vx > 0){
 						if(t->state & HITSTUN){
 							t->hitlag = 10;

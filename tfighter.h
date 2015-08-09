@@ -42,6 +42,7 @@
 #define MAXSKIN 13
 #define CAMERABORDER 20
 #define KBRESISTANCE 0.03f
+#define INTERSECT_TOLERANCE 0.001f
 
 typedef struct{
 	float px, py, x, y, size;
