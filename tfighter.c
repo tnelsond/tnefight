@@ -396,15 +396,15 @@ void hitbox_update(hitbox *h){
 void hitbox_spawn(tfighter *t, hitbox *src, hitbox *dest){
 	trect *offset = &t->rect;
 
-	if(t->left){
-		dest->rect.x = -src->rect.x - src->rect.w/2 + offset->x + offset->w/2;
-	}
-	else{
-		dest->rect.x = src->rect.x + offset->x - src->rect.w/2 + offset->w/2;
-	}
-
 	dest->rect.w = src->rect.w * t->rect.w / 2;
 	dest->rect.h = src->rect.h * t->rect.h / 2;
+
+	if(t->left){
+		dest->rect.x = -src->rect.x - dest->rect.w/2 + offset->x + offset->w/2;
+	}
+	else{
+		dest->rect.x = src->rect.x + offset->x - dest->rect.w/2 + offset->w/2;
+	}
 
 	dest->rect.y = src->rect.y + offset->y  - dest->rect.h/2;
 
@@ -460,7 +460,9 @@ void tfighter_input(tfighter *t, tlevel *tl, SDL_Event *e){
 		if(e->type == SDL_KEYDOWN){
 			for(i=0; i<7; ++i){
 				if(e->key.keysym.sym == t->keys[i]){
-					t->state = t->state | (1 << i);
+					if(!(t->state & (ATTACKING | SPECIAL)) || !(t->keys[i] & (ATTACKING | SPECIAL))){
+						t->state = t->state | (1 << i);
+					}
 				}
 			}
 		}
@@ -510,7 +512,9 @@ void tfighter_input(tfighter *t, tlevel *tl, SDL_Event *e){
 		for(i=0; i<5; ++i){
 			if(e->jbutton.state == SDL_PRESSED){
 				if(i == e->jbutton.button){
-					t->state |= t->jbuttons[i];
+					if(!(t->state & (ATTACKING | SPECIAL)) || !(t->jbuttons[i] & (ATTACKING | SPECIAL))){
+						t->state |= t->jbuttons[i];
+					}
 				}
 			}
 			else{
@@ -608,7 +612,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 	for(i=0; i<tl->MAX_BOXES; ++i){
 		tfighter *owner = tl->boxes[i].owner;
 		hitbox *box = &tl->boxes[i];
-		if((owner != NULL) && owner != t && box->tick > box->maxdelay && !(box->hit & t->id) && intersects(&t->rect, &box->rect)){
+		if((owner) && owner != t && box->tick > box->maxdelay && !(box->hit & t->id) && intersects(&t->rect, &box->rect)){
 			t->damage += box->attack * box->attackmultiply;
 			t->vy += (float)(-0.04 * sin(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth))/t->launchresistance);
 			t->vx += (float)(0.04 * cos(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth))/t->launchresistance);
