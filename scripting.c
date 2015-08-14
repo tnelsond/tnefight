@@ -1,19 +1,20 @@
 #include "scripting.h"
+#include <stdarg.h>
 
 int lsetcolor(lua_State *l){
-	if(lua_gettop(l) >= 2 && lua_isnumber(l, -1) && lua_isnumber(l, -2) && lua_isnumber(l, -3) && cfighter != NULL){
-		cfighter->red = lua_tonumber(l, -3);
-		cfighter->green = lua_tonumber(l, -2);
-		cfighter->blue = lua_tonumber(l, -1);
+	if(lua_gettop(l) >= 2 && lua_isnumber(l, 1) && lua_isnumber(l, 2) && lua_isnumber(l, 3) && cfighter != NULL){
+		cfighter->red = lua_tonumber(l, 1);
+		cfighter->green = lua_tonumber(l, 2);
+		cfighter->blue = lua_tonumber(l, 3);
 		return 0;
 	}
 	return -1;
 }
 
 int lsetsize(lua_State *l){
-	if(lua_gettop(l) >= 1 && lua_isnumber(l, -1) && lua_isnumber(l, -2)){
-		cfighter->rect.w = lua_tonumber(l, -2);
-		cfighter->rect.h = lua_tonumber(l, -1);
+	if(lua_gettop(l) >= 1 && lua_isnumber(l, 1) && lua_isnumber(l, 2)){
+		cfighter->rect.w = lua_tonumber(l, 1);
+		cfighter->rect.h = lua_tonumber(l, 2);
 		return 0;
 	}
 	return -1;
@@ -28,16 +29,16 @@ int lrunscript(char *str){
 }
 
 int lsetskin(lua_State *l){
-	if(lua_gettop(l) >= 2 && lua_isnumber(l, -1) && lua_isnumber(l, -2) && lua_isnumber(l, -3) && cfighter != NULL){
-		cfighter->skin[0] = lua_tonumber(l, -1);
+	if(lua_gettop(l) >= 2 && lua_isnumber(l, 1) && lua_isnumber(l, 2) && lua_isnumber(l, 3) && cfighter != NULL){
+		cfighter->skin[0] = lua_tonumber(l, 3);
 		if(cfighter->skin[0] > MAXSKIN){
 			cfighter->skin[0] = MAXSKIN;
 		}
-		cfighter->skin[1] = lua_tonumber(l, -2);
+		cfighter->skin[1] = lua_tonumber(l, 2);
 		if(cfighter->skin[1] > MAXSKIN){
 			cfighter->skin[1] = MAXSKIN;
 		}
-		cfighter->skin[2] = lua_tonumber(l, -3);
+		cfighter->skin[2] = lua_tonumber(l, 1);
 		if(cfighter->skin[2] > MAXSKIN){
 			cfighter->skin[2] = MAXSKIN;
 		}
@@ -56,7 +57,7 @@ int lsetmove(lua_State *l){
 	if(cfighter == NULL){
 		return -3;
 	}
-	for(i = -15; i <= -1; ++i){
+	for(i = 1; i <= 15; ++i){
 		if(!lua_isnumber(l, i)){
 			SDL_Log("Argument %d in setmove is not a number!", i);
 			return -2;
@@ -68,21 +69,21 @@ int lsetmove(lua_State *l){
 	*/
 
 	tfighter_balance_move(cfighter,
-		lua_tonumber(l, -15),
-		lua_tonumber(l, -14),
-		lua_tonumber(l, -13),
-		lua_tonumber(l, -12),
-		lua_tonumber(l, -11),
-		lua_tonumber(l, -10),
-		lua_tonumber(l, -9),
-		lua_tonumber(l, -8),
-		lua_tonumber(l, -7),
-		lua_tonumber(l, -6),
-		lua_tonumber(l, -5),
-		lua_tonumber(l, -4),
-		lua_tonumber(l, -3),
-		lua_tonumber(l, -2),
-		lua_tonumber(l, -1)
+		lua_tonumber(l, 1),
+		lua_tonumber(l, 2),
+		lua_tonumber(l, 3),
+		lua_tonumber(l, 4),
+		lua_tonumber(l, 5),
+		lua_tonumber(l, 6),
+		lua_tonumber(l, 7),
+		lua_tonumber(l, 8),
+		lua_tonumber(l, 9),
+		lua_tonumber(l, 10),
+		lua_tonumber(l, 11),
+		lua_tonumber(l, 12),
+		lua_tonumber(l, 13),
+		lua_tonumber(l, 14),
+		lua_tonumber(l, 15)
 	);
 	/*
 		int index,
@@ -106,8 +107,8 @@ int lsetmove(lua_State *l){
 }
 
 int lsetbruiserness(lua_State *l){
-	if(lua_gettop(l) >= 0 && lua_isnumber(l, -1)){
-		int temp = lua_tonumber(l, -1);
+	if(lua_gettop(l) >= 0 && lua_isnumber(l, 1)){
+		int temp = lua_tonumber(l, 1);
 		if(temp > 100){
 			return -2;
 		}
@@ -119,8 +120,8 @@ int lsetbruiserness(lua_State *l){
 }
 
 int lsetjump(lua_State *l){
-	if(lua_gettop(l) >= 0 && lua_isnumber(l, -1)){
-		int temp = lua_tonumber(l, -1);
+	if(lua_gettop(l) >= 0 && lua_isnumber(l, 1)){
+		int temp = lua_tonumber(l, 1);
 		if(temp > 100){
 			return -2;
 		}
@@ -132,32 +133,32 @@ int lsetjump(lua_State *l){
 }
 
 int laddblock(lua_State *l){
-	if(lua_gettop(l) >= 3 && lua_isnumber(l, -1) && lua_isnumber(l, -2) && lua_isnumber(l, -3) && lua_isnumber(l, -4)){
+	if(lua_gettop(l) >= 3 && lua_isnumber(l, 1) && lua_isnumber(l, 2) && lua_isnumber(l, 3) && lua_isnumber(l, 4)){
 		if(level.blocks == NULL){
 			level.blocks = malloc(sizeof(trect) * level.len);
 		}
-		level.blocks[level.cbox].x = lua_tonumber(l, -4);
-		level.blocks[level.cbox].y = lua_tonumber(l, -3);
-		level.blocks[level.cbox].w = lua_tonumber(l, -2);
-		level.blocks[level.cbox].h = lua_tonumber(l, -1);
+		level.blocks[level.cbox].x = lua_tonumber(l, 1);
+		level.blocks[level.cbox].y = lua_tonumber(l, 2);
+		level.blocks[level.cbox].w = lua_tonumber(l, 3);
+		level.blocks[level.cbox].h = lua_tonumber(l, 4);
 		++level.cbox;
 	}
 	return 0;
 }
 
 int lsetscale(lua_State *l){
-	if(lua_gettop(l) >= 1 && lua_isnumber(l, -1) && lua_isnumber(l, -2)){
-		level.rect.w = lua_tonumber(l, -2);	
-		level.rect.h = lua_tonumber(l, -1);	
+	if(lua_gettop(l) >= 1 && lua_isnumber(l, 1) && lua_isnumber(l, 2)){
+		level.rect.w = lua_tonumber(l, 1);	
+		level.rect.h = lua_tonumber(l, 2);	
 		return 0;
 	}
 	return -1;
 }
 
 int lsetname(lua_State *l){
-	if(lua_gettop(l) >= 0 && lua_isstring(l, -1)){
+	if(lua_gettop(l) >= 0 && lua_isstring(l, 1)){
 		int length;
-		char *temp = lua_tostring(l, -1);
+		char *temp = lua_tostring(l, 1);
 		length = strlen(temp);
 		cfighter->name = malloc(length*(sizeof(char)));
 		strcpy(cfighter->name, temp);

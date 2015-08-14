@@ -21,8 +21,8 @@ int PLAYERS = 0;
 int MAXPLAYERS = 8;
 int cparticle = 0;
 
-SDL_Rect charrect = {0, 0, 6, 12};
-SDL_Rect imgrect = {0, 0, 7, 8};
+SDL_Rect charrect = {0, 0, 16, 30};
+SDL_Rect imgrect = {0, 0, 32, 32};
 tparticle particles[MAXPARTICLES];
 
 int debug = 0;
@@ -243,9 +243,9 @@ void draw(float alpha){
 }
 
 void loadfont(){
-	SDL_Surface *surf = IMG_Load("font.gif");
+	SDL_Surface *surf = IMG_Load("font.png");
 	check(surf != NULL);
-	SDL_SetColorKey(surf, SDL_TRUE, SDL_MapRGB(surf->format, 0x0, 0x0, 0x0));
+	/*SDL_SetColorKey(surf, SDL_RLEACCEL, SDL_MapRGB(surf->format, 0x0, 0x0, 0x0));*/
 	gatlas = SDL_CreateTextureFromSurface(gren, surf);
 	check(gatlas != NULL);
 	SDL_FreeSurface(surf);
