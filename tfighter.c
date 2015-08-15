@@ -686,6 +686,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 				if(t->vy > 0 && (tl->blocks[i].h >= 0.9f || !(t->state & DOWN))){
 					if(t->state & HITSTUN){
 						t->hitlag = 2;
+						t->vy *= -DAMPENING;
 					}
 					else{
 						t->vy = 0;
@@ -698,6 +699,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 				else if(tl->blocks[i].h >= 0.9f){
 					if(t->state & HITSTUN){
 						t->hitlag = 2;
+						t->vy *= -DAMPENING;
 					}
 					else{
 						t->vy = 0;
