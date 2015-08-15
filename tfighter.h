@@ -44,6 +44,9 @@
 #define KBRESISTANCE 0.03f
 #define INTERSECT_TOLERANCE 0.001f
 
+#define terp(p, c, alpha) (p + (c - p) * alpha)
+#define clamp(a, b, c) ((a) < (b) ? (b) : ((a) > (c) ? (c) : (a)))
+
 typedef struct{
 	float px, py, x, y, size;
 	int time;

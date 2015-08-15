@@ -3,11 +3,6 @@
 #include <SDL2/SDL.h>
 #include "tfighter.h"
 
-#define terp(p, c, alpha) (p + (c - p) * alpha)
-#define min(a, b) ((a) < (b)) ? (a) : (b)
-#define max(a, b) ((a) > (b)) ? (a) : (b)
-#define clamp(a, b, c) ((a) < (b) ? (b) : ((a) > (c) ? (c) : (a)))
-
 int gid = 1;
 
 int intersects(trect *r, trect *o){

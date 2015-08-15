@@ -187,7 +187,7 @@ void draw(float alpha){
 		SDL_RenderCopyEx(gren, gatlas, &imgrect, &temprect, fighters[i]->tick * (fighters[i]->vx > 0 ? 1 : -1) * (fighters[i]->state & HITSTUN ? 10 : 1), NULL, fighters[i]->left);	
 		SDL_SetTextureColorMod(gatlas, 0, 0, 0);
 		if(fighters[i]->name){
-			drawdynamictext(fighters[i]->name, alpha, fighters[i]->rect.x, fighters[i]->rect.y - 1.8f, 1, 1);
+			drawdynamictext(fighters[i]->name, alpha, terp(fighters[i]->prect.x, fighters[i]->rect.x, alpha), terp(fighters[i]->prect.y, fighters[i]->rect.y, alpha) - 1.8f, 1, 1);
 		}
 	}
 
