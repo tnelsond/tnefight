@@ -1,4 +1,4 @@
-CC = gcc -pedantic -Wall -O2  `sdl2-config --cflags --libs` -lSDL2_image -lm
+CC = gcc -pedantic -Wall -O2  `sdl2-config --cflags --libs` -lGL -lGLU -lSDL2_image -lm
 LUA = `pkg-config --libs lua`
 
 main.o : main.c tfighter.o scripting.o
