@@ -277,7 +277,7 @@ int main(int argc, char *argv[]){
 	gwin = SDL_CreateWindow("SDL TEST", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, camera.swidth, camera.sheight, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 	check(gwin != NULL);
 
-	gren = SDL_CreateRenderer(gwin, -1, SDL_RENDERER_ACCELERATED);
+	gren = SDL_CreateRenderer(gwin, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 	check(gren != NULL); check(IMG_Init(IMG_INIT_JPG));
 	loadfont();
 
