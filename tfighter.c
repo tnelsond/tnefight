@@ -20,41 +20,6 @@ int xintersects(trect *r, trect *o){
 			&& r->y + r->h - INTERSECT_TOLERANCE > o->y && r->y + INTERSECT_TOLERANCE < o->y + o->h;
 }
 
-void project(tcamera *tc, trect *t, trect *p, SDL_Rect *r, float alpha){
-	r->x = (int)((terp(p->x, t->x, alpha) + tc->ix)  * tc->iscale + 0.5f);
-	r->y = (int)((terp(p->y, t->y, alpha) + tc->iy) * tc->iscale + 0.5f);
-	r->w = (int)((terp(p->w, t->w, alpha) * tc->iscale + 0.5f));
-	r->h = (int)((terp(p->h, t->h, alpha) * tc->iscale + 0.5f));
-}
-
-void project2(tcamera *tc, trect *t, SDL_Rect *r, float alpha){
-	r->x = (int)((t->x + tc->ix) * tc->iscale + 0.5f);
-	r->y = (int)((t->y + tc->iy) * tc->iscale + 0.5f);
-	r->w = (int)(t->w * tc->iscale + 0.5f);
-	r->h = (int)(t->h * tc->iscale + 0.5f);
-}
-
-void project3(tcamera *tc, SDL_Rect *r, float alpha, float x, float y, float w, float h){
-	r->x = (int)((x + tc->ix) * tc->iscale + 0.5f);
-	r->y = (int)((y + tc->iy) * tc->iscale + 0.5f);
-	r->w = (int)(w * tc->iscale + 0.5f);
-	r->h = (int)(h * tc->iscale + 0.5f);
-}
-
-void project_particle(tcamera *tc, SDL_Rect *r, tparticle *part, float alpha){
-	r->x = (int)((terp(part->px, part->x, alpha) + tc->ix) * tc->iscale + 0.5f);
-	r->y = (int)((terp(part->py, part->y, alpha) + tc->iy) * tc->iscale + 0.5f);
-	r->w = (int)(part->size * tc->iscale + 0.5f);
-	r->h = r->w;
-}
-
-void projecthud(tcamera *tc, SDL_Rect *r, float x, float y, float w, float h){
-	r->x = (int)(x * tc->swidth + 0.5f);
-	r->y = (int)(y * tc->swidth + 0.5f);
-	r->w = (int)(w * tc->swidth + 0.5f);
-	r->h = (int)(h * tc->swidth + 0.5f);
-}
-
 void tparticle_set(tparticle *part, float x, float y, float vx, float vy, float size, int ttime, Uint32 color){
 	part->px = x;
 	part->py = y;
@@ -77,19 +42,17 @@ void tparticle_update(tparticle *part){
 }
 
 void tcamera_interpolate(tcamera *tc, float alpha){
-	tc->iscale = terp(tc->pscale, tc->scale, alpha);
-	tc->ix = -terp(tc->px, tc->x, alpha);
-	tc->iy = -terp(tc->py, tc->y, alpha);
+	tc->ix = terp(tc->px, tc->x, alpha);
+	tc->iy = terp(tc->py, tc->y, alpha);
 }
 
 void tcamera_track(tcamera *tc, tlevel *tl, tfighter **t, int len){
-	float height, width, minx, miny, maxx, maxy;
-	height = width = minx = miny = maxx = maxy = 0;
+	float minx, miny, maxx, maxy, ratio;
+	minx = miny = maxx = maxy = ratio = 0;
 	int i;
 
 	tc->px = tc->x;
 	tc->py = tc->y;
-	tc->pscale = tc->scale;
 
 	for(i = 0; i < len; ++i){
 		if(i == 0){
@@ -137,14 +100,17 @@ void tcamera_track(tcamera *tc, tlevel *tl, tfighter **t, int len){
 	else if(maxy > tl->rect.y + tl->rect.h)
 		maxy = tl->rect.y + tl->rect.h;
 
-	width = maxx - minx;
-	height = maxy - miny;
-	tc->scale = (tc->swidth/width < tc->sheight/height ? tc->swidth/width : tc->sheight/height);
+	tc->width = maxx - minx;
+	tc->height = maxy - miny;
+	ratio = ((float)tc->swidth)/tc->sheight;
+	if(tc->width/tc->height > ratio){
+		tc->height = tc->width/ratio;
+	}
+	else{
+		tc->width = ratio * tc->height;
+	}
 	tc->x = minx;
 	tc->y = miny;
-	if(tc->y + tc->sheight/tc->scale > tl->rect.y + tl->rect.h){
-		tc->y = tl->rect.y + tl->rect.h - tc->sheight/tc->scale;
-	}
 }
 
 tlevel *tlevel_new(int len){

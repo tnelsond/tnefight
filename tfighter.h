@@ -61,9 +61,9 @@ typedef struct{
 } trect;
 
 typedef struct{
-	float px, py, x, y, pscale, scale;
+	float px, py, x, y, width, height;
 	int swidth, sheight;
-	float iscale, ix, iy;
+	float ix, iy;
 } tcamera;
 
 typedef struct tfighter tfighter;
@@ -161,12 +161,6 @@ tlevel *tlevel_new(int len);
 void tlevel_add_hitbox(tlevel *tl, tfighter *t, hitbox *h);
 
 void tlevel_free(tlevel *tl);
-
-void project(tcamera *tc, trect *t, trect *p, SDL_Rect *r, float alpha);
-void project2(tcamera *tc, trect *t, SDL_Rect *r, float alpha);
-void project3(tcamera *tc, SDL_Rect *r, float alpha, float x, float y, float w, float h);
-void project_particle(tcamera *tc, SDL_Rect *r, tparticle *part, float alpha);
-void projecthud(tcamera *tc, SDL_Rect *r, float x, float y, float w, float h);
 
 void tcamera_track(tcamera *tc, tlevel *tl, tfighter **t, int len);
 void tcamera_interpolate(tcamera *tc, float alpha);

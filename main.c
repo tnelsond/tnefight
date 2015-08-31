@@ -30,7 +30,7 @@ tparticle particles[MAXPARTICLES];
 int debug = 0;
 char debugtest[256];
 
-tcamera camera = {0, 0, 0, 0, 0, 0, 800, 600};
+tcamera camera = {0, 0, 0, 0, 1, 1, 800, 600};
 tfighter **fighters = NULL;
 
 SDL_Rect temprect;
@@ -78,9 +78,9 @@ void loadfont(){
 	SDL_FreeSurface(surf);
 }
 
-void filltrect(trect *t, float r, float g, float b){
+void filltrect(trect *t, float r, float g, float b, float a){
 		glBegin( GL_QUADS );
-			glColor3f(r, g, b);
+			glColor4f(r, g, b, a);
 			glVertex2f(t->x, t->y);
 			glVertex2f(t->x, t->y + t->h);
 			glVertex2f(t->x + t->w, t->y + t->h);
@@ -90,12 +90,18 @@ void filltrect(trect *t, float r, float g, float b){
 
 void draw(float alpha){
 	int i;
+	trect temp = {0, 0, 0, 0};
+
+	/* Setup the camera */
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0.0, camera.width, camera.height, 0.0, 1.0, -1.0);
 
 	tcamera_interpolate(&camera, alpha);
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
 	glLoadIdentity();
-	/*glTranslatef(-camera.ix, -camera.iy, 0.0f);*/
+	glTranslatef(-camera.ix, -camera.iy, 0.0f);
 	glPushMatrix();
 
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -105,25 +111,42 @@ void draw(float alpha){
 
 	/*glTranslatef(camera.swidth/2, camera.sheight/2, 0.0f);*/
 
+	filltrect(&level.rect, 0.6f, 0.6f, 0.7f, 1);
+
 	for(i = 0; i < level.len; ++i){
-		trect *t = &level.blocks[i];
 		/*glTranslatef(t->x, t->y, 0.0f);*/
-		filltrect(&level.blocks[i], 0.1f, 0.1f, 0.f);
+		filltrect(&level.blocks[i], 0.1f, 0.1f, 0.f, 1);
 	}
 
 	for(i = 0; i < PLAYERS; ++i){
-		filltrect(&fighters[i]->rect, fighters[i]->red, fighters[i]->green, fighters[i]->blue);
+		filltrect(&fighters[i]->rect, fighters[i]->red, fighters[i]->green, fighters[i]->blue, 1);
+	}
+
+	for(i=0; i<level.MAX_BOXES; ++i){
+		if(level.boxes[i].owner){
+			filltrect(&level.boxes[i].rect, 0, 1, 0, 0.5f);
+		}
+	}
+
+	for(i=0; i<MAXPARTICLES; ++i){
+		if(particles[i].time > 0){
+			temp.x = particles[i].x;
+			temp.y = particles[i].y;
+			temp.w = particles[i].size;
+			temp.h = particles[i].size;
+			filltrect(&temp, 0, 0, 1, particles[i].time / 128.0f);
+		}
 	}
 
 	SDL_GL_SwapWindow(gwin);
 }
 
-int setViewport(){
+void setViewport(){
 	glViewport(0.0f, 0.0f, camera.swidth, camera.sheight);
 	
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(0.0, level.rect.w + 1, level.rect.h + 1, 0.0, 1.0, -1.0);
+	glOrtho(0.0, camera.width, camera.height, 0.0, 1.0, -1.0);
 }
 
 int initGL(){
@@ -136,7 +159,9 @@ int initGL(){
 	glLoadIdentity();
 	glPushMatrix();
 
-	glClearColor(0.f, 0.4f, 0.0f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
 	error = glGetError();
 	if(error != GL_NO_ERROR){
