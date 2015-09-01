@@ -5,19 +5,14 @@
 
 int gid = 1;
 
-int intersects(trect *r, trect *o){
-	return r->x + r->w > o->x && r->x < o->x + o->w 
-			&& r->y + r->h > o->y && r->y < o->y + o->h;
-}
-
-int yintersects(trect *r, trect *o){
-	return r->x + r->w - INTERSECT_TOLERANCE > o->x && r->x + INTERSECT_TOLERANCE < o->x + o->w 
-			&& r->y + r->h > o->y && r->y < o->y + o->h;
-}
-
-int xintersects(trect *r, trect *o){
-	return r->x + r->w > o->x && r->x < o->x + o->w 
-			&& r->y + r->h - INTERSECT_TOLERANCE > o->y && r->y + INTERSECT_TOLERANCE < o->y + o->h;
+int intersects(trect *r, trect *o, float xintersect, float yintersect){
+	if(r->type == RECT && o->type == RECT){
+		return r->x + r->w - yintersect > o->x && r->x + yintersect < o->x + o->w 
+			&& r->y + r->h - xintersect > o->y && r->y + xintersect < o->y + o->h;
+	}
+	else if(r->type == RECT && o->type == TRIUL){
+		return (r->x + r->w - yintersect > o->x && r->x + yintersect < o->x + o->w && r->y + r->h - xintersect > o->y + o->h - (r->x + r->w - yintersect - o->x) * o->h/o->w && r->y + xintersect < o->y + o->h);
+	}
 }
 
 void tparticle_set(tparticle *part, float x, float y, float vx, float vy, float size, int ttime, Uint32 color){
@@ -170,7 +165,7 @@ void tfighter_balance_move(tfighter *t, int index, int attack, int kb, int charg
 			img);
 }
 
-tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys, Uint32 *joybuttons, SDL_JoystickID joy, int joyxoffset, int joyyoffset, Uint8 *skin){
+tfighter *tfighter_new(float x, float y, Uint32 color, SDL_Keycode *keys, Uint32 *joybuttons, SDL_JoystickID joy, int joyxoffset, int joyyoffset, Uint8 *skin){
 	int i;
 	tfighter *ret = malloc(sizeof(tfighter));
 	ret->skin = skin;
@@ -178,12 +173,11 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 	ret->joyyoffset = joyyoffset;
 	ret->tick = 0;
 	ret->damage = 0;
-	ret->red = red;
-	ret->green = green;
-	ret->blue = blue;
+	ret->color = color;
 	ret->state = 0;
 	ret->pstate = 0;
 	ret->keys = keys;
+	ret->rect.type = RECT;
 	ret->prect.x = x;
 	ret->prect.y = y;
 	ret->prect.w = 2;
@@ -219,6 +213,7 @@ tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keyco
 		ret->moves[i].rect.y = 0.0f;
 		ret->moves[i].rect.w = 0.0f;
 		ret->moves[i].rect.h = 0.0f;
+		ret->moves[i].rect.type = RECT;
 		ret->moves[i].vx = 0.0f;
 		ret->moves[i].vy = 0.0f;
 		ret->moves[i].ax = 0.00f;
@@ -317,7 +312,7 @@ void hitbox_update(hitbox *h){
 		h->rect.y += h->vy + h->vh/2;
 	}
 	for(i = 0; i < level.MAX_BOXES; ++i){
-		if((level.boxes[i].owner != NULL) && (level.boxes[i].owner != h->owner) && (&level.boxes[i] != h) && intersects(&level.boxes[i].rect, &h->rect)){
+		if((level.boxes[i].owner != NULL) && (level.boxes[i].owner != h->owner) && (&level.boxes[i] != h) && intersects(&level.boxes[i].rect, &h->rect, 0, 0)){
 			if(level.boxes[i].type & REFLECT){
 				h->vx *= -1;
 				h->ax *= -1;
@@ -368,6 +363,8 @@ void hitbox_spawn(tfighter *t, hitbox *src, hitbox *dest){
 	}
 
 	dest->rect.y = src->rect.y + offset->y  - dest->rect.h/2;
+
+	dest->rect.type = src->rect.type;
 
 	dest->left = t->left;
 
@@ -573,7 +570,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 	for(i=0; i<tl->MAX_BOXES; ++i){
 		tfighter *owner = tl->boxes[i].owner;
 		hitbox *box = &tl->boxes[i];
-		if((owner) && owner != t && box->tick > box->maxdelay && !(box->hit & t->id) && intersects(&t->rect, &box->rect)){
+		if((owner) && owner != t && box->tick > box->maxdelay && !(box->hit & t->id) && intersects(&t->rect, &box->rect, 0, 0)){
 			t->damage += box->attack * box->attackmultiply;
 			t->vy += (float)(-0.04 * sin(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth))/t->launchresistance);
 			t->vx += (float)(0.04 * cos(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth))/t->launchresistance);
@@ -643,8 +640,8 @@ void tfighter_update(tfighter *t, tlevel *tl){
 		}
 		t->rect.y += t->vy;
 		for(i=0; i < tl->len; ++i){
-			if(yintersects(&t->rect, &tl->blocks[i])){
-				if(t->vy > 0 && (tl->blocks[i].h >= 0.9f || !(t->state & DOWN))){
+			if(intersects(&t->rect, &tl->blocks[i], 0, INTERSECT_TOLERANCE)){
+				if(t->vy > 0 && (tl->blocks[i].h >= 0.9f || t->state ^ DOWN)){
 					if(t->state & HITSTUN){
 						t->hitlag = 2;
 						t->vy *= -DAMPENING;
@@ -655,7 +652,17 @@ void tfighter_update(tfighter *t, tlevel *tl){
 						t->state &= ~HELPLESS;
 						t->state |= GROUND;
 					}
-					t->rect.y = tl->blocks[i].y - t->rect.h;
+					if(t->rect.type == RECT && tl->blocks[i].type == TRIUL){
+						if(t->rect.x + t->rect.w > tl->blocks[i].x + tl->blocks[i].w){
+							t->rect.y = tl->blocks[i].y - t->rect.h;
+						}
+						else{
+							t->rect.y = tl->blocks[i].y + tl->blocks[i].h - (t->rect.x + t->rect.w - tl->blocks[i].x) * tl->blocks[i].h/tl->blocks[i].w  - t->rect.h;
+						}
+					}
+					else{
+						t->rect.y = tl->blocks[i].y - t->rect.h;
+					}
 				}
 				else if(tl->blocks[i].h >= 0.9f){
 					if(t->state & HITSTUN){
@@ -675,17 +682,27 @@ void tfighter_update(tfighter *t, tlevel *tl){
 		t->rect.x += t->vx;
 		for(i=0; i < tl->len; ++i){
 			if(tl->blocks[i].h >= 1.0f){
-				if(xintersects(&t->rect, &tl->blocks[i])){
+				if(intersects(&t->rect, &tl->blocks[i], INTERSECT_TOLERANCE, 0)){
 					if(t->vx > 0){
 						if(t->state & HITSTUN){
 							t->hitlag = 10;
-							t->vx *= -DAMPENING;	
+							t->vx *= -DAMPENING;
 							t->vy *= DAMPENING;
 						}
-						else{
-							t->vx = 0;	
+						if(t->rect.type == RECT && tl->blocks[i].type == TRIUL){
+							if(t->rect.x + t->rect.w > tl->blocks[i].x + tl->blocks[i].w){
+								t->rect.y = tl->blocks[i].y - t->rect.h;
+							}
+							else{
+								t->rect.y = tl->blocks[i].y + tl->blocks[i].h - (t->rect.x + t->rect.w - tl->blocks[i].x) * tl->blocks[i].h/tl->blocks[i].w  - t->rect.h;
+							}
 						}
-						t->rect.x = tl->blocks[i].x - t->rect.w;
+						else{
+							t->rect.x = tl->blocks[i].x - t->rect.w; 
+							if(t->state ^ HITSTUN){
+								t->vx = 0;
+							}
+						}
 					}
 					else{
 						if(t->state & HITSTUN){

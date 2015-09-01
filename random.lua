@@ -4,7 +4,7 @@ setname("Random")
 width = math.random(2, 3)
 height = width * (1.1 + math.random()*.9)
 setsize(width, height)
-setcolor(math.random(0, 0xFF), math.random(0, 0xFF), math.random(0, 0xFF))
+setcolor(math.random(0, 0xFFFFFF))
 setskin(math.random(0, 13), math.random(0, 13), math.random(0, 13))
 setbruiserness(math.random(0, 100))
 setjump(math.random(0, 100));

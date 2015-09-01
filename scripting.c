@@ -2,10 +2,8 @@
 #include <stdarg.h>
 
 int lsetcolor(lua_State *l){
-	if(lua_gettop(l) >= 2 && lua_isnumber(l, 1) && lua_isnumber(l, 2) && lua_isnumber(l, 3) && cfighter != NULL){
-		cfighter->red = lua_tonumber(l, 1);
-		cfighter->green = lua_tonumber(l, 2);
-		cfighter->blue = lua_tonumber(l, 3);
+	if(lua_gettop(l) >= 0 && lua_isnumber(l, 1)){
+		cfighter->color = lua_tonumber(l, 1) * 0x100 + 0xFF;
 		return 0;
 	}
 	return -1;
@@ -141,6 +139,12 @@ int laddblock(lua_State *l){
 		level.blocks[level.cbox].y = lua_tonumber(l, 2);
 		level.blocks[level.cbox].w = lua_tonumber(l, 3);
 		level.blocks[level.cbox].h = lua_tonumber(l, 4);
+		if(lua_gettop(l) >= 4 && lua_isnumber(l, 5)){
+			level.blocks[level.cbox].type = lua_tonumber(l, 5);
+		}
+		else{
+			level.blocks[level.cbox].type = RECT;
+		}
 		++level.cbox;
 	}
 	return 0;

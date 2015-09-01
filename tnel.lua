@@ -2,7 +2,7 @@ require("math")
 math.randomseed(seed)
 setname("Tnel")
 setsize(2, 3)
-setcolor(0x44, 0xDD, 0x00)
+setcolor(0x44DD00)
 setskin(1, 2, 3)
 setbruiserness(20)
 setjump(60);

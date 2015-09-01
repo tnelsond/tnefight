@@ -28,12 +28,9 @@ SDL_Rect imgrect = {0, 0, 32, 32};
 tparticle particles[MAXPARTICLES];
 
 int debug = 0;
-char debugtest[256];
 
 tcamera camera = {0, 0, 0, 0, 1, 1, 800, 600};
 tfighter **fighters = NULL;
-
-SDL_Rect temprect;
 
 void close_game(){
 	if(gwin)
@@ -79,20 +76,56 @@ void loadfont(){
 }
 
 void filltrect(trect *t, float r, float g, float b, float a){
-		glBegin( GL_QUADS );
-			glColor4f(r, g, b, a);
+	glBegin(GL_QUADS);
+		glColor4f(r, g, b, a);
+		glVertex2f(t->x, t->y);
+		glVertex2f(t->x, t->y + t->h);
+		glVertex2f(t->x + t->w, t->y + t->h);
+		glVertex2f(t->x + t->w, t->y);
+	glEnd();
+}
+
+void filltriangle(trect *t, float r, float g, float b, float a){
+	glBegin(GL_TRIANGLES);
+		glColor4f(r, g, b, a);
+		glVertex2f(t->x, t->y);
+		glVertex2f(t->x + t->w, t->y);
+		glVertex2f(t->x + t->w/2, t->y + t->h);
+	glEnd();
+}
+
+void fillslope(trect *t, int hyp, float r, float g, float b, float a){
+	glBegin(GL_TRIANGLES);
+		glColor4f(r, g, b, a);
+		if(hyp != 0)
 			glVertex2f(t->x, t->y);
+		if(hyp != 1)
 			glVertex2f(t->x, t->y + t->h);
+		if(hyp != 2)
 			glVertex2f(t->x + t->w, t->y + t->h);
+		if(hyp != 3)
 			glVertex2f(t->x + t->w, t->y);
-		glEnd();
+	glEnd();
+}
+
+void fillpolygon(float r, float g, float b, float a){
+	glBegin(GL_TRIANGLES);
+		glColor4f(r, g, b, a);
+		glVertex2f(0, 0);
+		glVertex2f(-0.1f, 0.5f);
+		glVertex2f(0.0f, 0.9f);
+		glVertex2f(0.5f, 1.0f);
+		glVertex2f(1.0f, 0.9f);
+		glVertex2f(1.1f, 0.5f);
+		glVertex2f(1.0f, 0.0f);
+		glVertex2f(0.5f, 0.5f);
+	glEnd();	
 }
 
 void draw(float alpha){
 	int i;
 	trect temp = {0, 0, 0, 0};
 
-	/* Setup the camera */
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(0.0, camera.width, camera.height, 0.0, 1.0, -1.0);
@@ -109,17 +142,31 @@ void draw(float alpha){
 	glPopMatrix();
 	glPushMatrix();
 
-	/*glTranslatef(camera.swidth/2, camera.sheight/2, 0.0f);*/
-
 	filltrect(&level.rect, 0.6f, 0.6f, 0.7f, 1);
 
 	for(i = 0; i < level.len; ++i){
-		/*glTranslatef(t->x, t->y, 0.0f);*/
-		filltrect(&level.blocks[i], 0.1f, 0.1f, 0.f, 1);
+		glTranslatef(level.blocks[i].x, level.blocks[i].y, 0.0f);
+		temp.w = level.blocks[i].w;
+		temp.h = level.blocks[i].h;
+		if(level.blocks[i].type == RECT){
+			filltrect(&temp, 0.1f, 0.1f, 0.f, 1);
+		}
+		else{
+			fillslope(&temp, level.blocks[i].type, 0.1f, 0.1f, 0.f, 1);
+		}
+		glPopMatrix();
+		glPushMatrix();
 	}
 
 	for(i = 0; i < PLAYERS; ++i){
-		filltrect(&fighters[i]->rect, fighters[i]->red, fighters[i]->green, fighters[i]->blue, 1);
+		glTranslatef(terp(fighters[i]->prect.x, fighters[i]->rect.x, alpha),
+			terp(fighters[i]->prect.y, fighters[i]->rect.y, alpha), 0);
+		temp.w = fighters[i]->rect.w;
+		temp.h = fighters[i]->rect.h;
+		filltrect(&temp, tofloatcolor(fighters[i]->color), 1);
+		/*fillpolygon(0, 1, 0, 1);*/
+		glPopMatrix();
+		glPushMatrix();
 	}
 
 	for(i=0; i<level.MAX_BOXES; ++i){
@@ -130,11 +177,14 @@ void draw(float alpha){
 
 	for(i=0; i<MAXPARTICLES; ++i){
 		if(particles[i].time > 0){
-			temp.x = particles[i].x;
-			temp.y = particles[i].y;
+			glTranslatef(particles[i].x, particles[i].y, 0.0f);
+			glRotatef((particles[i].x + particles[i].y) * 10, 0, 0, 1);
 			temp.w = particles[i].size;
 			temp.h = particles[i].size;
-			filltrect(&temp, 0, 0, 1, particles[i].time / 128.0f);
+			filltriangle(&temp,
+				tofloatcolor(particles[i].color), particles[i].time / 128.0f);
+			glPopMatrix();
+			glPushMatrix();
 		}
 	}
 
@@ -162,7 +212,7 @@ int initGL(){
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	
+
 	error = glGetError();
 	if(error != GL_NO_ERROR){
 		SDL_Log("Error initializing OpenGL! %s\n", gluErrorString(error));
@@ -216,7 +266,7 @@ int main(int argc, char *argv[]){
 	for(i = 0; i < argc - 1; ++i){
 		if(strcmp(argv[i + 1], "-level") != 0){
 			gjoy[i] = SDL_JoystickOpen(i);
-			fighters[i] = tfighter_new(34 + i * 2, 10, 0x77, 0x55, 0x00, (i <= 1) ?  c[i] : NULL, b, i, SDL_JoystickGetAxis(gjoy[i], 0), SDL_JoystickGetAxis(gjoy[i], 1), &skin[i*3]);
+			fighters[i] = tfighter_new(34 + i * 2, 10, 0x775500FF, (i <= 1) ?  c[i] : NULL, b, i, SDL_JoystickGetAxis(gjoy[i], 0), SDL_JoystickGetAxis(gjoy[i], 1), &skin[i*3]);
 			cfighter = fighters[i];
 			PLAYERS = i + 1;
 			lua_pushnumber(l, rand());

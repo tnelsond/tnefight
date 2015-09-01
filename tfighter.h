@@ -32,6 +32,13 @@
 #define DATTACK 3
 #define NATTACK 2
 
+/* trect type */
+#define TRIUL 0
+#define TRIDL 1
+#define TRIDR 2
+#define TRIUR 3
+#define RECT 4
+
 /* Other Constants */
 #define NUMKEYS 5
 #define MAXMOVES 9
@@ -44,8 +51,23 @@
 #define KBRESISTANCE 0.03f
 #define INTERSECT_TOLERANCE 0.001f
 
+#define RED 0xFF0000
+#define GREEN 0x00FF00
+#define BLUE 0x0000FF
+
+#define tofloatcolor(color)\
+	(float)((color >> 24) % (0x100)),\
+	(float)((color >> 16) % (0x100)),\
+	(float)((color >> 8) % (0x100))
+
 #define terp(p, c, alpha) (p + (c - p) * alpha)
 #define clamp(a, b, c) ((a) < (b) ? (b) : ((a) > (c) ? (c) : (a)))
+
+#define settrect(t, a, b, c, d)\
+	t.x = a;\
+	t.y = b;\
+	t.w = c;\
+	t.h = d;
 
 typedef struct{
 	float px, py, x, y, size;
@@ -58,6 +80,7 @@ void tparticle_update(tparticle *part);
 
 typedef struct{
 	float x, y, w, h;
+	char type;
 } trect;
 
 typedef struct{
@@ -122,9 +145,7 @@ struct tfighter{
 	float launchresistance;
 	char id;
 	char left;
-	int red;
-	int green;
-	int blue;
+	Uint32 color;
 	hitbox *moves;
 	SDL_Keycode *keys;
 	Uint32 *jbuttons;
@@ -139,7 +160,7 @@ struct tfighter{
 	char *name;
 };
 
-tfighter *tfighter_new(float x, float y, int red, int green, int blue, SDL_Keycode *keys, Uint32 *joybuttons, SDL_JoystickID joy, int joyxoffset, int joyyoffset, Uint8 *skin);
+tfighter *tfighter_new(float x, float y, Uint32 color, SDL_Keycode *keys, Uint32 *joybuttons, SDL_JoystickID joy, int joyxoffset, int joyyoffset, Uint8 *skin);
 
 void tfighter_setmove(tfighter *t, int index, int attack, int kb, int kbgrowth, int mindelay, int maxdelay, int duration, int endlag, int x, int y, int width, int height, int angle, int kbangle, int speed, int type, int img);
 void tfighter_balance_move(tfighter *t, int index, int attack, int kb, int chargetime, int duration, int endlag, int x, int y, int width, int height, int angle, int kbangle, int speed, int type, int img);
@@ -154,7 +175,7 @@ void hitbox_update(hitbox *h);
 
 void hitbox_spawn(tfighter *t, hitbox *src, hitbox *dest);
 
-int intersects(trect *r, trect *o);
+int intersects(trect *r, trect *o, float xintersect, float yintersect);
 
 tlevel *tlevel_new(int len);
 
