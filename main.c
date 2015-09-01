@@ -2,6 +2,8 @@
 #include <SDL2/SDL_image.h>
 
 #include <SDL2/SDL_opengl.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
 
 #include <stdlib.h>
 #include <time.h>
@@ -340,7 +342,9 @@ int main(int argc, char *argv[]){
 				tfighter_update(fighters[i], &level);
 				if(fighters[i]->state & HITSTUN){
 					float mag = (float)(rand() % 1000 / 1000.0f);
-					tparticle_set(&particles[cparticle], fighters[i]->rect.x + ((rand() % 1000) / 1000.0) * fighters[i]->rect.w, fighters[i]->rect.y + ((rand() % 1000) / 1000.0) * fighters[i]->rect.h, fighters[i]->vx * mag, fighters[i]->vy * mag, 0.5f, 90, rand() % 0xFFFFFFFF);
+					Uint32 color = rand() % 0xFF;
+					color = 0xFF + color * 0x100 + color * 0x10000 + color * 0x1000000;
+					tparticle_set(&particles[cparticle], fighters[i]->rect.x + ((rand() % 1000) / 1000.0) * fighters[i]->rect.w, fighters[i]->rect.y + ((rand() % 1000) / 1000.0) * fighters[i]->rect.h, fighters[i]->vx * mag, fighters[i]->vy * mag, 0.5f, 90, color);
 					cparticle = (cparticle + 1) % MAXPARTICLES;
 				}
 			}
