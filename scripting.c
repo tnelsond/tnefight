@@ -13,6 +13,19 @@ int lsetsize(lua_State *l){
 	if(lua_gettop(l) >= 1 && lua_isnumber(l, 1) && lua_isnumber(l, 2)){
 		cfighter->rect.w = lua_tonumber(l, 1);
 		cfighter->rect.h = lua_tonumber(l, 2);
+		if(cfighter->rect.w < 1){
+			cfighter->rect.w = 1;
+		}
+		if(cfighter->rect.h < 1){
+			cfighter->rect.h = 1;
+		}
+		if(cfighter->rect.w > 4){
+			cfighter->rect.w = 4;
+		}
+		if(cfighter->rect.h > 4){
+			cfighter->rect.h = 4;
+		}
+		cfighter->launchresistance = cfighter->rect.w * cfighter->rect.h;
 		return 0;
 	}
 	return -1;

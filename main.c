@@ -101,9 +101,11 @@ void fillslope(trect *t, int hyp, float r, float g, float b, float a){
 			glVertex2f(t->x, t->y);
 		if(hyp != 1)
 			glVertex2f(t->x, t->y + t->h);
+		glColor4f(r*2, g*2, b*2, a);
 		if(hyp != 2)
 			glVertex2f(t->x + t->w, t->y + t->h);
 		if(hyp != 3)
+		glColor4f(r/2, g/2, b/2, a);
 			glVertex2f(t->x + t->w, t->y);
 	glEnd();
 }
@@ -159,8 +161,12 @@ void draw(float alpha){
 	}
 
 	for(i = 0; i < PLAYERS; ++i){
-		glTranslatef(terp(fighters[i]->prect.x, fighters[i]->rect.x, alpha),
-			terp(fighters[i]->prect.y, fighters[i]->rect.y, alpha), 0);
+		glTranslatef(terp(fighters[i]->prect.x, fighters[i]->rect.x, alpha) + fighters[i]->rect.w / 2,
+			terp(fighters[i]->prect.y, fighters[i]->rect.y, alpha) + fighters[i]->rect.h / 2, 0);
+		if(fighters[i]->state & HITSTUN){
+			glRotatef(fighters[i]->tick * 10, 0, 0, 1);
+		}
+		glTranslatef(-fighters[i]->rect.w/2, -fighters[i]->rect.h/2, 0);
 		temp.w = fighters[i]->rect.w;
 		temp.h = fighters[i]->rect.h;
 		filltrect(&temp, tofloatcolor(fighters[i]->color), 1);
@@ -334,7 +340,7 @@ int main(int argc, char *argv[]){
 				tfighter_update(fighters[i], &level);
 				if(fighters[i]->state & HITSTUN){
 					float mag = (float)(rand() % 1000 / 1000.0f);
-					tparticle_set(&particles[cparticle], fighters[i]->rect.x + ((rand() % 1000) / 1000.0) * fighters[i]->rect.w, fighters[i]->rect.y + ((rand() % 1000) / 1000.0) * fighters[i]->rect.h, fighters[i]->vx * mag, fighters[i]->vy * mag, 0.5f, 90, 0x0000FF);
+					tparticle_set(&particles[cparticle], fighters[i]->rect.x + ((rand() % 1000) / 1000.0) * fighters[i]->rect.w, fighters[i]->rect.y + ((rand() % 1000) / 1000.0) * fighters[i]->rect.h, fighters[i]->vx * mag, fighters[i]->vy * mag, 0.5f, 90, rand() % 0xFFFFFFFF);
 					cparticle = (cparticle + 1) % MAXPARTICLES;
 				}
 			}

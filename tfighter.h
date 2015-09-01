@@ -56,9 +56,9 @@
 #define BLUE 0x0000FF
 
 #define tofloatcolor(color)\
-	(float)((color >> 24) % (0x100)),\
-	(float)((color >> 16) % (0x100)),\
-	(float)((color >> 8) % (0x100))
+	(float)((color >> 24) % (0x100))/0xFF,\
+	(float)((color >> 16) % (0x100))/0xFF,\
+	(float)((color >> 8) % (0x100))/0xFF
 
 #define terp(p, c, alpha) (p + (c - p) * alpha)
 #define clamp(a, b, c) ((a) < (b) ? (b) : ((a) > (c) ? (c) : (a)))

@@ -578,7 +578,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 			box->hit |= t->id;
 			t->state &= ~(ATTACKING | HELPLESS | SPECIAL | WALKING | RUNNING | JUMP | CHARGING);
 			t->state |= HITSTUN;
-			t->tick = (int)((box->kb + box->kbgrowth * t->damage) / 3);
+			t->tick = (int)((box->kb + box->kbgrowth * t->damage) / t->launchresistance);
 			t->hitlag = box->attack*0.1f;
 			box->hitlag = box->attack*0.1f;
 			if(~box->type & PROJECTILE){
