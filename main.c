@@ -19,20 +19,20 @@ SDL_GLContext gcon;
 SDL_Joystick **gjoy = NULL;
 
 SDL_Texture *gatlas = NULL;
-int glinew = 32;
-int gnlines = 3;
+#define glinew 32
+#define gnlines 3
 int PLAYERS = 0;
 int MAXPLAYERS = 8;
 int cparticle = 0;
 
-SDL_Rect charrect = {0, 0, 16, 30};
-SDL_Rect imgrect = {0, 0, 32, 32};
+trect tchar = {0, 0, (float)(1.0/glinew), (float)(1.0/gnlines)};
 tparticle particles[MAXPARTICLES];
 
 int debug = 0;
 
 tcamera camera = {0, 0, 0, 0, 1, 1, 800, 600};
 tfighter **fighters = NULL;
+GLuint texture[1];
 
 void close_game(){
 	if(gwin)
@@ -52,9 +52,9 @@ void check(int exp){
 	close_game();
 }
 
-void setimgrect(int num){
-	imgrect.y = charrect.h * gnlines + num/glinew;
-	imgrect.x = (num % glinew) * imgrect.w;
+void settchar(int num){
+	tchar.y = tchar.h * (int)(num/glinew - 1);
+	tchar.x = (num % glinew) * tchar.w;
 }
 
 void copyrect(SDL_Rect *in, SDL_Rect *out){
@@ -71,10 +71,48 @@ void copytrect(trect *in, trect *out){
 	out->h = in->h;
 }
 
+void drawtext(trect *t, char *str){
+	while(*str){
+		settchar(*str);
+		glBegin(GL_QUADS);
+			glColor3f(1.0f, 1.0f, 1.0f);
+			glTexCoord2f(tchar.x, tchar.y);
+			glVertex2f(t->x, t->y);
+			glTexCoord2f(tchar.x+tchar.w, tchar.y);
+			glVertex2f(t->x + t->w, t->y);
+			glTexCoord2f(tchar.x+tchar.w, tchar.y+tchar.h);
+			glVertex2f(t->x + t->w, t->y + t->h);
+			glTexCoord2f(tchar.x, tchar.y+tchar.h);
+			glVertex2f(t->x, t->y + t->h);
+		glEnd();
+		glTranslatef(t->w, 0, 0);
+		++str;
+	}
+}
+
 void loadfont(){
-	SDL_Surface *surf = IMG_Load("font.png");
+	SDL_Surface *surf;
+	SDL_Surface *surf2;
+	SDL_PixelFormat pf;
+	pf.palette = 0;
+	pf.BitsPerPixel = 24;
+	pf.BytesPerPixel = 4;
+	pf.Rshift = pf.Rloss = pf.Gloss = pf.Bloss = pf.Aloss = 0;
+	pf.Rmask = 0x000000ff;
+	pf.Gshift = 8;
+	pf.Gmask = 0x0000ff00;
+	pf.Bshift = 16;
+	pf.Bmask = 0x00ff0000;
+	surf = IMG_Load("font.png");
 	check(surf != NULL);
-	SDL_FreeSurface(surf);
+	surf2 = SDL_ConvertSurface(surf, &pf, 0);
+	glGenTextures(1, &texture[0]);
+	glBindTexture(GL_TEXTURE_2D, texture[0]);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, surf2->w, surf2->h, 0, GL_RGB, GL_UNSIGNED_BYTE, surf2->pixels);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	free(surf);
+	free(surf2);
 }
 
 void filltrect(trect *t, float r, float g, float b, float a){
@@ -128,8 +166,9 @@ void fillpolygon(float r, float g, float b, float a){
 
 void draw(float alpha){
 	int i;
-	trect temp = {0, 0, 0, 0};
+	trect temp = {0, 0, 20, 20};
 
+	glBindTexture(GL_TEXTURE_2D, texture[0]);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(0.0, camera.width, camera.height, 0.0, 1.0, -1.0);
@@ -147,6 +186,15 @@ void draw(float alpha){
 	glPushMatrix();
 
 	filltrect(&level.rect, 0.6f, 0.6f, 0.7f, 1);
+
+	glEnable(GL_TEXTURE_2D);
+	glTranslatef(25, 14, 0.0f);
+	temp.w = 1;
+	temp.h = 1.5f;
+	drawtext(&temp, "Hello 456. Lazy!!");
+	glPopMatrix();
+	glPushMatrix();
+	glDisable(GL_TEXTURE_2D);
 
 	for(i = 0; i < level.len; ++i){
 		glTranslatef(level.blocks[i].x, level.blocks[i].y, 0.0f);
@@ -195,6 +243,17 @@ void draw(float alpha){
 			glPushMatrix();
 		}
 	}
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glPopMatrix();
+
+	temp.x = 3;
+	temp.y = 3;
+	temp.w = 1;
+	temp.h = 1.5f;
+	glEnable(GL_TEXTURE_2D);
+	drawtext(&temp, "Hello 456. Lazy!!");
+	glDisable(GL_TEXTURE_2D);
 
 	SDL_GL_SwapWindow(gwin);
 }
@@ -226,6 +285,9 @@ int initGL(){
 		SDL_Log("Error initializing OpenGL! %s\n", gluErrorString(error));
 		return -1;
 	}
+
+	glEnable(GL_TEXTURE_2D);
+	loadfont();
 
 	SDL_Log("Initted OPENGL.\n");
 	return 0;
