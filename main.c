@@ -97,7 +97,7 @@ void loadfont(){
 	SDL_Surface *surf2;
 	SDL_PixelFormat pf;
 	pf.palette = 0;
-	pf.BitsPerPixel = 24;
+	pf.BitsPerPixel = 32;
 	pf.BytesPerPixel = 4;
 	pf.Rshift = pf.Rloss = pf.Gloss = pf.Bloss = pf.Aloss = 0;
 	pf.Rmask = 0x000000ff;
@@ -105,12 +105,14 @@ void loadfont(){
 	pf.Gmask = 0x0000ff00;
 	pf.Bshift = 16;
 	pf.Bmask = 0x00ff0000;
+	pf.Ashift = 24;
+	pf.Amask = 0xff000000;
 	surf = IMG_Load("font.png");
 	check(surf != NULL);
 	surf2 = SDL_ConvertSurface(surf, &pf, 0);
 	glGenTextures(1, &texture[0]);
 	glBindTexture(GL_TEXTURE_2D, texture[0]);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, surf2->w, surf2->h, 0, GL_RGB, GL_UNSIGNED_BYTE, surf2->pixels);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surf2->w, surf2->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, surf2->pixels);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 	free(surf);
@@ -298,6 +300,7 @@ int initGL(){
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 
 	error = glGetError();
 	if(error != GL_NO_ERROR){
