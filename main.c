@@ -171,9 +171,9 @@ void draw(float alpha){
 	glBindTexture(GL_TEXTURE_2D, texture[0]);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
+	tcamera_interpolate(&camera, alpha);
 	glOrtho(0.0, camera.width, camera.height, 0.0, 1.0, -1.0);
 
-	tcamera_interpolate(&camera, alpha);
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
 	glLoadIdentity();
@@ -181,9 +181,11 @@ void draw(float alpha){
 	glPushMatrix();
 
 	glClear(GL_COLOR_BUFFER_BIT);
+	/*
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
 	glPushMatrix();
+	*/
 
 	filltrect(&level.rect, 0.6f, 0.6f, 0.7f, 1);
 
@@ -245,12 +247,11 @@ void draw(float alpha){
 	}
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	glPopMatrix();
 
-	temp.x = 3;
-	temp.y = 3;
-	temp.w = 1;
-	temp.h = 1.5f;
+	temp.w = camera.width / 20;
+	temp.x = temp.w;
+	temp.y = temp.w;
+	temp.h = temp.w * 1.5f;
 	glEnable(GL_TEXTURE_2D);
 	drawtext(&temp, "Hello 456. Lazy!!");
 	glDisable(GL_TEXTURE_2D);
@@ -260,10 +261,6 @@ void draw(float alpha){
 
 void setViewport(){
 	glViewport(0.0f, 0.0f, camera.swidth, camera.sheight);
-	
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(0.0, camera.width, camera.height, 0.0, 1.0, -1.0);
 }
 
 int initGL(){
