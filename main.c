@@ -25,6 +25,8 @@ int PLAYERS = 0;
 int MAXPLAYERS = 8;
 int cparticle = 0;
 
+char disp[5] = {' ', ' ', ' ', '%', '\0'};
+
 trect tchar = {0, 0, (float)(1.0/glinew), (float)(1.0/gnlines)};
 tparticle particles[MAXPARTICLES];
 
@@ -71,11 +73,11 @@ void copytrect(trect *in, trect *out){
 	out->h = in->h;
 }
 
-void drawtext(trect *t, char *str){
+void drawtext(trect *t, char *str, float r, float g, float b, float a){
+	glColor4f(r, g, b, a);
 	while(*str){
 		settchar(*str);
 		glBegin(GL_QUADS);
-			glColor3f(1.0f, 1.0f, 1.0f);
 			glTexCoord2f(tchar.x, tchar.y);
 			glVertex2f(t->x, t->y);
 			glTexCoord2f(tchar.x+tchar.w, tchar.y);
@@ -191,9 +193,6 @@ void draw(float alpha){
 
 	glEnable(GL_TEXTURE_2D);
 	glTranslatef(25, 14, 0.0f);
-	temp.w = 1;
-	temp.h = 1.5f;
-	drawtext(&temp, "Hello 456. Lazy!!");
 	glPopMatrix();
 	glPushMatrix();
 	glDisable(GL_TEXTURE_2D);
@@ -213,8 +212,11 @@ void draw(float alpha){
 	}
 
 	for(i = 0; i < PLAYERS; ++i){
+		glPopMatrix();
+		glPushMatrix();
 		glTranslatef(terp(fighters[i]->prect.x, fighters[i]->rect.x, alpha) + fighters[i]->rect.w / 2,
 			terp(fighters[i]->prect.y, fighters[i]->rect.y, alpha) + fighters[i]->rect.h / 2, 0);
+		glPushMatrix();
 		if(fighters[i]->state & HITSTUN){
 			glRotatef(fighters[i]->tick * 10, 0, 0, 1);
 		}
@@ -223,10 +225,17 @@ void draw(float alpha){
 		temp.h = fighters[i]->rect.h;
 		filltrect(&temp, tofloatcolor(fighters[i]->color), 1);
 		/*fillpolygon(0, 1, 0, 1);*/
+		temp.w = 1;
+		temp.h = 1.5f;
 		glPopMatrix();
-		glPushMatrix();
+		glTranslatef(strlen(fighters[i]->name)/-temp.w/2, -fighters[i]->rect.h, 0);
+		glEnable(GL_TEXTURE_2D);
+		drawtext(&temp, fighters[i]->name, 1, 1, 1, 0.8f);
+		glDisable(GL_TEXTURE_2D);
 	}
 
+	glPopMatrix();
+	glPushMatrix();
 	for(i=0; i<level.MAX_BOXES; ++i){
 		if(level.boxes[i].owner){
 			filltrect(&level.boxes[i].rect, 0, 1, 0, 0.5f);
@@ -248,12 +257,25 @@ void draw(float alpha){
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	temp.w = camera.width / 20;
-	temp.x = temp.w;
-	temp.y = temp.w;
+	temp.w = camera.width / 40;
+	temp.x = temp.w/2;
+	temp.y = temp.w/2;
 	temp.h = temp.w * 1.5f;
 	glEnable(GL_TEXTURE_2D);
-	drawtext(&temp, "Hello 456. Lazy!!");
+	/* text */
+	for(i=0; i<PLAYERS; ++i){
+		disp[2] = '0' + ((int)fighters[i]->damage) % 10;
+		disp[1] = '0' + (((int)fighters[i]->damage) % 100) / 10;
+		disp[0] = '0' + (int)fighters[i]->damage / 100;
+		if(disp[0] == '0'){
+			disp[0] = ' ';
+			if(disp[1] == '0'){
+				disp[1] = ' ';
+			}
+		}
+		drawtext(&temp, disp, 1, 1, 0, 1);
+		glTranslatef(temp.w, 0, 0);
+	}
 	glDisable(GL_TEXTURE_2D);
 
 	SDL_GL_SwapWindow(gwin);
