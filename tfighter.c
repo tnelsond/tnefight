@@ -13,6 +13,7 @@ int intersects(trect *r, trect *o, float xintersect, float yintersect){
 	else if(r->type == RECT && o->type == TRIUL){
 		return (r->x + r->w - yintersect > o->x && r->x + yintersect < o->x + o->w && r->y + r->h - xintersect > o->y + o->h - (r->x + r->w - yintersect - o->x) * o->h/o->w && r->y + xintersect < o->y + o->h);
 	}
+	return 0;
 }
 
 void tparticle_set(tparticle *part, float x, float y, float vx, float vy, float size, int ttime, Uint32 color){
@@ -153,10 +154,10 @@ void tfighter_balance_move(tfighter *t, int index, int attack, int kb, int charg
 			(attack - (width + height) / 2) / (type & PROJECTILE ? 3 : 1), /* Attack */
 			kb, /* KnockBack */
 			(100 - (speed + kb / 2)), /* KnockBack Growth */
-			(int)((200 - endlag) * (attack + kb/2.0)/100.0 + duration * 0.03), /* Minimum Delay */ 
+			(int)((200 - endlag) * (attack + kb/2.0)/200.0 + duration * 0.01), /* Minimum Delay */ 
 			chargetime, /* Max Delay */
 			duration, /* Duration */
-			(int)(endlag * attack/100.0 + duration * 0.03),
+			(int)(endlag * attack/100.0 + duration * 0.02),
 			x, y, width, height,
 			angle,
 			kbangle,

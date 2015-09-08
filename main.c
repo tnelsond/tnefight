@@ -12,7 +12,7 @@
 #include "tfighter.h"
 
 #define min(a, b) a < b ? a : b
-#define MAXPARTICLES 100
+#define MAXPARTICLES 2000
 
 SDL_Window *gwin = NULL;
 SDL_GLContext gcon;
@@ -119,52 +119,56 @@ void loadfont(){
 	free(surf2);
 }
 
-void filltrect(trect *t, float r, float g, float b, float a){
+void fillrect(float r, float g, float b, float a){
 	glBegin(GL_QUADS);
 		glColor4f(r, g, b, a);
-		glVertex2f(t->x, t->y);
-		glVertex2f(t->x, t->y + t->h);
-		glVertex2f(t->x + t->w, t->y + t->h);
-		glVertex2f(t->x + t->w, t->y);
+		glVertex2f(0, 0);
+		glVertex2f(0, 1);
+		glVertex2f(1, 1);
+		glVertex2f(1, 0);
 	glEnd();
 }
 
-void filltriangle(trect *t, float r, float g, float b, float a){
+void filltriangle(float r, float g, float b, float a){
 	glBegin(GL_TRIANGLES);
 		glColor4f(r, g, b, a);
-		glVertex2f(t->x, t->y);
-		glVertex2f(t->x + t->w, t->y);
-		glVertex2f(t->x + t->w/2, t->y + t->h);
+		glVertex2f(0, 0);
+		glVertex2f(1, 0);
+		glVertex2f(0.5f, 1);
 	glEnd();
 }
 
-void fillslope(trect *t, int hyp, float r, float g, float b, float a){
+void fillslope(int hyp, float r, float g, float b, float a){
 	glBegin(GL_TRIANGLES);
 		glColor4f(r, g, b, a);
 		if(hyp != 0)
-			glVertex2f(t->x, t->y);
+			glVertex2f(0, 0);
 		if(hyp != 1)
-			glVertex2f(t->x, t->y + t->h);
+			glVertex2f(0, 1);
 		glColor4f(r*2, g*2, b*2, a);
 		if(hyp != 2)
-			glVertex2f(t->x + t->w, t->y + t->h);
+			glVertex2f(1, 1);
 		if(hyp != 3)
 		glColor4f(r/2, g/2, b/2, a);
-			glVertex2f(t->x + t->w, t->y);
+			glVertex2f(1, 0);
 	glEnd();
 }
 
 void fillpolygon(float r, float g, float b, float a){
 	glBegin(GL_TRIANGLES);
 		glColor4f(r, g, b, a);
-		glVertex2f(0, 0);
-		glVertex2f(-0.1f, 0.5f);
-		glVertex2f(0.0f, 0.9f);
-		glVertex2f(0.5f, 1.0f);
-		glVertex2f(1.0f, 0.9f);
-		glVertex2f(1.1f, 0.5f);
-		glVertex2f(1.0f, 0.0f);
-		glVertex2f(0.5f, 0.5f);
+
+		glVertex2f(.2f, 0);
+		glVertex2f(.5f, 0.25f);
+		glVertex2f(0, 0.25f);
+
+		glVertex2f(.8f, 0);
+		glVertex2f(.5f, 0.25f);
+		glVertex2f(1, 0.25f);
+
+		glVertex2f(0, 0.25f);
+		glVertex2f(0.5f, 1);
+		glVertex2f(1, 0.25f);
 	glEnd();	
 }
 
@@ -191,7 +195,11 @@ void draw(float alpha){
 	glPushMatrix();
 	*/
 
-	filltrect(&level.rect, 0.6f, 0.6f, 0.7f, 1);
+	glTranslatef(level.rect.x, level.rect.y, 0);
+	glScalef(level.rect.w, level.rect.h, 0);
+	fillrect(0.6f, 0.6f, 0.7f, 1);
+	glPopMatrix();
+	glPushMatrix();
 
 	glEnable(GL_TEXTURE_2D);
 	glTranslatef(25, 14, 0.0f);
@@ -201,13 +209,12 @@ void draw(float alpha){
 
 	for(i = 0; i < level.len; ++i){
 		glTranslatef(level.blocks[i].x, level.blocks[i].y, 0.0f);
-		temp.w = level.blocks[i].w;
-		temp.h = level.blocks[i].h;
+		glScalef(level.blocks[i].w, level.blocks[i].h, 0);
 		if(level.blocks[i].type == RECT){
-			filltrect(&temp, 0.1f, 0.1f, 0.f, 1);
+			fillrect(0.1f, 0.1f, 0.f, 1);
 		}
 		else{
-			fillslope(&temp, level.blocks[i].type, 0.1f, 0.1f, 0.f, 1);
+			fillslope(level.blocks[i].type, 0.1f, 0.1f, 0.f, 1);
 		}
 		glPopMatrix();
 		glPushMatrix();
@@ -220,13 +227,15 @@ void draw(float alpha){
 			terp(fighters[i]->prect.y, fighters[i]->rect.y, alpha) + fighters[i]->rect.h / 2, 0);
 		glPushMatrix();
 		if(fighters[i]->state & HITSTUN){
-			glRotatef(fighters[i]->tick * 10, 0, 0, 1);
+			glRotatef(fighters[i]->tick * 10 * (fighters[i]->vx < 0 ? 1 : -1), 0, 0, 1);
 		}
 		glTranslatef(-fighters[i]->rect.w/2, -fighters[i]->rect.h/2, 0);
-		temp.w = fighters[i]->rect.w;
-		temp.h = fighters[i]->rect.h;
-		filltrect(&temp, tofloatcolor(fighters[i]->color), 1);
-		/*fillpolygon(0, 1, 0, 1);*/
+		glScalef(fighters[i]->rect.w, fighters[i]->rect.h, 0);
+		temp.w = 1;
+		temp.h = 1;
+		fillrect(tofloatcolor(fighters[i]->color), 1);
+		glTranslatef(0, -0.5f, 0);
+		fillpolygon(0, 1, 0, 1);
 		temp.w = 1;
 		temp.h = 1.5f;
 		glPopMatrix();
@@ -240,18 +249,20 @@ void draw(float alpha){
 	glPushMatrix();
 	for(i=0; i<level.MAX_BOXES; ++i){
 		if(level.boxes[i].owner){
-			filltrect(&level.boxes[i].rect, 0, 1, 0, 0.5f);
+			glTranslatef(level.boxes[i].rect.x, level.boxes[i].rect.y, 0);
+			glScalef(level.boxes[i].rect.w, level.boxes[i].rect.h, 0);
+			fillrect(0, 1, 0, 0.5f);
+			glPopMatrix();
+			glPushMatrix();
 		}
 	}
 
 	for(i=0; i<MAXPARTICLES; ++i){
 		if(particles[i].time > 0){
 			glTranslatef(particles[i].x, particles[i].y, 0.0f);
-			glRotatef((particles[i].x + particles[i].y) * 10, 0, 0, 1);
-			temp.w = particles[i].size;
-			temp.h = particles[i].size;
-			filltriangle(&temp,
-				tofloatcolor(particles[i].color), particles[i].time / 128.0f);
+			glRotatef(particles[i].time * 10, 0, 0, 1);
+			glScalef(particles[i].size, particles[i].size, 0);
+			filltriangle(tofloatcolor(particles[i].color), particles[i].time / 128.0f);
 			glPopMatrix();
 			glPushMatrix();
 		}
@@ -427,8 +438,8 @@ int main(int argc, char *argv[]){
 				if(fighters[i]->state & HITSTUN){
 					float mag = (float)(rand() % 1000 / 1000.0f);
 					Uint32 color = rand() % 0xFF;
-					color = 0xFF + color * 0x100 + color * 0x10000 + color * 0x1000000;
-					tparticle_set(&particles[cparticle], fighters[i]->rect.x + ((rand() % 1000) / 1000.0) * fighters[i]->rect.w, fighters[i]->rect.y + ((rand() % 1000) / 1000.0) * fighters[i]->rect.h, fighters[i]->vx * mag, fighters[i]->vy * mag, 0.5f, 90, color);
+					color = 0x55 + color * 0x100 + color * 0x10000 + color * 0x1000000;
+					tparticle_set(&particles[cparticle], fighters[i]->rect.x + ((rand() % 1000) / 1000.0) * fighters[i]->rect.w, fighters[i]->rect.y + ((rand() % 1000) / 1000.0) * fighters[i]->rect.h, fighters[i]->vx * mag, fighters[i]->vy * mag, (rand() % 100) / 100.0f + 0.05f, 90, color);
 					cparticle = (cparticle + 1) % MAXPARTICLES;
 				}
 			}
