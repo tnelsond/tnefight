@@ -154,22 +154,50 @@ void fillslope(int hyp, float r, float g, float b, float a){
 	glEnd();
 }
 
-void fillpolygon(float r, float g, float b, float a){
-	glBegin(GL_TRIANGLES);
-		glColor4f(r, g, b, a);
+void fillpolygon(int skin, float r, float g, float b, float a){
+	glColor4f(r, g, b, a);
+	switch(skin){
+		case 0:
+			glBegin(GL_TRIANGLES);
+				glVertex2f(.2f, 0);
+				glVertex2f(.5f, 0.25f);
+				glVertex2f(0, 0.25f);
 
-		glVertex2f(.2f, 0);
-		glVertex2f(.5f, 0.25f);
-		glVertex2f(0, 0.25f);
+				glVertex2f(.8f, 0);
+				glVertex2f(.5f, 0.25f);
+				glVertex2f(1, 0.25f);
 
-		glVertex2f(.8f, 0);
-		glVertex2f(.5f, 0.25f);
-		glVertex2f(1, 0.25f);
+				glVertex2f(0, 0.25f);
+				glVertex2f(0.5f, 1);
+				glVertex2f(1, 0.25f);
+			glEnd();
+			break;
+		case 1:
+			glBegin(GL_TRIANGLES);
+				glVertex2f(.4f, 0);
+				glVertex2f(0, 0.5f);
+				glVertex2f(0, 0.25f);
 
-		glVertex2f(0, 0.25f);
-		glVertex2f(0.5f, 1);
-		glVertex2f(1, 0.25f);
-	glEnd();	
+				glVertex2f(.8f, 0);
+				glVertex2f(.5f, 0.25f);
+				glVertex2f(1, 0.25f);
+
+				glVertex2f(0, 0.25f);
+				glVertex2f(0.5f, 1);
+				glVertex2f(1, 0.25f);
+			glEnd();
+			break;
+		default:
+			glBegin(GL_TRIANGLES);
+				glVertex2f(0, 0);
+				glVertex2f(0.5f, 0.7f);
+				glVertex2f(1, 0);
+
+				glVertex2f(0, 1);
+				glVertex2f(0.5f, 0.3f);
+				glVertex2f(1, 1);
+			glEnd();
+	}
 }
 
 void draw(float alpha){
@@ -226,6 +254,7 @@ void draw(float alpha){
 		glTranslatef(terp(fighters[i]->prect.x, fighters[i]->rect.x, alpha) + fighters[i]->rect.w / 2,
 			terp(fighters[i]->prect.y, fighters[i]->rect.y, alpha) + fighters[i]->rect.h / 2, 0);
 		glPushMatrix();
+		glRotatef(fighters[i]->tick*10, 0, 1, 0);
 		if(fighters[i]->state & HITSTUN){
 			glRotatef(fighters[i]->tick * 10 * (fighters[i]->vx < 0 ? 1 : -1), 0, 0, 1);
 		}
@@ -235,7 +264,7 @@ void draw(float alpha){
 		temp.h = 1;
 		fillrect(tofloatcolor(fighters[i]->color), 1);
 		glTranslatef(0, -0.5f, 0);
-		fillpolygon(0, 1, 0, 1);
+		fillpolygon(fighters[i]->skin[0], 0.4f, 0.1f, 0.2f, 1);
 		temp.w = 1;
 		temp.h = 1.5f;
 		glPopMatrix();
