@@ -153,6 +153,7 @@ struct tfighter{
 	int joyxoffset;
 	int joyyoffset;
 	int tick;
+	int anim;
 	Uint32 state, pstate;
 	float damage;
 	int hitlag;

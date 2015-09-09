@@ -173,6 +173,7 @@ tfighter *tfighter_new(float x, float y, Uint32 color, SDL_Keycode *keys, Uint32
 	ret->joyxoffset = joyxoffset;
 	ret->joyyoffset = joyyoffset;
 	ret->tick = 0;
+	ret->anim = 0;
 	ret->damage = 0;
 	ret->color = color;
 	ret->state = 0;
@@ -490,6 +491,9 @@ void tfighter_input(tfighter *t, tlevel *tl, SDL_Event *e){
 
 void tfighter_update(tfighter *t, tlevel *tl){
 	int i;
+	if(t->anim > 0){
+		t->anim = t->anim - 10;
+	}
 	if(t->state & HITSTUN && t->vx != 0 && t->vy < 0){
 		float a = t->vx, b = t->vy;
 		double angle = atan2((double)t->vy, (double)t->vx);
@@ -623,13 +627,19 @@ void tfighter_update(tfighter *t, tlevel *tl){
 				t->vx -= t->accel;
 				if(t->vx <= -t->speed)
 					t->vx = -t->speed;
-				t->left = 1;
+				if(!t->left){
+					t->anim = 180;
+					t->left = 1;
+				}
 			}
 			else if(t->state & RIGHT){
 				t->vx += t->accel;
 				if(t->vx >= t->speed)
 					t->vx = t->speed;
-				t->left = 0;
+				if(t->left){
+					t->anim = 180;
+					t->left = 0;
+				}
 			}
 			else if(t->state & DOWN){
 				t->vy += t->accel;

@@ -249,28 +249,50 @@ void draw(float alpha){
 	}
 
 	for(i = 0; i < PLAYERS; ++i){
+		tfighter *t = fighters[i];
 		glPopMatrix();
 		glPushMatrix();
-		glTranslatef(terp(fighters[i]->prect.x, fighters[i]->rect.x, alpha) + fighters[i]->rect.w / 2,
-			terp(fighters[i]->prect.y, fighters[i]->rect.y, alpha) + fighters[i]->rect.h / 2, 0);
+		glTranslatef(terp(t->prect.x, t->rect.x, alpha) + t->rect.w / 2,
+			terp(t->prect.y, t->rect.y, alpha) + t->rect.h / 2, 0);
 		glPushMatrix();
-		glRotatef(fighters[i]->tick*10, 0, 1, 0);
-		if(fighters[i]->state & HITSTUN){
-			glRotatef(fighters[i]->tick * 10 * (fighters[i]->vx < 0 ? 1 : -1), 0, 0, 1);
+		/*glRotatef(t->tick*10 * (t->state & LEFT ? 1 : -1), 0, 1, 0);*/
+		if(t->left){
+			glRotatef(180, 0, 1, 0);
 		}
-		glTranslatef(-fighters[i]->rect.w/2, -fighters[i]->rect.h/2, 0);
-		glScalef(fighters[i]->rect.w, fighters[i]->rect.h, 0);
-		temp.w = 1;
-		temp.h = 1;
-		fillrect(tofloatcolor(fighters[i]->color), 1);
+		glRotatef(t->anim, 0, 1, 0);
+		if(t->state & HITSTUN){
+			glRotatef(t->tick * 10 * (t->vx < 0 ? 1 : -1), 0, 0, 1);
+		}
+		/* Chest */
+		glTranslatef(-t->rect.w/2, -t->rect.h/2, 0);
+		glScalef(t->rect.w, t->rect.w, 0);
+		fillrect(tofloatcolor(t->color), 1);
+
+		/* Head */
 		glTranslatef(0, -0.5f, 0);
-		fillpolygon(fighters[i]->skin[0], 0.4f, 0.1f, 0.2f, 1);
+		fillpolygon(t->skin[0], 0.4f, 0.1f, 0.2f, 1);
+
+		/* Legs */
+		glPushMatrix();
+		glTranslatef(0, 1.5f, 0);
+		glRotatef((int)(t->rect.x * 30) % 90, 0, 0, 1);
+		glScalef(0.25f, 0.75f, 0);
+		fillrect(0.3f, 0.3f, 0.3f, 1);
+
+		glPopMatrix();
+		/* Arm */
+		glTranslatef(0, 0.6f, 0);
+		glRotatef(t->tick, 0, 0, 1);
+		glScalef(0.3f, 0.7f, 0);
+		fillrect(0.3f, 0.3f, 0.3f, 1);
+
+		/* Name */
 		temp.w = 1;
 		temp.h = 1.5f;
 		glPopMatrix();
-		glTranslatef(strlen(fighters[i]->name)/-temp.w/2, -fighters[i]->rect.h, 0);
+		glTranslatef(strlen(t->name)/-temp.w/2, -t->rect.h - 1.0f, 0);
 		glEnable(GL_TEXTURE_2D);
-		drawtext(&temp, fighters[i]->name, 1, 1, 1, 0.8f);
+		drawtext(&temp, t->name, 1, 1, 1, 0.8f);
 		glDisable(GL_TEXTURE_2D);
 	}
 
@@ -464,7 +486,14 @@ int main(int argc, char *argv[]){
 
 			for(i=0; i<PLAYERS; ++i){
 				tfighter_update(fighters[i], &level);
-				if(fighters[i]->state & HITSTUN){
+				if(fighters[i]->state & JUMP){
+					float mag = (float)(rand() % 1000 / 1000.0f);
+					Uint32 color = rand() % 0xFF;
+					color = 0x55 + color * 0x100 + color * 0x10000;
+					tparticle_set(&particles[cparticle], fighters[i]->rect.x + ((rand() % 1000) / 1000.0) * fighters[i]->rect.w, fighters[i]->rect.y + ((rand() % 1000) / 1000.0) * fighters[i]->rect.h, fighters[i]->vx * mag, .2f*mag, (rand() % 100) / 100.0f + 0.05f, 90, color);
+					cparticle = (cparticle + 1) % MAXPARTICLES;
+				}
+				else if(fighters[i]->state & HITSTUN){
 					float mag = (float)(rand() % 1000 / 1000.0f);
 					Uint32 color = rand() % 0xFF;
 					color = 0x55 + color * 0x100 + color * 0x10000 + color * 0x1000000;

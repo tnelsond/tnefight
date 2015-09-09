@@ -3,7 +3,7 @@ math.randomseed(seed)
 setname("Tnel")
 setsize(2, 3)
 setcolor(0x44DD00)
-setskin(1, 2, 3)
+setskin(0, 0, 0)
 setbruiserness(20)
 setjump(60);
 
