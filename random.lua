@@ -10,10 +10,10 @@ setcolor(
 	math.random(0, 0xFFFFFF),
 	math.random(0, 0xFFFFFF))
 setskin(
-	math.random(0, 3),
-	math.random(0, 3),
-	math.random(0, 3),
-	math.random(0, 3))
+	math.random(0, 4),
+	math.random(0, 4),
+	math.random(0, 4),
+	math.random(0, 4))
 setbruiserness(math.random(0, 100))
 setjump(math.random(0, 100));
 for i=0,8 do

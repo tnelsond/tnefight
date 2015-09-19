@@ -12,7 +12,7 @@
 #include "tfighter.h"
 
 #define min(a, b) a < b ? a : b
-#define MAXPARTICLES 2000
+#define MAXPARTICLES 200
 
 SDL_Window *gwin = NULL;
 SDL_GLContext gcon;
@@ -195,6 +195,20 @@ void fillpolygon(int skin, float r, float g, float b, float a){
 				glVertex2f(0, 0.75f);
 				glVertex2f(1, 0.75f);
 				glVertex2f(1, 0.25f);
+			break;
+		case 4:
+			glBegin(GL_TRIANGLES);
+				glVertex2f(0, 1);
+				glVertex2f(0.3f, 1);
+				glVertex2f(0.4f, 0.5f);
+
+				glVertex2f(0.7f, 1);
+				glVertex2f(0.6f, 0.5f);
+				glVertex2f(1, 1);
+
+				glVertex2f(0.3f, 0.7f);
+				glVertex2f(0.7f, 0.7f);
+				glVertex2f(0.5f, 0);
 			break;
 		default:
 			glBegin(GL_TRIANGLES);

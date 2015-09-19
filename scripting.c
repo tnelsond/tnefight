@@ -32,11 +32,11 @@ int lsetsize(lua_State *l){
 	if(lua_gettop(l) >= 1 && lua_isnumber(l, 1) && lua_isnumber(l, 2)){
 		cfighter->rect.h = lua_tonumber(l, 2);
 		cfighter->rect.w = lua_tonumber(l, 1) * cfighter->rect.h;
-		if(cfighter->rect.h < 1.5f){
-			cfighter->rect.h = 1.5f;
+		if(cfighter->rect.h < 2){
+			cfighter->rect.h = 2;
 		}
-		if(cfighter->rect.w < 1){
-			cfighter->rect.w = 1;
+		if(cfighter->rect.w < 1.5f){
+			cfighter->rect.w = 1.5f;
 		}
 		if(cfighter->rect.h > 4){
 			cfighter->rect.h = 4;
