@@ -2,28 +2,47 @@
 #include <stdarg.h>
 
 int lsetcolor(lua_State *l){
-	if(lua_gettop(l) >= 0 && lua_isnumber(l, 1)){
-		cfighter->color = lua_tonumber(l, 1) * 0x100 + 0xFF;
-		return 0;
+	int len = lua_gettop(l);
+	if(len > 3){
+		len = 3;
+	}
+	switch(len){ /* Fall through is intended */
+		case 3:
+			if(lua_isnumber(l, 4)){
+				cfighter->footcolor = lua_tonumber(l, 4) * 0x100 + 0xFF;
+			}
+		case 2:
+			if(lua_isnumber(l, 3)){
+				cfighter->armcolor = lua_tonumber(l, 3) * 0x100 + 0xFF;
+			}
+		case 1:
+			if(lua_isnumber(l, 2)){
+				cfighter->color = lua_tonumber(l, 2) * 0x100 + 0xFF;
+			}
+		default:
+			if(lua_isnumber(l, 1)){
+				cfighter->headcolor = lua_tonumber(l, 1) * 0x100 + 0xFF;
+				return 0;
+			}
 	}
 	return -1;
 }
 
 int lsetsize(lua_State *l){
 	if(lua_gettop(l) >= 1 && lua_isnumber(l, 1) && lua_isnumber(l, 2)){
-		cfighter->rect.w = lua_tonumber(l, 1);
 		cfighter->rect.h = lua_tonumber(l, 2);
+		cfighter->rect.w = lua_tonumber(l, 1) * cfighter->rect.h;
+		if(cfighter->rect.h < 1.5f){
+			cfighter->rect.h = 1.5f;
+		}
 		if(cfighter->rect.w < 1){
 			cfighter->rect.w = 1;
 		}
-		if(cfighter->rect.h < 1){
-			cfighter->rect.h = 1;
-		}
-		if(cfighter->rect.w > 4){
-			cfighter->rect.w = 4;
-		}
 		if(cfighter->rect.h > 4){
 			cfighter->rect.h = 4;
+		}
+		if(cfighter->rect.w > cfighter->rect.h*0.8f){
+			cfighter->rect.w = cfighter->rect.h*0.8f;
 		}
 		cfighter->launchresistance = cfighter->rect.w * cfighter->rect.h;
 		return 0;
@@ -40,18 +59,22 @@ int lrunscript(char *str){
 }
 
 int lsetskin(lua_State *l){
-	if(lua_gettop(l) >= 2 && lua_isnumber(l, 1) && lua_isnumber(l, 2) && lua_isnumber(l, 3) && cfighter != NULL){
-		cfighter->skin[0] = lua_tonumber(l, 3);
+	if(lua_gettop(l) >= 3 && lua_isnumber(l, 1) && lua_isnumber(l, 2) && lua_isnumber(l, 3) && lua_isnumber(l, 4) && cfighter != NULL){
+		cfighter->skin[0] = lua_tonumber(l, 4);
 		if(cfighter->skin[0] > MAXSKIN){
 			cfighter->skin[0] = MAXSKIN;
 		}
-		cfighter->skin[1] = lua_tonumber(l, 2);
+		cfighter->skin[1] = lua_tonumber(l, 3);
 		if(cfighter->skin[1] > MAXSKIN){
 			cfighter->skin[1] = MAXSKIN;
 		}
-		cfighter->skin[2] = lua_tonumber(l, 1);
+		cfighter->skin[2] = lua_tonumber(l, 2);
 		if(cfighter->skin[2] > MAXSKIN){
 			cfighter->skin[2] = MAXSKIN;
+		}
+		cfighter->skin[3] = lua_tonumber(l, 1);
+		if(cfighter->skin[3] > MAXSKIN){
+			cfighter->skin[3] = MAXSKIN;
 		}
 		return 0;
 	}

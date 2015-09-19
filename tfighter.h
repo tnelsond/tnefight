@@ -146,6 +146,9 @@ struct tfighter{
 	char id;
 	char left;
 	Uint32 color;
+	Uint32 headcolor;
+	Uint32 footcolor;
+	Uint32 armcolor;
 	hitbox *moves;
 	SDL_Keycode *keys;
 	Uint32 *jbuttons;

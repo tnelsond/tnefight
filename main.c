@@ -158,6 +158,13 @@ void fillpolygon(int skin, float r, float g, float b, float a){
 	glColor4f(r, g, b, a);
 	switch(skin){
 		case 0:
+			glBegin(GL_QUADS);
+				glVertex2f(0, 0);
+				glVertex2f(0, 1);
+				glVertex2f(1, 1);
+				glVertex2f(1, 0);
+			break;
+		case 1:
 			glBegin(GL_TRIANGLES);
 				glVertex2f(.2f, 0);
 				glVertex2f(.5f, 0.25f);
@@ -170,22 +177,24 @@ void fillpolygon(int skin, float r, float g, float b, float a){
 				glVertex2f(0, 0.25f);
 				glVertex2f(0.5f, 1);
 				glVertex2f(1, 0.25f);
-			glEnd();
 			break;
-		case 1:
+		case 2:
 			glBegin(GL_TRIANGLES);
-				glVertex2f(.4f, 0);
-				glVertex2f(0, 0.5f);
-				glVertex2f(0, 0.25f);
+				glVertex2f(0, 0);
+				glVertex2f(0, 1);
+				glVertex2f(1, 1);
+			break;
+		case 3:
+			glBegin(GL_QUADS);
+				glVertex2f(0.25f, 0);
+				glVertex2f(0.25f, 1);
+				glVertex2f(0.75f, 1);
+				glVertex2f(0.75f, 0);
 
-				glVertex2f(.8f, 0);
-				glVertex2f(.5f, 0.25f);
-				glVertex2f(1, 0.25f);
-
 				glVertex2f(0, 0.25f);
-				glVertex2f(0.5f, 1);
+				glVertex2f(0, 0.75f);
+				glVertex2f(1, 0.75f);
 				glVertex2f(1, 0.25f);
-			glEnd();
 			break;
 		default:
 			glBegin(GL_TRIANGLES);
@@ -196,8 +205,8 @@ void fillpolygon(int skin, float r, float g, float b, float a){
 				glVertex2f(0, 1);
 				glVertex2f(0.5f, 0.3f);
 				glVertex2f(1, 1);
-			glEnd();
 	}
+	glEnd();
 }
 
 void draw(float alpha){
@@ -266,25 +275,31 @@ void draw(float alpha){
 		/* Chest */
 		glTranslatef(-t->rect.w/2, -t->rect.h/2, 0);
 		glScalef(t->rect.w, t->rect.w, 0);
-		fillrect(tofloatcolor(t->color), 1);
+		fillpolygon(t->skin[1], tofloatcolor(t->color), 1);
 
 		/* Head */
 		glTranslatef(0, -0.5f, 0);
-		fillpolygon(t->skin[0], 0.4f, 0.1f, 0.2f, 1);
+		fillpolygon(t->skin[0], tofloatcolor(t->headcolor), 1);
 
 		/* Legs */
 		glPushMatrix();
-		glTranslatef(0, 1.5f, 0);
-		glRotatef((int)(t->rect.x * 30) % 90, 0, 0, 1);
+		glTranslatef(0.3f, 1.5f, 0);
+		if(t->left){
+			glRotatef(30 + (int)(t->rect.x * -30) % 90, 0, 0, 1);
+		}
+		else{
+			glRotatef(-60 + (int)(t->rect.x * 30) % 90, 0, 0, 1);
+		}
 		glScalef(0.25f, 0.75f, 0);
-		fillrect(0.3f, 0.3f, 0.3f, 1);
+		glTranslatef(-0.2f, -.2f, 0);
+		fillpolygon(t->skin[3], tofloatcolor(t->footcolor), 1);
 
 		glPopMatrix();
 		/* Arm */
 		glTranslatef(0, 0.6f, 0);
 		glRotatef(t->tick, 0, 0, 1);
 		glScalef(0.3f, 0.7f, 0);
-		fillrect(0.3f, 0.3f, 0.3f, 1);
+		fillpolygon(t->skin[2], tofloatcolor(t->armcolor), 1);
 
 		/* Name */
 		temp.w = 1;
@@ -391,16 +406,13 @@ int main(int argc, char *argv[]){
 											};
 	Uint32 b[] = {ATTACKING, SPECIAL, 0, JUMP, SHIELDING};
 	fighters = malloc(sizeof(*fighters) * MAXPLAYERS);
-	Uint8 *skin = malloc(sizeof(Uint8) * 3 * MAXPLAYERS);
-	/*for(i = 0; i < 3 * MAXPLAYERS; ++i){
-		skin[i] = 0;
-	}*/
+	Uint8 *skin = malloc(sizeof(Uint8) * 4 * MAXPLAYERS);
 	gjoy = malloc(sizeof(*gjoy) * MAXPLAYERS);
 
 
 	check(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) >= 0);
 
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 
 	gwin = SDL_CreateWindow("SDL TEST", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, camera.swidth, camera.sheight, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);

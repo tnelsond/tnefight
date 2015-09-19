@@ -1,9 +1,7 @@
-require("math")
-math.randomseed(seed)
 setname("Tnel")
 setsize(2, 3)
-setcolor(0x44DD00)
-setskin(0, 0, 0)
+setcolor(0x44DD00, 0x555500, 0xAA8800, 0x557700)
+setskin(2, 1, 3, 0)
 setbruiserness(20)
 setjump(60);
 

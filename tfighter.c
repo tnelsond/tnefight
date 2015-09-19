@@ -176,6 +176,9 @@ tfighter *tfighter_new(float x, float y, Uint32 color, SDL_Keycode *keys, Uint32
 	ret->anim = 0;
 	ret->damage = 0;
 	ret->color = color;
+	ret->headcolor = color;
+	ret->armcolor = color;
+	ret->footcolor = color/2;
 	ret->state = 0;
 	ret->pstate = 0;
 	ret->keys = keys;
