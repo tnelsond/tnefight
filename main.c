@@ -334,6 +334,15 @@ void draw(float alpha){
 			fillrect(0, 1, 0, 0.5f);
 			glPopMatrix();
 			glPushMatrix();
+			if(level.boxes[i].tick < level.boxes[i].maxdelay){
+				glTranslatef(level.boxes[i].rect.x, level.boxes[i].rect.y, 0);
+				glPushMatrix();
+				glScalef(1.0f, level.boxes[i].tick / 20.0f, 0);
+				fillrect(1, 1, 0, 0.5f);
+				glPopMatrix();
+				glTranslatef(0, level.boxes[i].mindelay / 20.0f, 0);
+				fillrect(1, 0, 0, 0.5f);
+			}
 		}
 	}
 
