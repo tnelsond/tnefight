@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include <SDL/SDL_net.h>
+#include <SDL2/SDL_net.h>
 
 #include "scripting.h"
 #include "tfighter.h"
