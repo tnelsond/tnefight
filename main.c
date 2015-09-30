@@ -423,6 +423,7 @@ char *server = NULL;
 IPaddress serveradd;
 int port = 0;
 void initNetwork(){
+	SDL_Log("Initting Network...\n");
 	if(SDLNet_Init() < 0){
 		SDL_Log("Error initializing SDLNet: %s\n", SDLNet_GetError());
 	}
@@ -444,7 +445,7 @@ int main(int argc, char *argv[]){
 	Uint32 ttime, oldtime;
 	hitbox boxes[30];
 	int quit = 0;
-	int i;
+	int i, j;
 	Uint32 accumulator = 0;
 	Uint32 physicsstep = 1000 / 60; /* 60 fps physics */
 	Uint32 vfps = 1000 / 60; /* 60 fps */
@@ -477,7 +478,7 @@ int main(int argc, char *argv[]){
 	level.rect.y = 0;
 	linit();
 	srand(time(NULL));
-	for(i = 0; i < argc - 1; ++i){
+	for(i = 0, j=0; i < argc - 1; ++i){
 		if(strcmp(argv[i + 1], "-level") == 0){
 			SDL_Log("Loading level");
 			cfighter = NULL;
@@ -493,14 +494,13 @@ int main(int argc, char *argv[]){
 			++i;
 		}
 		else{
-			gjoy[i] = SDL_JoystickOpen(i);
-			fighters[i] = tfighter_new(34 + i * 2, 10, 0x775500FF, (i <= 1) ?  c[i] : NULL, b, i, SDL_JoystickGetAxis(gjoy[i], 0), SDL_JoystickGetAxis(gjoy[i], 1), &skin[i*3]);
-			cfighter = fighters[i];
-			PLAYERS = i + 1;
+			gjoy[j] = SDL_JoystickOpen(j);
+			fighters[j] = tfighter_new(34 + j * 2, 10, 0x775500FF, (j <= 1) ?  c[j] : NULL, b, j, SDL_JoystickGetAxis(gjoy[j], 0), SDL_JoystickGetAxis(gjoy[j], 1), &skin[j*3]);
+			cfighter = fighters[j];
+			PLAYERS = ++j;
 			lua_pushnumber(l, rand());
 			lua_setglobal(l, "seed");	
 			lrunscript(argv[i + 1]);
-
 		}
 	}
 	if(level.blocks == NULL){
@@ -557,10 +557,10 @@ int main(int argc, char *argv[]){
 			if(port){
 				p->address.host = serveradd.host;
 				p->address.port = serveradd.port;
-				p->channel = 0;
-				*p->data = (Uint8)fighters[p->channel]->input;
-				p->len = sizeof(Uint8);
-				SDLNet_UDP_Send(sd, p->channel, p);
+				p->channel = -1;
+				*p->data = (Uint8)fighters[0]->input;
+				p->len = sizeof(Uint8) + 1;
+				SDLNet_UDP_Send(sd, -1, p);
 			}
 			while(SDLNet_UDP_Recv(sd, p)){
 				fighters[p->channel]->input = (Uint8)*p->data;
