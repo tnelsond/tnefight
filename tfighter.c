@@ -180,7 +180,8 @@ tfighter *tfighter_new(float x, float y, Uint32 color, SDL_Keycode *keys, Uint32
 	ret->armcolor = color;
 	ret->footcolor = color/2;
 	ret->state = 0;
-	ret->pstate = 0;
+	ret->pinput = 0;
+	ret->input = 0;
 	ret->keys = keys;
 	ret->rect.type = RECT;
 	ret->prect.x = x;
@@ -423,8 +424,8 @@ void tfighter_input(tfighter *t, tlevel *tl, SDL_Event *e){
 		if(e->type == SDL_KEYDOWN){
 			for(i=0; i<7; ++i){
 				if(e->key.keysym.sym == t->keys[i]){
-					if(!(t->state & (ATTACKING | SPECIAL)) || !(t->keys[i] & (ATTACKING | SPECIAL))){
-						t->state = t->state | (1 << i);
+					if(!(t->input & (ATTACKING | SPECIAL)) || !(t->keys[i] & (ATTACKING | SPECIAL))){
+						t->input = t->input | (1 << i);
 					}
 				}
 			}
@@ -432,10 +433,8 @@ void tfighter_input(tfighter *t, tlevel *tl, SDL_Event *e){
 		else if(e->type == SDL_KEYUP){
 			for(i=0; i<7; ++i){
 				if(e->key.keysym.sym == t->keys[i]){
-					if(((1 << i) != ATTACKING) && (1 << i) != SPECIAL){
-						t->state &= ~(1 << i);
-					}
-					else{
+					t->input &= ~(1 << i);
+					if((1 << i) & (ATTACKING | SPECIAL)){
 						t->state &= ~CHARGING;
 					}
 				}
@@ -445,29 +444,29 @@ void tfighter_input(tfighter *t, tlevel *tl, SDL_Event *e){
 	if(e->type == SDL_JOYAXISMOTION && e->jaxis.which == t->joy){
 		if(e->jaxis.axis == 0){	
 			if(e->jaxis.value + t->joyxoffset < -JOYDEADZONE){
-				t->state &= ~RIGHT;
-				t->state |= LEFT;
-				t->state |= RUNNING;
+				t->input &= ~RIGHT;
+				t->input |= LEFT;
+				t->input |= RUNNING;
 			}
 			else if(e->jaxis.value + t->joyxoffset > JOYDEADZONE){
-				t->state &= ~LEFT;
-				t->state |= RIGHT;
+				t->input &= ~LEFT;
+				t->input |= RIGHT;
 			}
 			else{
-				t->state &= ~(LEFT | RIGHT);
+				t->input &= ~(LEFT | RIGHT);
 			}
 		}
 		else if(e->jaxis.axis == 1){
 			if(e->jaxis.value + t->joyyoffset < -JOYDEADZONE){
-				t->state &= ~DOWN;
-				t->state |= UP;
+				t->input &= ~DOWN;
+				t->input |= UP;
 			}
 			else if(e->jaxis.value + t->joyyoffset > JOYDEADZONE){
-				t->state &= ~UP;
-				t->state |= DOWN;
+				t->input &= ~UP;
+				t->input |= DOWN;
 			}
 			else{
-				t->state &= ~(UP | DOWN);
+				t->input &= ~(UP | DOWN);
 			}
 		}
 	}
@@ -475,16 +474,14 @@ void tfighter_input(tfighter *t, tlevel *tl, SDL_Event *e){
 		for(i=0; i<5; ++i){
 			if(e->jbutton.state == SDL_PRESSED){
 				if(i == e->jbutton.button){
-					if(!(t->state & (ATTACKING | SPECIAL)) || !(t->jbuttons[i] & (ATTACKING | SPECIAL))){
-						t->state |= t->jbuttons[i];
+					if(!(t->input & (ATTACKING | SPECIAL)) || !(t->jbuttons[i] & (ATTACKING | SPECIAL))){
+						t->input |= t->jbuttons[i];
 					}
 				}
 			}
 			else{
-				if(t->jbuttons[i] != ATTACKING && t->jbuttons[i] != SPECIAL){
-					t->state &= ~(t->jbuttons[i]);
-				}
-				else{
+				t->input &= ~(t->jbuttons[i]);
+				if(t->jbuttons[i] == ATTACKING || t->jbuttons[i] == SPECIAL){
 					t->state &= ~CHARGING;
 				}
 			}
@@ -500,7 +497,6 @@ void tfighter_update(tfighter *t, tlevel *tl){
 	if(t->state & HITSTUN && t->vx != 0 && t->vy < 0){
 		float a = t->vx, b = t->vy;
 		double angle = atan2((double)t->vy, (double)t->vx);
-		t->state &= ~(ATTACKING | CHARGING | SPECIAL);
 		t->vx -= (float)(cos(angle)) * KBRESISTANCE;
 		t->vy -= (float)(sin(angle)) * KBRESISTANCE;
 		if((t->vx > 0 && a < 0) || (t->vx < 0 && a > 0)){
@@ -519,7 +515,6 @@ void tfighter_update(tfighter *t, tlevel *tl){
 	if(t->rect.x > tl->rect.x + tl->rect.w + 1 || t->rect.x + t->rect.w < tl->rect.x || t->rect.y + t->rect.h < tl->rect.y - 4 || t->rect.y > tl->rect.y + tl->rect.h + 1){
 		t->state = 0;
 		t->hitlag = 0;
-		t->pstate = 0;
 		t->jump = 0;
 		t->rect.x = tl->rect.x + tl->spawnx - t->rect.w / 2;
 		t->rect.y = tl->rect.y + tl->spawny;
@@ -535,39 +530,39 @@ void tfighter_update(tfighter *t, tlevel *tl){
 		}
 	}
 
-	if((t->state & (SPECIAL | ATTACKING) && !(t->pstate & (SPECIAL | ATTACKING)))){
+	if((t->input & (SPECIAL | ATTACKING) && !(t->pinput & (SPECIAL | ATTACKING)))){
 		t->state |= CHARGING;
 	}
 
 	/* Jumping */
-	if((~t->pstate & JUMP) && (t->state & JUMP) && t->tick <= 0){
+	if((~t->pinput & JUMP) && (t->input & JUMP) && t->tick <= 0){
 		if(t->jump < t->MAXJUMPS){
 			t->vy = -t->jumpvel;
 			++t->jump;
 		}
 	}
 	/* Attacking */
-	if(((~t->pstate & ATTACKING) && (t->state & ATTACKING) && (~t->pstate & CHARGING))
-			|| ((~t->pstate & SPECIAL) && (t->state & SPECIAL) && (~t->pstate & CHARGING))){
+	if((((~t->pinput & ATTACKING) && (t->input & ATTACKING))
+			|| ((~t->pinput & SPECIAL) && (t->input & SPECIAL))) && (~t->state & CHARGING)){
 		int x = NATTACK;
-		if(t->state & UP)
+		if(t->input & UP)
 			x = UATTACK;
-		else if(t->state & DOWN)
+		else if(t->input & DOWN)
 			x = DATTACK;
-		else if(t->state & (LEFT | RIGHT))
+		else if(t->input & (LEFT | RIGHT))
 			x = OATTACK;
-		t->state |= CHARGING;
-		if(t->state & SPECIAL){
+		t->input |= CHARGING;
+		if(t->input & SPECIAL){
 			x += 4;
 		}
 		tlevel_add_hitbox(tl, t, &t->moves[x]);
 		t->tick = t->moves[x].maxdelay + t->moves[x].time + t->moves[x].endlag; 
 	}
 	/* Moving */
-	if(!(t->pstate & WALKING) && !(t->state & (ATTACKING | HITSTUN | CHARGING | SPECIAL))){
-		if((t->state & RIGHT) && (t->vx > t->walk/2))
+	if(!(t->state & (HITSTUN | CHARGING | LAG))){
+		if((t->input & RIGHT) && (t->vx > t->walk/2))
 			t->state |= RUNNING;
-		else if((t->state & LEFT) && (t->vx < -t->walk/2))
+		else if((t->input & LEFT) && (t->vx < -t->walk/2))
 			t->state |= RUNNING;
 		else if(t->state & (LEFT | RIGHT))
 			t->state |= WALKING;
@@ -584,7 +579,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 			t->vx += (float)(0.04 * cos(PI * box->kbangle / 180.0) * (box->kb + (t->damage * box->kbgrowth))/t->launchresistance);
 			SDL_Log("attack: %d, attackmultiply: %f, kb: %f, kbgrowth: %f, kbangle: %f\n", box->attack, box->attackmultiply, box->kb, box->kbgrowth, box->kbangle);
 			box->hit |= t->id;
-			t->state &= ~(ATTACKING | HELPLESS | SPECIAL | WALKING | RUNNING | JUMP | CHARGING);
+			t->state &= ~(HELPLESS | LAG | WALKING | RUNNING | CHARGING);
 			t->state |= HITSTUN;
 			t->tick = (int)((box->kb + box->kbgrowth * t->damage) / t->launchresistance);
 			t->hitlag = box->attack*0.1f;
@@ -596,6 +591,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 		}
 	}
 
+	t->state &= ~(WALKING | RUNNING);
 	if(t->hitlag <= 0){
 		--t->tick; 
 		if(t->tick < 0){
@@ -603,13 +599,10 @@ void tfighter_update(tfighter *t, tlevel *tl){
 		}
 		/* Hitstun */
 		if(t->state & HITSTUN){
-				if(t->tick <= 0){
-					t->state &= (LEFT | RIGHT | UP | DOWN);
-				}
 		}
 		/* Attacking & Movement */
 		else{
-			if(t->pstate & GROUND){
+			if(t->state & GROUND){
 				if(t->state & RUNNING){
 					t->speed = t->run;
 				}
@@ -620,13 +613,13 @@ void tfighter_update(tfighter *t, tlevel *tl){
 			else{
 				t->speed = t->driftspeed;
 			}
-			if(t->state & (ATTACKING | SPECIAL)){
+			if(t->state & LAG){
 				if(t->tick <= 0){
 					t->tick = 0;
-					t->state &= ~(ATTACKING | CHARGING | SPECIAL);
+					t->state &= ~(LAG);
 				}
 			}
-			else if(t->state & LEFT){
+			else if(t->input & LEFT){
 				t->vx -= t->accel;
 				if(t->vx <= -t->speed)
 					t->vx = -t->speed;
@@ -635,7 +628,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 					t->left = 1;
 				}
 			}
-			else if(t->state & RIGHT){
+			else if(t->input & RIGHT){
 				t->vx += t->accel;
 				if(t->vx >= t->speed)
 					t->vx = t->speed;
@@ -644,7 +637,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 					t->left = 0;
 				}
 			}
-			else if(t->state & DOWN){
+			else if(t->input & DOWN){
 				t->vy += t->accel;
 			}
 		}
@@ -653,6 +646,7 @@ void tfighter_update(tfighter *t, tlevel *tl){
 			t->vy = t->fallspeed;	
 		}
 		t->rect.y += t->vy;
+		t->state &= ~(GROUND);
 		for(i=0; i < tl->len; ++i){
 			if(intersects(&t->rect, &tl->blocks[i], 0, INTERSECT_TOLERANCE)){
 				if(t->vy > 0 && (tl->blocks[i].h >= 0.9f || t->state ^ DOWN)){
@@ -736,8 +730,6 @@ void tfighter_update(tfighter *t, tlevel *tl){
 	else{
 		--t->hitlag;
 	}
-	t->pstate = t->state;
-	t->state &= ~(WALKING | RUNNING | GROUND);
 }
 
 void tlevel_add_hitbox(tlevel *tl, tfighter *t, hitbox *h){

@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include <SDL/SDL_net.h>
+
 #include "scripting.h"
 #include "tfighter.h"
 
@@ -415,6 +417,29 @@ int initGL(){
 	return 0;
 }
 
+UDPsocket sd;
+UDPpacket *p;
+char *server = NULL;
+IPaddress serveradd;
+int port = 0;
+void initNetwork(){
+	if(SDLNet_Init() < 0){
+		SDL_Log("Error initializing SDLNet: %s\n", SDLNet_GetError());
+	}
+	if(!(sd = SDLNet_UDP_Open(3000))){
+		SDL_Log("Error SDLNet_UDP_Open: %s\n", SDLNet_GetError());
+	}
+	if(!(p = SDLNet_AllocPacket(128))){
+		SDL_Log("Error SDLNet_AllocPacket: %s\n", SDLNet_GetError());
+	}
+	if(port && server){
+		if(SDLNet_ResolveHost(&serveradd, server, port) == -1){
+			SDL_Log("Error SDLNet_ResolveHost: %s\n", SDLNet_GetError());
+		}
+		p->channel = 0;
+	}
+}
+
 int main(int argc, char *argv[]){
 	Uint32 ttime, oldtime;
 	hitbox boxes[30];
@@ -453,7 +478,21 @@ int main(int argc, char *argv[]){
 	linit();
 	srand(time(NULL));
 	for(i = 0; i < argc - 1; ++i){
-		if(strcmp(argv[i + 1], "-level") != 0){
+		if(strcmp(argv[i + 1], "-level") == 0){
+			SDL_Log("Loading level");
+			cfighter = NULL;
+			lrunscript(argv[i + 2]);
+			SDL_Log("Loaded level");
+		}
+		else if(strcmp(argv[i + 1], "-server") == 0){
+			server = argv[i + 2];
+			++i;
+		}
+		else if(strcmp(argv[i + 1], "-p") == 0){
+			port = atoi(argv[i + 2]);
+			++i;
+		}
+		else{
 			gjoy[i] = SDL_JoystickOpen(i);
 			fighters[i] = tfighter_new(34 + i * 2, 10, 0x775500FF, (i <= 1) ?  c[i] : NULL, b, i, SDL_JoystickGetAxis(gjoy[i], 0), SDL_JoystickGetAxis(gjoy[i], 1), &skin[i*3]);
 			cfighter = fighters[i];
@@ -461,13 +500,7 @@ int main(int argc, char *argv[]){
 			lua_pushnumber(l, rand());
 			lua_setglobal(l, "seed");	
 			lrunscript(argv[i + 1]);
-		}
-		else{
-			SDL_Log("Loading level");
-			cfighter = NULL;
-			lrunscript(argv[i + 2]);
-			SDL_Log("Loaded level");
-			break;
+
 		}
 	}
 	if(level.blocks == NULL){
@@ -489,6 +522,8 @@ int main(int argc, char *argv[]){
 	for(i=0; i<level.MAX_BOXES; ++i){
 		boxes[i].owner = NULL;
 	}
+
+	initNetwork();
 	
 	ttime = oldtime = SDL_GetTicks();
 	while(!quit){
@@ -518,6 +553,18 @@ int main(int argc, char *argv[]){
 			}
 
 			tcamera_track(&camera, &level, fighters, PLAYERS);
+
+			if(port){
+				p->address.host = serveradd.host;
+				p->address.port = serveradd.port;
+				p->channel = 0;
+				*p->data = (Uint8)fighters[p->channel]->input;
+				p->len = sizeof(Uint8);
+				SDLNet_UDP_Send(sd, p->channel, p);
+			}
+			while(SDLNet_UDP_Recv(sd, p)){
+				fighters[p->channel]->input = (Uint8)*p->data;
+			}
 
 			for(i=0; i<PLAYERS; ++i){
 				tfighter_update(fighters[i], &level);
@@ -557,6 +604,9 @@ int main(int argc, char *argv[]){
 		if(timesleep > 0)
 			SDL_Delay(timesleep);
 	}
+
+	SDLNet_FreePacket(p);
+	SDLNet_Quit();
 
 	for(i=0; i<PLAYERS; ++i){
 		if(fighters[i]->name){

@@ -10,7 +10,7 @@
 #define PROJECTILE (1 << 3)
 #define AIRONCE (1 << 4)
 
-/* tfighter state */
+/* tfighter input */
 #define LEFT (1 << 0)
 #define RIGHT (1 << 1)
 #define UP (1 << 2)
@@ -19,12 +19,15 @@
 #define ATTACKING (1 << 5)
 #define SPECIAL (1 << 6)
 #define SHIELDING (1 << 7)
-#define CHARGING (1 << 8)
-#define HITSTUN (1 << 9)
-#define HELPLESS (1 << 10)
-#define GROUND (1 << 11)
-#define WALKING (1 << 12)
-#define RUNNING (1 << 13)
+
+/* tfighter state */
+#define CHARGING (1 << 0)
+#define HITSTUN (1 << 1)
+#define HELPLESS (1 << 2)
+#define GROUND (1 << 3)
+#define WALKING (1 << 4)
+#define RUNNING (1 << 5)
+#define LAG (1 << 6)
 
 /* tfighter attack numbers */
 #define OATTACK 0
@@ -125,12 +128,6 @@ typedef struct tlevel{
 
 tlevel level;
 
-typedef struct{
-	char bruiserness;
-	char floatiness;
-	char size;
-} tfighterconf;
-
 struct tfighter{
 	trect rect, prect;
 	float vx, vy;
@@ -157,7 +154,8 @@ struct tfighter{
 	int joyyoffset;
 	int tick;
 	int anim;
-	Uint32 state, pstate;
+	Uint32 state;
+	Uint8 input, pinput;
 	float damage;
 	int hitlag;
 	Uint8 *skin;

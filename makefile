@@ -1,7 +1,7 @@
-CC = gcc -pedantic -Wall -O2  `sdl2-config --cflags --libs` -lGL -lGLU -lSDL2_image -lm
+CC = gcc -pedantic -Wall -O2 `sdl2-config --cflags --libs` -lSDL_net -lGL -lGLU -lSDL2_image -lm
 LUA = `pkg-config --libs lua`
 
-main.o : main.c tfighter.o scripting.o
+run.out : main.c tfighter.o scripting.o
 	$(CC) main.c tfighter.o scripting.o $(LUA) -o run.out
 
 tfighter.o : tfighter.c tfighter.h
