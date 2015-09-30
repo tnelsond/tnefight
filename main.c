@@ -478,29 +478,31 @@ int main(int argc, char *argv[]){
 	level.rect.y = 0;
 	linit();
 	srand(time(NULL));
-	for(i = 0, j=0; i < argc - 1; ++i){
-		if(strcmp(argv[i + 1], "-level") == 0){
+	for(i = 1, j = 0; i < argc; ++i){
+		if(strcmp(argv[i], "-level") == 0){
 			SDL_Log("Loading level");
 			cfighter = NULL;
-			lrunscript(argv[i + 2]);
+			++i;
+			lrunscript(argv[i]);
 			SDL_Log("Loaded level");
 		}
-		else if(strcmp(argv[i + 1], "-server") == 0){
-			server = argv[i + 2];
+		else if(strcmp(argv[i], "-server") == 0){
 			++i;
+			server = argv[i];
 		}
-		else if(strcmp(argv[i + 1], "-p") == 0){
-			port = atoi(argv[i + 2]);
+		else if(strcmp(argv[i], "-p") == 0){
 			++i;
+			port = atoi(argv[i]);
 		}
 		else{
 			gjoy[j] = SDL_JoystickOpen(j);
 			fighters[j] = tfighter_new(34 + j * 2, 10, 0x775500FF, (j <= 1) ?  c[j] : NULL, b, j, SDL_JoystickGetAxis(gjoy[j], 0), SDL_JoystickGetAxis(gjoy[j], 1), &skin[j*3]);
 			cfighter = fighters[j];
-			PLAYERS = ++j;
 			lua_pushnumber(l, rand());
 			lua_setglobal(l, "seed");	
-			lrunscript(argv[i + 1]);
+			lrunscript(argv[i]);
+			++j;
+			PLAYERS = j;
 		}
 	}
 	if(level.blocks == NULL){
@@ -559,11 +561,11 @@ int main(int argc, char *argv[]){
 				p->address.port = serveradd.port;
 				p->channel = -1;
 				*p->data = (Uint8)fighters[0]->input;
-				p->len = sizeof(Uint8) + 1;
+				p->len = sizeof(Uint8);
 				SDLNet_UDP_Send(sd, -1, p);
 			}
 			while(SDLNet_UDP_Recv(sd, p)){
-				fighters[p->channel]->input = (Uint8)*p->data;
+				fighters[0]->input = (Uint8)*p->data;
 			}
 
 			for(i=0; i<PLAYERS; ++i){
