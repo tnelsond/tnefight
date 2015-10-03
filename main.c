@@ -417,29 +417,86 @@ int initGL(){
 	return 0;
 }
 
-UDPsocket sd;
-UDPpacket *p;
-char *server = NULL;
-IPaddress serveradd;
-int port = 0;
+#define UDPBUFFERLEN 128
+struct udpdelay{
+	UDPpacket *p;
+	int delay;
+};
+
+struct{
+	UDPsocket sd;
+	char *server;
+	IPaddress serveradd;
+	int port;
+	int client;
+	struct udpdelay buf[UDPBUFFERLEN]; /* For testing :D */
+} tnet;
+
+void preinitnetwork(){
+	tnet.server = NULL;
+	tnet.port = 0;
+	tnet.client = 1;
+}
+
 void initNetwork(){
+	int i = 0;
 	SDL_Log("Initting Network...\n");
+	if(tnet.port == 0){
+		tnet.client = 0;
+	}
 	if(SDLNet_Init() < 0){
 		SDL_Log("Error initializing SDLNet: %s\n", SDLNet_GetError());
 	}
-	if(!(sd = SDLNet_UDP_Open(3000))){
+	if(!(tnet.sd = SDLNet_UDP_Open(tnet.client ? 0 : 3000))){
 		SDL_Log("Error SDLNet_UDP_Open: %s\n", SDLNet_GetError());
 	}
-	if(!(p = SDLNet_AllocPacket(128))){
-		SDL_Log("Error SDLNet_AllocPacket: %s\n", SDLNet_GetError());
+	for(i = 0; i < UDPBUFFERLEN; ++i){
+		if(!(tnet.buf[i].p = SDLNet_AllocPacket(128))){
+			SDL_Log("Error SDLNet_AllocPacket: %s\n", SDLNet_GetError());
+		}
 	}
-	if(port && server){
-		if(SDLNet_ResolveHost(&serveradd, server, port) == -1){
+	if(tnet.port && tnet.server){
+		if(SDLNet_ResolveHost(&tnet.serveradd, tnet.server, tnet.port) == -1){
 			SDL_Log("Error SDLNet_ResolveHost: %s\n", SDLNet_GetError());
 		}
-		p->channel = 0;
 	}
 }
+
+void t_networksend(){
+	int i;
+	int pi = 1;
+	for(i = 1; i < UDPBUFFERLEN; ++i){ /* First index is reserved for input */
+		if(tnet.buf[i].delay == 0){
+			SDLNet_UDP_Send(tnet.sd, -1, tnet.buf[i].p);
+			--tnet.buf[i].delay;
+		}
+		else if(tnet.buf[i].delay < 0){
+			pi = i;
+		}
+		else{
+			--tnet.buf[i].delay;
+		}
+	}
+	tnet.buf[pi].p->address.host = tnet.serveradd.host;
+	tnet.buf[pi].p->address.port = tnet.serveradd.port;
+	tnet.buf[pi].p->channel = -1;
+	*(tnet.buf[pi].p->data) = (Uint8)fighters[tnet.client ? 1 : 0]->input;
+	tnet.buf[pi].p->len = sizeof(Uint8);
+	tnet.buf[pi].delay = 30 + (rand() % 20);
+	tnet.buf[pi].p->channel = -1;
+}
+
+void t_networkreceive(){
+	while(SDLNet_UDP_Recv(tnet.sd, tnet.buf[0].p)){
+		if(!tnet.client){
+			tnet.serveradd.host = tnet.buf[0].p->address.host;
+			tnet.serveradd.port = tnet.buf[0].p->address.port;
+		}
+		fighters[tnet.client ? 0 : 1]->input = (Uint8)*(tnet.buf[0].p->data);
+	}
+}
+
+
 
 int main(int argc, char *argv[]){
 	Uint32 ttime, oldtime;
@@ -478,6 +535,7 @@ int main(int argc, char *argv[]){
 	level.rect.y = 0;
 	linit();
 	srand(time(NULL));
+	preinitnetwork();
 	for(i = 1, j = 0; i < argc; ++i){
 		if(strcmp(argv[i], "-level") == 0){
 			SDL_Log("Loading level");
@@ -488,11 +546,11 @@ int main(int argc, char *argv[]){
 		}
 		else if(strcmp(argv[i], "-server") == 0){
 			++i;
-			server = argv[i];
+			tnet.server = argv[i];
 		}
 		else if(strcmp(argv[i], "-p") == 0){
 			++i;
-			port = atoi(argv[i]);
+			tnet.port = atoi(argv[i]);
 		}
 		else{
 			gjoy[j] = SDL_JoystickOpen(j);
@@ -556,17 +614,8 @@ int main(int argc, char *argv[]){
 
 			tcamera_track(&camera, &level, fighters, PLAYERS);
 
-			if(port){
-				p->address.host = serveradd.host;
-				p->address.port = serveradd.port;
-				p->channel = -1;
-				*p->data = (Uint8)fighters[0]->input;
-				p->len = sizeof(Uint8);
-				SDLNet_UDP_Send(sd, -1, p);
-			}
-			while(SDLNet_UDP_Recv(sd, p)){
-				fighters[0]->input = (Uint8)*p->data;
-			}
+			t_networksend();
+			t_networkreceive();
 
 			for(i=0; i<PLAYERS; ++i){
 				tfighter_update(fighters[i], &level);
@@ -599,6 +648,7 @@ int main(int argc, char *argv[]){
 				tparticle_update(&particles[i]);
 			}
 		}
+
 		alpha = ((float)accumulator) / physicsstep;
 		draw(alpha);
 		
@@ -607,7 +657,9 @@ int main(int argc, char *argv[]){
 			SDL_Delay(timesleep);
 	}
 
-	SDLNet_FreePacket(p);
+	for(i=0; i<UDPBUFFERLEN; ++i){
+		SDLNet_FreePacket(tnet.buf[i].p);
+	}
 	SDLNet_Quit();
 
 	for(i=0; i<PLAYERS; ++i){
