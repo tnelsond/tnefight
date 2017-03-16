@@ -146,7 +146,7 @@ int lsetbruiserness(lua_State *l){
 		if(temp > 100){
 			return -2;
 		}
-		cfighter->run += (100 - temp)/300.0f;
+		cfighter->run += (100 - temp)/30.0f;
 		cfighter->strength += temp/100.0f;
 		return 0;
 	}

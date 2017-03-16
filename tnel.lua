@@ -2,7 +2,7 @@ setname("Tnel")
 setsize(2, 3)
 setcolor(0x44DD00, 0x555500, 0xAA8800, 0x557700)
 setskin(2, 1, 3, 0)
-setbruiserness(20)
+setbruiserness(0)
 setjump(60);
 
 setmove(0, 20, 30, 0, 5, 100, 10, 0, 5, 5, 0, 45, 40, ATTACK, 12)

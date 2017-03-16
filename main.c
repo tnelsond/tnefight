@@ -274,6 +274,7 @@ void draw(float alpha){
 	}
 
 	for(i = 0; i < PLAYERS; ++i){
+		int angle;
 		tfighter *t = fighters[i];
 		glPopMatrix();
 		glPushMatrix();
@@ -300,11 +301,14 @@ void draw(float alpha){
 		/* Legs */
 		glPushMatrix();
 		glTranslatef(0.3f, 1.5f, 0);
+		angle = (int)(t->rect.x * 30) % 120;
+		if(angle > 60)
+			angle = 120 - angle;
 		if(t->left){
-			glRotatef(30 + (int)(t->rect.x * -30) % 90, 0, 0, 1);
+			glRotatef(-20 + angle, 0, 0, 1);
 		}
 		else{
-			glRotatef(-60 + (int)(t->rect.x * 30) % 90, 0, 0, 1);
+			glRotatef(30 - angle, 0, 0, 1);
 		}
 		glScalef(0.25f, 0.75f, 0);
 		glTranslatef(-0.2f, -.2f, 0);
@@ -429,11 +433,13 @@ struct{
 	IPaddress serveradd;
 	int port;
 	int client;
+	Uint8 tick;
 	struct udpdelay buf[UDPBUFFERLEN]; /* For testing :D */
 } tnet;
 
 void preinitnetwork(){
 	tnet.server = NULL;
+	tnet.tick = 0;
 	tnet.port = 0;
 	tnet.client = 1;
 }
@@ -465,6 +471,7 @@ void initNetwork(){
 void t_networksend(){
 	int i;
 	int pi = 1;
+	Uint8 *data;
 	for(i = 1; i < UDPBUFFERLEN; ++i){ /* First index is reserved for input */
 		if(tnet.buf[i].delay == 0){
 			SDLNet_UDP_Send(tnet.sd, -1, tnet.buf[i].p);
@@ -477,22 +484,47 @@ void t_networksend(){
 			--tnet.buf[i].delay;
 		}
 	}
-	tnet.buf[pi].p->address.host = tnet.serveradd.host;
-	tnet.buf[pi].p->address.port = tnet.serveradd.port;
-	tnet.buf[pi].p->channel = -1;
-	*(tnet.buf[pi].p->data) = (Uint8)fighters[tnet.client ? 1 : 0]->input;
-	tnet.buf[pi].p->len = sizeof(Uint8);
-	tnet.buf[pi].delay = 30 + (rand() % 20);
-	tnet.buf[pi].p->channel = -1;
+	if(++tnet.tick % 5 == 0){
+		data = tnet.buf[pi].p->data;
+		tnet.buf[pi].p->address.host = tnet.serveradd.host;
+		tnet.buf[pi].p->address.port = tnet.serveradd.port;
+		tnet.buf[pi].p->channel = -1;
+		*data = (Uint8)fighters[tnet.client ? 1 : 0]->input;
+		tnet.buf[pi].p->len = 1;
+		data += 1;
+		if(!tnet.client){
+			for(i=0; i < PLAYERS; ++i){
+				*((float *)data) = (float)fighters[i]->rect.x;
+				data += sizeof(float);
+				*((float *)data) = (float)fighters[i]->rect.y;
+				data += sizeof(float);
+				tnet.buf[pi].p->len += sizeof(float)*2;
+			}
+		}
+		tnet.buf[pi].delay = 30 + (rand() % 20);
+		tnet.buf[pi].p->channel = -1;
+	}
 }
 
 void t_networkreceive(){
+	int i;
+	Uint8 *data;
 	while(SDLNet_UDP_Recv(tnet.sd, tnet.buf[0].p)){
+		data = tnet.buf[0].p->data;
+		fighters[tnet.client ? 0 : 1]->input = (Uint8)*data;
+		data += 1;
 		if(!tnet.client){
 			tnet.serveradd.host = tnet.buf[0].p->address.host;
 			tnet.serveradd.port = tnet.buf[0].p->address.port;
 		}
-		fighters[tnet.client ? 0 : 1]->input = (Uint8)*(tnet.buf[0].p->data);
+		else{
+			for(i = 0; i < PLAYERS; ++i){
+				fighters[i]->rect.x = *((float *)data);
+				data += sizeof(float);
+				fighters[i]->rect.y = *((float *)data);
+				data += sizeof(float);
+			}
+		}
 	}
 }
 
